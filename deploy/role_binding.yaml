@@ -1,0 +1,11 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hwameistor-operator
+subjects:
+- kind: ServiceAccount
+  name: hwameistor-operator
+roleRef:
+  kind: Role
+  name: hwameistor-operator
+  apiGroup: rbac.authorization.k8s.io
