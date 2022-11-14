@@ -1,4 +1,6 @@
 
+
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -23,3 +25,6 @@ testbin/*
 *.swp
 *.swo
 *~
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
