@@ -1,0 +1,7 @@
+apiVersion: hwameistor.io/v1alpha1
+kind: HwameistorCluster
+metadata:
+  name: hwameistorcluster-sample
+spec:
+  # Add fields here
+  foo: bar
