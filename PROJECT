@@ -12,7 +12,7 @@ resources:
     namespaced: true
   controller: true
   domain: hwameistor.io
-  kind: HwameistorCluster
+  kind: Cluster
   path: github.com/hwameistor/hwameistor-operator/api/v1alpha1
   version: v1alpha1
 version: "3"
