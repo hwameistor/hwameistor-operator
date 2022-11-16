@@ -6,20 +6,22 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
-  name: hwameistorclusters.hwameistor.io
+  name: clusters.hwameistor.io
 spec:
   group: hwameistor.io
   names:
-    kind: HwameistorCluster
-    listKind: HwameistorClusterList
-    plural: hwameistorclusters
-    singular: hwameistorcluster
+    kind: Cluster
+    listKind: ClusterList
+    plural: clusters
+    shortNames:
+    - hmcluster
+    singular: cluster
   scope: Cluster
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: HwameistorCluster is the Schema for the hwameistorclusters API
+        description: Cluster is the Schema for the clusters API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,15 +36,15 @@ spec:
           metadata:
             type: object
           spec:
-            description: HwameistorClusterSpec defines the desired state of HwameistorCluster
+            description: ClusterSpec defines the desired state of Cluster
             properties:
               foo:
-                description: Foo is an example field of HwameistorCluster. Edit hwameistorcluster_types.go
+                description: Foo is an example field of Cluster. Edit cluster_types.go
                   to remove/update
                 type: string
             type: object
           status:
-            description: HwameistorClusterStatus defines the observed state of HwameistorCluster
+            description: ClusterStatus defines the observed state of Cluster
             type: object
         type: object
     served: true

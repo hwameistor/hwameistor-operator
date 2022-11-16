@@ -1,20 +1,24 @@
-# permissions for end users to view hwameistorclusters.
+# permissions for end users to edit clusters.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: hwameistorcluster-viewer-role
+  name: cluster-editor-role
 rules:
 - apiGroups:
   - hwameistor.io
   resources:
-  - hwameistorclusters
+  - clusters
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
   - hwameistor.io
   resources:
-  - hwameistorclusters/status
+  - clusters/status
   verbs:
   - get

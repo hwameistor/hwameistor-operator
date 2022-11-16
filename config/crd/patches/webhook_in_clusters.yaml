@@ -2,7 +2,7 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: hwameistorclusters.hwameistor.io
+  name: clusters.hwameistor.io
 spec:
   conversion:
     strategy: Webhook

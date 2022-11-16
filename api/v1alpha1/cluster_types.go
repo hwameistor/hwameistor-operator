@@ -23,17 +23,17 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// HwameistorClusterSpec defines the desired state of HwameistorCluster
-type HwameistorClusterSpec struct {
+// ClusterSpec defines the desired state of Cluster
+type ClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of HwameistorCluster. Edit hwameistorcluster_types.go to remove/update
+	// Foo is an example field of Cluster. Edit cluster_types.go to remove/update
 	Foo string `json:"foo,omitempty"`
 }
 
-// HwameistorClusterStatus defines the observed state of HwameistorCluster
-type HwameistorClusterStatus struct {
+// ClusterStatus defines the observed state of Cluster
+type ClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 }
@@ -41,25 +41,25 @@ type HwameistorClusterStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// HwameistorCluster is the Schema for the hwameistorclusters API
-// +kubebuilder:resource:path=hwameistorclusters,scope=Cluster
-type HwameistorCluster struct {
+// Cluster is the Schema for the clusters API
+// +kubebuilder:resource:path=clusters,scope=Cluster,shortName=hmcluster
+type Cluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   HwameistorClusterSpec   `json:"spec,omitempty"`
-	Status HwameistorClusterStatus `json:"status,omitempty"`
+	Spec   ClusterSpec   `json:"spec,omitempty"`
+	Status ClusterStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// HwameistorClusterList contains a list of HwameistorCluster
-type HwameistorClusterList struct {
+// ClusterList contains a list of Cluster
+type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []HwameistorCluster `json:"items"`
+	Items           []Cluster `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&HwameistorCluster{}, &HwameistorClusterList{})
+	SchemeBuilder.Register(&Cluster{}, &ClusterList{})
 }

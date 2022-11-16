@@ -9,7 +9,7 @@ rules:
 - apiGroups:
   - hwameistor.io
   resources:
-  - hwameistorclusters
+  - clusters
   verbs:
   - create
   - delete
@@ -21,13 +21,13 @@ rules:
 - apiGroups:
   - hwameistor.io
   resources:
-  - hwameistorclusters/finalizers
+  - clusters/finalizers
   verbs:
   - update
 - apiGroups:
   - hwameistor.io
   resources:
-  - hwameistorclusters/status
+  - clusters/status
   verbs:
   - get
   - patch
