@@ -22,9 +22,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	"k8s.io/apimachinery/pkg/api/errors"
+
+	log "github.com/sirupsen/logrus"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"github.com/hwameistor/hwameistor-operator/installhwamei"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -47,9 +50,42 @@ type ClusterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.9.2/pkg/reconcile
 func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log.Infof("Reconcile Cluster %s", req.Name)
 
-	// your logic here
+	instance := &hwameistoriov1alpha1.Cluster{}
+	err := r.Client.Get(ctx, req.NamespacedName, instance)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		log.Errorf("Get instance err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	log.Infof("Cluster instance: %+v", instance)
+
+	switch instance.Status.Phase {
+	case hwameistoriov1alpha1.ClusterPhaseEmpty:
+		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseToInstall
+		if err := r.Client.Status().Update(ctx, instance); err != nil {
+			log.Errorf("Update status err: %v", err)
+			return ctrl.Result{}, err
+		}
+		log.Infof("Updated status")
+	case hwameistoriov1alpha1.ClusterPhaseToInstall:
+		if err := installhwamei.Install(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseInstalled
+		if err := r.Client.Status().Update(ctx, instance); err != nil {
+			log.Errorf("Update status err: %v", err)
+		}
+	default:
+		log.Infof("Phase to do nothing: %v", instance.Status.Phase)
+	}
+
+	log.Infof("Instance phase: %v",instance.Status.Phase)
 
 	return ctrl.Result{}, nil
 }
