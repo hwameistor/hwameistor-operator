@@ -216,7 +216,7 @@ BUILD_VERSION = ${shell git rev-parse --short "HEAD^{commit}" 2>/dev/null}
 BUILD_ENVS = CGO_ENABLED=0 GOOS=linux
 BUILD_CMD = go build
 BUILD_FLAGS = -X 'main.BUILDVERSION=${BUILD_VERSION}' -X 'main.BUILDTIME=${BUILD_TIME}' -X 'main.GOVERSION=${GO_VERSION}'
-BUILD_OPTIONS = -a -mod vendor -installsuffix cgo -ldflags "${BUILD_FLAGS}"
+BUILD_OPTIONS = -a -mod vendor -installsuffix cgo -ldflags "${BUILD_FLAGS}" -buildvcs=false
 
 BUILDER_MOUNT_DST_DIR = /go/src/github.com/hwameistor/hwameistor-operator
 DOCKER_SOCK_PATH=/var/run/docker.sock
