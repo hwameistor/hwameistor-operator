@@ -2,6 +2,6 @@ FROM centos:7
 
 COPY ./resourcestoinstall /resourcestoinstall
 
-COPY ./_build/hwameistor-operator /hwameistor-operator
+COPY ./_build/operator /operator
 
-ENTRYPOINT [ "/hwameistor-operator" ]
+ENTRYPOINT [ "/operator" ]
