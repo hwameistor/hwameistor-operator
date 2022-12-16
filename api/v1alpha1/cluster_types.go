@@ -28,7 +28,7 @@ type ClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	
+	TargetNamespace string `json:"targetNamespace"`
 }
 
 // ClusterStatus defines the observed state of Cluster

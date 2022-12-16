@@ -37,6 +37,11 @@ spec:
             type: object
           spec:
             description: ClusterSpec defines the desired state of Cluster
+            properties:
+              targetNamespace:
+                type: string
+            required:
+            - targetNamespace
             type: object
           status:
             description: ClusterStatus defines the observed state of Cluster

@@ -73,7 +73,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 		log.Infof("Updated status")
 	case hwameistoriov1alpha1.ClusterPhaseToInstall:
-		if err := installhwamei.Install(r.Client); err != nil {
+		if err := installhwamei.Install(r.Client, instance.Spec.TargetNamespace); err != nil {
 			log.Errorf("Install err: %v", err)
 			return ctrl.Result{}, err
 		}
