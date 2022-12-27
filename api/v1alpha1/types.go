@@ -5,6 +5,7 @@ type Phase string
 
 const (
 	ClusterPhaseEmpty     Phase = ""
+	ClusterPhaseEnsuringTargetNamespaceExists = "EnsuringTargetNamespaceExists"
 	ClusterPhaseToInstall Phase = "Toinstall"
 	ClusterPhaseInstalled Phase = "Installed"
 )

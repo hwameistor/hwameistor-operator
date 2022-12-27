@@ -3,5 +3,86 @@ kind: Cluster
 metadata:
   name: cluster-sample
 spec:
-  # Add fields here
   targetNamespace: hwameistor
+  rbac:
+    serviceAccountName: "hwameistor-admin"
+  localStorage:
+    kubeletRootDir: "/var/lib/kubelet"
+    csi:
+      registrar:
+        image:
+          registry: "k8s-gcr.m.daocloud.io"
+          repository: "sig-storage/csi-node-driver-registrar"
+          tag: "v2.5.0"
+      controller:
+        replicas: 1
+        provisioner:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-provisioner"
+            tag: "v2.0.3"
+        attacher:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-attacher"
+            tag: "v3.0.1"
+        resizer:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-resizer"
+            tag: "v1.0.1"
+    member:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/local-storage"
+        tag: "v0.6.1"
+      rcloneImage:
+        repository: "rclone/rclone"
+        tag: "1.53.2"
+  localDiskManager:
+    kubeletRootDir: "/var/lib/kubelet"
+    csi:
+      enable: true
+      registrar:
+        image:
+          registry: "k8s-gcr.m.daocloud.io"
+          repository: "sig-storage/csi-node-driver-registrar"
+          tag: "v2.5.0"
+      controller:
+        provisioner:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-provisioner"
+            tag: "v2.0.3"
+        attacher:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-attacher"
+            tag: "v3.0.1"
+    manager:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/local-disk-manager"
+        tag: "v0.6.1"
+  scheduler:
+    replicas: 1
+    scheduler:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/scheduler"
+        tag: "v0.6.1"
+  admissionController:
+    controller:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/admission"
+        tag: "v0.6.1"
+  evictor:
+    evictor:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/evictor"
+        tag: "v0.6.1"
+      
+
+

@@ -667,8 +667,6 @@ spec:
                     type: string
                   replicas:
                     type: integer
-                required:
-                - replicas
                 type: object
               apiServer:
                 properties:
@@ -3245,6 +3243,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          replicas:
+                            format: int32
+                            type: integer
                           resizer:
                             properties:
                               image:
@@ -4688,6 +4689,9 @@ spec:
                                     type: object
                                 type: object
                             type: object
+                          replicas:
+                            format: int32
+                            type: integer
                           resizer:
                             properties:
                               image:
@@ -5422,6 +5426,7 @@ spec:
                         type: array
                     type: object
                   replicas:
+                    format: int32
                     type: integer
                   scheduler:
                     properties:
@@ -5789,13 +5794,6 @@ spec:
                 required:
                 - instances
                 type: object
-            required:
-            - admissionController
-            - apiServer
-            - evictor
-            - localDiskManager
-            - localStorage
-            - scheduler
             type: object
         type: object
     served: true
