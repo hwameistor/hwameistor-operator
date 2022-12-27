@@ -28,6 +28,12 @@ import (
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/installhwamei"
+	installrbac "github.com/hwameistor/hwameistor-operator/installhwamei/rbac"
+	installldm "github.com/hwameistor/hwameistor-operator/installhwamei/localdiskmanager"
+	installls "github.com/hwameistor/hwameistor-operator/installhwamei/localstorage"
+	installscheduler "github.com/hwameistor/hwameistor-operator/installhwamei/scheduler"
+	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
+	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -66,17 +72,92 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	switch instance.Status.Phase {
 	case hwameistoriov1alpha1.ClusterPhaseEmpty:
+		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseEnsuringTargetNamespaceExists
+		if err := r.Client.Status().Update(ctx, instance); err != nil {
+			log.Errorf("Update status err: %v", err)
+			return ctrl.Result{}, err
+		}
+	case hwameistoriov1alpha1.ClusterPhaseEnsuringTargetNamespaceExists:
+		if err := installhwamei.EnsureTargetNamespaceExist(r.Client, instance.Spec.TargetNamespace); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
 		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseToInstall
 		if err := r.Client.Status().Update(ctx, instance); err != nil {
 			log.Errorf("Update status err: %v", err)
 			return ctrl.Result{}, err
 		}
-		log.Infof("Updated status")
 	case hwameistoriov1alpha1.ClusterPhaseToInstall:
-		if err := installhwamei.Install(r.Client, instance.Spec.TargetNamespace); err != nil {
+		if err := installhwamei.InstallCRDs(r.Client, instance.Spec.TargetNamespace); err != nil {
 			log.Errorf("Install err: %v", err)
 			return ctrl.Result{}, err
 		}
+
+		installrbac.SetRBAC(instance)
+		if err := installrbac.InstallRBAC(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+		
+		installldm.SetLDMDaemonSet(instance)
+		if err := installldm.InstallLDM(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installldm.SetLDMCSIController(instance)
+		if err := installldm.InstallLDMCSIController(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installls.SetLSDaemonSet(instance)
+		if err := installls.InstallLS(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installls.SetLSCSIController(instance)
+		if err := installls.InstallLSCSIController(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		// installscheduler.SetSchedulerConfigMap(instance)
+		if err := installscheduler.InstallSchedulerConfigMap(r.Client, instance.Spec.TargetNamespace); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installscheduler.SetScheduler(instance)
+		if err := installscheduler.InstallScheduler(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installadmissioncontroller.SetAdmissionController(instance)
+		if err := installadmissioncontroller.InstallAdmissionController(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installadmissioncontroller.SetAdmissionControllerService(instance)
+		if err := installadmissioncontroller.InstallAdmissionControllerService(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if err := installadmissioncontroller.InstallAdmissionControllerMutatingWebhookConfiguration(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		installevictor.SetEvictor(instance)
+		if err := installevictor.InstallEvictor(r.Client); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+
 		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseInstalled
 		if err := r.Client.Status().Update(ctx, instance); err != nil {
 			log.Errorf("Update status err: %v", err)

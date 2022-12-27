@@ -73,6 +73,7 @@ type PodCommonSpec struct {
 }
 
 type CSIControllerSpec struct {
+	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Provisioner *ContainerCommonSpec `json:"provisioner,omitempty"`
 	Attacher *ContainerCommonSpec `json:"attacher,omitempty"`
@@ -108,7 +109,7 @@ type MemberSpec struct {
 }
 
 type SchedulerSpec struct {
-	Replicas int `json:"replicas"`
+	Replicas int32 `json:"replicas"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Scheduler *ContainerCommonSpec `json:"scheduler,omitempty"`
 }
@@ -119,7 +120,7 @@ type EvictorSpec struct {
 }
 
 type AdmissionControllerSpec struct {
-	Replicas int `json:"replicas"`
+	Replicas int `json:"replicas,omitempty"`
 	FailurePolicy string `json:"failurePolicy,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Controller *ContainerCommonSpec `json:"controller,omitempty"`
@@ -146,12 +147,12 @@ type ClusterStatus struct {
 
 	Phase Phase `json:"phase,omitempty"`
 
-	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager"`
-	LocalStorage *LocalStorageStatus `json:"localStorage"`
-	Scheduler *SchedulerStatus `json:"scheduler"`
-	Evictor *EvictorStatus `json:"evictor"`
-	AdmissionController *AdmissionControllerStatus `json:"admissionController"`
-	ApiServer *ApiServerStatus `json:"apiServer"`
+	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
+	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
+	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`
+	Evictor *EvictorStatus `json:"evictor,omitempty"`
+	AdmissionController *AdmissionControllerStatus `json:"admissionController,omitempty"`
+	ApiServer *ApiServerStatus `json:"apiServer,omitempty"`
 }
 
 type DeployStatus struct {
