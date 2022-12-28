@@ -83,6 +83,21 @@ spec:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/evictor"
         tag: "v0.6.1"
-      
-
-
+  drbd:
+    enable: false
+    deployOnMaster: "no"
+    imageRegistry: "daocloud.io/daocloud"
+    imagePullPolicy: "IfNotPresent"
+    drbdVersion: "v9.0.32-1"
+    upgrade: "no"
+    checkHostName: "yes"
+    useAffinity: "no"
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: DoesNotExist
+          - key: node-role.kubernetes.io/control-plane
+            operator: DoesNotExist
+    chartVersion: "v0.3.6"
