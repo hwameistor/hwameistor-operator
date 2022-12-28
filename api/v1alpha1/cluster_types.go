@@ -134,6 +134,15 @@ type ApiServerSpec struct {
 
 type DRBDSpec struct {
 	Enable bool `json:"enable,omitempty"`
+	DeployOnMaster string `json:"deployOnMaster,omitempty"`
+	ImageRegistry string `json:"imageRegistry,omitempty"`
+	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
+	DRBDVersion string `json:"drbdVersion,omitempty"`
+	Upgrade string `json:"upgrade,omitempty"`
+	CheckHostName string `json:"checkHostName,omitempty"`
+	UseAffinity string `json:"useAffinity,omitempty"`
+	NodeAffinity corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	ChartVersion string `json:"chartVersion,omitempty"`
 }
 
 type RBACSpec struct {

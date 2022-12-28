@@ -34,6 +34,7 @@ import (
 	installscheduler "github.com/hwameistor/hwameistor-operator/installhwamei/scheduler"
 	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
 	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
+	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -164,6 +165,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	default:
 		log.Infof("Phase to do nothing: %v", instance.Status.Phase)
+	}
+
+	if instance.Spec.DRBD.Enable {
+		installdrbd.HandelDRBDConfigs(instance)
+		if err := installdrbd.CreateDRBDAdapter(r.Client); err != nil {
+			log.Errorf("Create DRBD Adapter err: %v", err)
+			return ctrl.Result{}, err
+		}
 	}
 
 	log.Infof("Instance phase: %v",instance.Status.Phase)
