@@ -101,3 +101,9 @@ spec:
           - key: node-role.kubernetes.io/control-plane
             operator: DoesNotExist
     chartVersion: "v0.3.6"
+  storageClass:
+    enable: true
+    allowVolumeExpansion: true
+    reclaimPolicy: "Delete"
+    diskType: "HDD"
+    fsType: "xfs"

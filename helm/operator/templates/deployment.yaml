@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - args:
-        image: ghcr.io/hwameistor/operator:alpha1
+        image: {{ .Values.imageRegistry}}/{{ .Values.imageRepository}}:{{ .Values.imageTag}}
         imagePullPolicy: IfNotPresent
         name: hwameistor-operator
         resources:
