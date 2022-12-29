@@ -5691,6 +5691,21 @@ spec:
                 required:
                 - replicas
                 type: object
+              storageClass:
+                properties:
+                  allowVolumeExpansion:
+                    type: boolean
+                  diskType:
+                    type: string
+                  enable:
+                    type: boolean
+                  fsType:
+                    type: string
+                  reclaimPolicy:
+                    description: PersistentVolumeReclaimPolicy describes a policy
+                      for end-of-life maintenance of persistent volumes.
+                    type: string
+                type: object
               targetNamespace:
                 type: string
             required:

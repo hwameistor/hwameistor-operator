@@ -35,6 +35,7 @@ import (
 	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
 	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
 	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
+	installstorageclass "github.com/hwameistor/hwameistor-operator/installhwamei/storageclass"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -157,6 +158,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if err := installevictor.InstallEvictor(r.Client); err != nil {
 			log.Errorf("Install err: %v", err)
 			return ctrl.Result{}, err
+		}
+
+		if instance.Spec.StorageClass.Enable {
+			installstorageclass.SetStorageClass(instance)
+			if err := installstorageclass.InstallStorageClass(r.Client); err != nil {
+				log.Errorf("Install err: %v", err)
+				return ctrl.Result{}, err
+			}
 		}
 
 		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseInstalled

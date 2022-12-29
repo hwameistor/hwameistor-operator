@@ -52,6 +52,8 @@ type ClusterSpec struct {
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
 
 	RBAC *RBACSpec `json:"rbac,omitempty"`
+
+	StorageClass *StorageClassSpec `json:"storageClass,omitempty"`
 }
 
 type ImageSpec struct {
@@ -147,6 +149,14 @@ type DRBDSpec struct {
 
 type RBACSpec struct {
 	ServiceAccountName string `json:"serviceAccountName"`
+}
+
+type StorageClassSpec struct {
+	Enable bool `json:"enable,omitempty"`
+	AllowVolumeExpansion bool `json:"allowVolumeExpansion,omitempty"`
+	ReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
+	DiskType string `json:"diskType,omitempty"`
+	FSType string `json:"fsType,omitempty"`
 }
 
 // ClusterStatus defines the observed state of Cluster
