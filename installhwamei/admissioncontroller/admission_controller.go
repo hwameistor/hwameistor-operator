@@ -45,13 +45,13 @@ var admissionController = appsv1.Deployment{
 		},
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"app": "hwameistor-admission-controller",
+				admissionControllerLabelSelectorKey: admissionControllerLabelSelectorValue,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					"app": "hwameistor-admission-controller",
+					admissionControllerLabelSelectorKey: admissionControllerLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{

@@ -47,7 +47,7 @@ var lsCSIController = appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					"app": "hwameistor-local-storage-csi-controller",
+					lsCSIControllerLabelSelectorKey: lsCSIControllerLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{

@@ -1,4 +1,4 @@
-package evictor
+package metrics
 
 import (
 	"context"
@@ -15,50 +15,64 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type EvictorMaintainer struct {
+type MetricsMaintainer struct {
 	Client client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewEvictorMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *EvictorMaintainer {
-	return &EvictorMaintainer{
+func NewMetricsMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *MetricsMaintainer {
+	return &MetricsMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
 	}
 }
 
-var replicas = int32(1)
-var evictorLabelSelectorKey = "app"
-var evictorLabelSelectorValue = "hwameistor-volume-evictor"
+var metricsLabelSelectorKey = "app"
+var metricsLabelSelectorValue = "hwameistor-metrics-collector"
 
-var evictorDeployment = appsv1.Deployment{
+var metrics = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "hwameistor-volume-evictor",
+		Name: "hwameistor-metrics-collector",
 		Labels: map[string]string{
-			evictorLabelSelectorKey: evictorLabelSelectorValue,
+			metricsLabelSelectorKey: metricsLabelSelectorValue,
 		},
 	},
 	Spec: appsv1.DeploymentSpec{
-		Replicas: &replicas,
 		Strategy: appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		},
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				evictorLabelSelectorKey: evictorLabelSelectorValue,
+				metricsLabelSelectorKey: metricsLabelSelectorValue,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					evictorLabelSelectorKey: evictorLabelSelectorValue,
+					metricsLabelSelectorKey: metricsLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "evictor",
+						Name: "collector",
 						ImagePullPolicy: corev1.PullIfNotPresent,
+						Ports: []corev1.ContainerPort{
+							{
+								Name: "metrics-apis",
+								ContainerPort: 8080,
+							},
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name: "NAMESPACE",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "metadata.namespace",
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -66,54 +80,50 @@ var evictorDeployment = appsv1.Deployment{
 	},
 }
 
-func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	evictorDeployment.Namespace = clusterInstance.Spec.TargetNamespace
-	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	evictorDeployment.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setEvictorContainers(clusterInstance)
-}
-
-func setEvictorContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	for i, container := range evictorDeployment.Spec.Template.Spec.Containers {
-		if container.Name == "evictor" {
-			// container.Resources = *clusterInstance.Spec.Evictor.Evictor.Resources
-			imageSpec := clusterInstance.Spec.Evictor.Evictor.Image
+func SetMetrics(clusterInstance *hwameistoriov1alpha1.Cluster) {
+	metrics.Namespace = clusterInstance.Spec.TargetNamespace
+	metrics.OwnerReferences = append(metrics.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	metrics.Spec.Replicas = &clusterInstance.Spec.Metrics.Replicas
+	metrics.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	for i, container := range metrics.Spec.Template.Spec.Containers {
+		if container.Name == "collector" {
+			imageSpec := clusterInstance.Spec.Metrics.Collector.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 		}
-		evictorDeployment.Spec.Template.Spec.Containers[i] = container
+		metrics.Spec.Template.Spec.Containers[i] = container
 	}
 }
 
-func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
+func (m *MetricsMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetEvictor(newClusterInstance)
+	SetMetrics(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: evictorDeployment.Namespace,
-		Name: evictorDeployment.Name,
+		Namespace: metrics.Namespace,
+		Name: metrics.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &evictorDeployment); errCreate != nil {
-				log.Errorf("Create Evictor err: %v", errCreate)
+			if errCreate := m.Client.Create(context.TODO(), &metrics); errCreate != nil {
+				log.Errorf("Create Metrics Collector err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
 			return newClusterInstance, nil
 		} else {
-			log.Errorf("Get Evictor err: %v", err)
+			log.Errorf("Get Metrics Collector err: %v", err)
 			return newClusterInstance, err
 		}
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: evictorDeployment.Namespace}); err != nil {
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: metrics.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
 
 	var podsManaged []corev1.Pod
 	for _, pod := range podList.Items {
-		if pod.Labels[evictorLabelSelectorKey] == evictorLabelSelectorValue {
+		if pod.Labels[metricsLabelSelectorKey] == metricsLabelSelectorValue {
 			podsManaged = append(podsManaged, pod)
 		}
 	}
@@ -141,18 +151,18 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadType: "Deployment",
 	}
 
-	if newClusterInstance.Status.Evictor == nil {
-		newClusterInstance.Status.Evictor = &hwameistoriov1alpha1.EvictorStatus{
+	if newClusterInstance.Status.Metrics == nil {
+		newClusterInstance.Status.Metrics = &hwameistoriov1alpha1.MetricsStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.Evictor.Instances == nil {
-			newClusterInstance.Status.Evictor.Instances = &instancesStatus
+		if newClusterInstance.Status.Metrics.Instances == nil {
+			newClusterInstance.Status.Metrics.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.Evictor.Instances, instancesStatus) {
-				newClusterInstance.Status.Evictor.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.Metrics.Instances, instancesStatus) {
+				newClusterInstance.Status.Metrics.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}
