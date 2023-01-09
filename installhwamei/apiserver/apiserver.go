@@ -1,4 +1,4 @@
-package evictor
+package apiserver
 
 import (
 	"context"
@@ -15,50 +15,54 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-type EvictorMaintainer struct {
+type ApiServerMaintainer struct {
 	Client client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewEvictorMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *EvictorMaintainer {
-	return &EvictorMaintainer{
+func NewApiServerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ApiServerMaintainer {
+	return &ApiServerMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
 	}
 }
 
-var replicas = int32(1)
-var evictorLabelSelectorKey = "app"
-var evictorLabelSelectorValue = "hwameistor-volume-evictor"
+var apiServerLabelSelectorKey = "app"
+var apiServerLabelSelectorValue = "hwameistor-apiserver"
 
-var evictorDeployment = appsv1.Deployment{
+var apiServer = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "hwameistor-volume-evictor",
+		Name: "hwameistor-apiserver",
 		Labels: map[string]string{
-			evictorLabelSelectorKey: evictorLabelSelectorValue,
+			apiServerLabelSelectorKey: apiServerLabelSelectorValue,
 		},
 	},
 	Spec: appsv1.DeploymentSpec{
-		Replicas: &replicas,
 		Strategy: appsv1.DeploymentStrategy{
 			Type: appsv1.RecreateDeploymentStrategyType,
 		},
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				evictorLabelSelectorKey: evictorLabelSelectorValue,
+				apiServerLabelSelectorKey: apiServerLabelSelectorValue,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					evictorLabelSelectorKey: evictorLabelSelectorValue,
+					apiServerLabelSelectorKey: apiServerLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "evictor",
+						Name: "server",
 						ImagePullPolicy: corev1.PullIfNotPresent,
+						Ports: []corev1.ContainerPort{
+							{
+								Name: "http",
+								ContainerPort: 80,
+							},
+						},
 					},
 				},
 			},
@@ -66,54 +70,50 @@ var evictorDeployment = appsv1.Deployment{
 	},
 }
 
-func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	evictorDeployment.Namespace = clusterInstance.Spec.TargetNamespace
-	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	evictorDeployment.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setEvictorContainers(clusterInstance)
-}
-
-func setEvictorContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	for i, container := range evictorDeployment.Spec.Template.Spec.Containers {
-		if container.Name == "evictor" {
-			// container.Resources = *clusterInstance.Spec.Evictor.Evictor.Resources
-			imageSpec := clusterInstance.Spec.Evictor.Evictor.Image
+func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
+	apiServer.Namespace = clusterInstance.Spec.TargetNamespace
+	apiServer.OwnerReferences = append(apiServer.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	apiServer.Spec.Replicas = &clusterInstance.Spec.ApiServer.Replicas
+	apiServer.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	for i, container := range apiServer.Spec.Template.Spec.Containers {
+		if container.Name == "server" {
+			imageSpec := clusterInstance.Spec.ApiServer.Server.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 		}
-		evictorDeployment.Spec.Template.Spec.Containers[i] = container
+		apiServer.Spec.Template.Spec.Containers[i] = container
 	}
 }
 
-func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
+func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetEvictor(newClusterInstance)
+	SetApiServer(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: evictorDeployment.Namespace,
-		Name: evictorDeployment.Name,
+		Namespace: apiServer.Namespace,
+		Name: apiServer.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &evictorDeployment); errCreate != nil {
-				log.Errorf("Create Evictor err: %v", errCreate)
+			if errCreate := m.Client.Create(context.TODO(), &apiServer); errCreate != nil {
+				log.Errorf("Create ApiServer err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
 			return newClusterInstance, nil
 		} else {
-			log.Errorf("Get Evictor err: %v", err)
+			log.Errorf("Get ApiServer err: %v", err)
 			return newClusterInstance, err
 		}
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: evictorDeployment.Namespace}); err != nil {
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: apiServer.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
 
 	var podsManaged []corev1.Pod
 	for _, pod := range podList.Items {
-		if pod.Labels[evictorLabelSelectorKey] == evictorLabelSelectorValue {
+		if pod.Labels[apiServerLabelSelectorKey] == apiServerLabelSelectorValue {
 			podsManaged = append(podsManaged, pod)
 		}
 	}
@@ -141,18 +141,18 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadType: "Deployment",
 	}
 
-	if newClusterInstance.Status.Evictor == nil {
-		newClusterInstance.Status.Evictor = &hwameistoriov1alpha1.EvictorStatus{
+	if newClusterInstance.Status.ApiServer == nil {
+		newClusterInstance.Status.ApiServer = &hwameistoriov1alpha1.ApiServerStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.Evictor.Instances == nil {
-			newClusterInstance.Status.Evictor.Instances = &instancesStatus
+		if newClusterInstance.Status.ApiServer.Instances == nil {
+			newClusterInstance.Status.ApiServer.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.Evictor.Instances, instancesStatus) {
-				newClusterInstance.Status.Evictor.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ApiServer.Instances, instancesStatus) {
+				newClusterInstance.Status.ApiServer.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}

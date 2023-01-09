@@ -31,6 +31,8 @@ import (
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/installhwamei"
 	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
+	installapiserver "github.com/hwameistor/hwameistor-operator/installhwamei/apiserver"
+	installmetrics "github.com/hwameistor/hwameistor-operator/installhwamei/metrics"
 	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
 	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
 	installldm "github.com/hwameistor/hwameistor-operator/installhwamei/localdiskmanager"
@@ -191,7 +193,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if scheduler := newInstance.Status.AdmissionController; scheduler != nil {
+	if scheduler := newInstance.Status.Scheduler; scheduler != nil {
 		instances := scheduler.Instances
 		if instances != nil {
 			if instances.AvailablePodCount == instances.DesiredPodCount {
@@ -209,7 +211,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if evictor := newInstance.Status.AdmissionController; evictor != nil {
+	if evictor := newInstance.Status.Evictor; evictor != nil {
 		instances := evictor.Instances
 		if instances != nil {
 			if instances.AvailablePodCount == instances.DesiredPodCount {
@@ -218,6 +220,54 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 				newInstance.Status.Evictor.Health = "Abnormal"
 			}
 		}
+	}
+
+	apiServerMaintainer := installapiserver.NewApiServerMaintainer(r.Client, newInstance)
+	newInstance, err = apiServerMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure ApiServer err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if apiServer := newInstance.Status.ApiServer; apiServer != nil {
+		instances := apiServer.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.ApiServer.Health = "Normal"
+			} else {
+				newInstance.Status.ApiServer.Health = "Abnormal"
+			}
+		}
+	}
+
+	apiServerServiceMaintainer := installapiserver.NewApiServerServiceMaintainer(r.Client, newInstance)
+	if err := apiServerServiceMaintainer.Ensure(); err != nil {
+		log.Errorf("Ensure ApiServer Service err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	metricsMaintainer := installmetrics.NewMetricsMaintainer(r.Client, newInstance)
+	newInstance, err = metricsMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure Metrics Collector err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if metrics := newInstance.Status.Metrics; metrics != nil {
+		instances := metrics.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.Metrics.Health = "Normal"
+			} else {
+				newInstance.Status.Metrics.Health = "Abnormal"
+			}
+		}
+	}
+
+	metricsServiceMaintainer := installmetrics.NewMetricsServiceMaintainer(r.Client, newInstance)
+	if err := metricsServiceMaintainer.Ensure(); err != nil {
+		log.Errorf("Ensure Metrics Service err: %v", err)
+		return ctrl.Result{}, err
 	}
 
 	if instance.Spec.StorageClass.Enable {

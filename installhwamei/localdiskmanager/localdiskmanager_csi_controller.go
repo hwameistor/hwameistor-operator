@@ -46,7 +46,7 @@ var ldmCSIController = appsv1.Deployment{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					"app": "hwameistor-local-disk-csi-controller",
+					ldmCSIControllerLabelSelectorKey: ldmCSIControllerLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{

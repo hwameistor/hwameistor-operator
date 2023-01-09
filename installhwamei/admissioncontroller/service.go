@@ -31,7 +31,7 @@ var admissionControllerService = corev1.Service{
 	},
 	Spec: corev1.ServiceSpec{
 		Selector: map[string]string{
-			"app": "hwameistor-admission-controller",
+			admissionControllerLabelSelectorKey: admissionControllerLabelSelectorValue,
 		},
 		Ports: []corev1.ServicePort{
 			{

@@ -44,7 +44,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 		Template: corev1.PodTemplateSpec{
 			ObjectMeta: metav1.ObjectMeta{
 				Labels: map[string]string{
-					"app": "hwameistor-local-storage",
+					lsDaemonSetLabelSelectorKey: lsDaemonSetLabelSelectorValue,
 				},
 			},
 			Spec: corev1.PodSpec{

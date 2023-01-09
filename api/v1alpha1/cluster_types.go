@@ -49,6 +49,8 @@ type ClusterSpec struct {
 
 	ApiServer *ApiServerSpec `json:"apiServer,omitempty"`
 
+	Metrics *MetricsSpec `json:"metrics,omitempty"`
+
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
 
 	RBAC *RBACSpec `json:"rbac,omitempty"`
@@ -129,9 +131,15 @@ type AdmissionControllerSpec struct {
 }
 
 type ApiServerSpec struct {
-	Replicas int `json:"replicas"`
+	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Server *ContainerCommonSpec `json:"server,omitempty"`
+}
+
+type MetricsSpec struct {
+	Replicas int32 `json:"replicas,omitempty"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	Collector *ContainerCommonSpec `json:"collector,omitempty"`
 }
 
 type DRBDSpec struct {
@@ -171,6 +179,7 @@ type ClusterStatus struct {
 	Evictor *EvictorStatus `json:"evictor,omitempty"`
 	AdmissionController *AdmissionControllerStatus `json:"admissionController,omitempty"`
 	ApiServer *ApiServerStatus `json:"apiServer,omitempty"`
+	Metrics *MetricsStatus 	`json:"metrics,omitempty"`
 }
 
 type DeployStatus struct {
@@ -214,7 +223,13 @@ type AdmissionControllerStatus struct {
 }
 
 type ApiServerStatus struct {
-	Instances *DeployStatus `json:"instances"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
+}
+
+type MetricsStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 //+kubebuilder:object:root=true
