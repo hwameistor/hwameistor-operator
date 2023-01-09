@@ -2,16 +2,34 @@ package localstorage
 
 import (
 	"context"
+	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/installhwamei"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type LocalStorageMaintainer struct {
+	Client client.Client
+	ClusterInstance *hwameistoriov1alpha1.Cluster
+}
+
+func NewLocalStorageMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalStorageMaintainer {
+	return &LocalStorageMaintainer{
+		Client: cli,
+		ClusterInstance: clusterInstance,
+	}
+}
+
+var lsDaemonSetLabelSelectorKey = "app"
+var lsDaemonSetLabelSelectorValue = "hwameistor-local-storage"
 
 var lsDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -20,7 +38,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 	Spec: appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"app": "hwameistor-local-storage",
+				lsDaemonSetLabelSelectorKey: lsDaemonSetLabelSelectorValue,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
@@ -248,6 +266,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 }
 
 func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
+	lsDaemonSet.OwnerReferences = append(lsDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	lsDaemonSet.Namespace = clusterInstance.Spec.TargetNamespace
 	// lsDaemonSet.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalStorage.Common.PriorityClassName
 	lsDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
@@ -347,11 +366,72 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	}
 }
 
-func InstallLS(cli client.Client) error {
-	if err := cli.Create(context.TODO(), &lsDaemonSet); err != nil {
-		log.Errorf("Create LocalStorage DaemonSet err: %v", err)
-		return err
+func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
+	newClusterInstance := m.ClusterInstance.DeepCopy()
+	SetLSDaemonSet(newClusterInstance)
+	key := types.NamespacedName{
+		Namespace: lsDaemonSet.Namespace,
+		Name: lsDaemonSet.Name,
+	}
+	var gottenDS appsv1.DaemonSet
+	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
+		if errors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &lsDaemonSet); errCreate != nil {
+				log.Errorf("Create LocalStorage DaemonSet err: %v", errCreate)
+				return newClusterInstance, errCreate
+			}
+			return newClusterInstance, nil
+		} else {
+			log.Errorf("Get LocalStorage DaemonSet err: %v", err)
+			return newClusterInstance, err
+		}
 	}
 
-	return nil
+	var podList corev1.PodList
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: lsDaemonSet.Namespace}); err != nil {
+		log.Errorf("List pods err: %v", err)
+		return newClusterInstance, err
+	}
+
+	var podsManaged []corev1.Pod
+	for _, pod := range podList.Items {
+		if pod.Labels[lsDaemonSetLabelSelectorKey] == lsDaemonSetLabelSelectorValue {
+			podsManaged = append(podsManaged, pod)
+		}
+	}
+
+	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
+	for _, pod := range podsManaged {
+		podStatus := hwameistoriov1alpha1.PodStatus{
+			Name: pod.Name,
+			Node: pod.Spec.NodeName,
+			Status: string(pod.Status.Phase),
+		}
+		podsStatus = append(podsStatus, podStatus)
+	}
+
+	instancesDeployStatus := hwameistoriov1alpha1.DeployStatus{
+		Pods: podsStatus,
+		DesiredPodCount: gottenDS.Status.DesiredNumberScheduled,
+		AvailablePodCount: gottenDS.Status.NumberAvailable,
+		WorkloadType: "DaemonSet",
+	}
+
+	if newClusterInstance.Status.LocalStorage == nil {
+		newClusterInstance.Status.LocalStorage = &hwameistoriov1alpha1.LocalStorageStatus{
+			Instances: &instancesDeployStatus,
+		}
+		return newClusterInstance, nil
+	} else {
+		if newClusterInstance.Status.LocalStorage.Instances == nil {
+			newClusterInstance.Status.LocalStorage.Instances = &instancesDeployStatus
+			return newClusterInstance, nil
+		} else {
+			if !reflect.DeepEqual(newClusterInstance.Status.LocalStorage.Instances, instancesDeployStatus) {
+				newClusterInstance.Status.LocalStorage.Instances = &instancesDeployStatus
+				return newClusterInstance, nil
+			}
+		}
+	}
+	return newClusterInstance, nil
 }

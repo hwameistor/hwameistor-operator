@@ -3,13 +3,28 @@ package rbac
 import (
 	"context"
 
+	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	log "github.com/sirupsen/logrus"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type RBACMaintainer struct {
+	Client client.Client
+	ClusterInstance *hwameistoriov1alpha1.Cluster
+}
+
+func NewRBACMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *RBACMaintainer {
+	return &RBACMaintainer{
+		Client: cli,
+		ClusterInstance: clusterInstance,
+	}
+}
+
 var clusterRole = rbacv1.ClusterRole{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "hwameistor-role",
@@ -62,20 +77,80 @@ func SetRBAC(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	setClusterRoleBinding(clusterInstance.Spec.TargetNamespace, clusterInstance.Spec.RBAC.ServiceAccountName)
 }
 
-func InstallRBAC(cli client.Client) error {
-	if err := cli.Create(context.TODO(), &clusterRole); err != nil {
-		log.Errorf("Create ClusterRole err: %v", err)
+func (m *RBACMaintainer) Ensure() error {
+	SetRBAC(m.ClusterInstance)
+	if err := m.ensureClusterRole(); err != nil {
+		log.Errorf("ensure ClusterRole err: %v", err)
+		return err
+	}
+	if err := m.ensureServiceAccount(); err != nil {
+		log.Errorf("ensure ServiceAccount err: %v", err)
+		return err
+	}
+	if err := m.ensureClusterRoleBinding(); err != nil {
+		log.Errorf("ensure ClusterRoleBinding err: %v", err)
 		return err
 	}
 
-	if err := cli.Create(context.TODO(), &sa); err != nil {
-		log.Errorf("Create ServiceAccount err: %v", err)
-		return err
+	return nil
+}
+
+func (m *RBACMaintainer) ensureClusterRole() error {
+	key := types.NamespacedName{
+		Name: clusterRole.Name,
+	}
+	var gottenClusterRole rbacv1.ClusterRole
+	if err := m.Client.Get(context.TODO(), key, &gottenClusterRole); err != nil {
+		if errors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &clusterRole); errCreate != nil {
+				log.Errorf("Create ClusterRole err: %v", err)
+				return errCreate
+			}
+		} else {
+			log.Errorf("Get ClusterRole err: %v", err)
+			return err
+		}
+	}
+	
+	return nil
+}
+
+func (m *RBACMaintainer) ensureServiceAccount() error {
+	key := types.NamespacedName{
+		Namespace: sa.Namespace,
+		Name: sa.Name,
+	}
+	var gottenSA corev1.ServiceAccount
+	if err := m.Client.Get(context.TODO(), key, &gottenSA); err != nil {
+		if errors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &sa); errCreate != nil {
+				log.Errorf("Create ServiceAccount err: %v", errCreate)
+				return errCreate
+			}
+		} else {
+			log.Errorf("Get ServiceAccount err: %v", err)
+			return err
+		}
 	}
 
-	if err := cli.Create(context.TODO(), &clusterRoleBinding); err != nil {
-		log.Errorf("Create ClusterRoleBinding err: %v", err)
-		return err
+	return nil
+}
+
+func (m *RBACMaintainer) ensureClusterRoleBinding() error {
+	key := types.NamespacedName{
+		Name: clusterRoleBinding.Name,
+	}
+	var gottenClusterRoleBinding rbacv1.ClusterRoleBinding
+	if err := m.Client.Get(context.TODO(), key, &gottenClusterRoleBinding); err != nil {
+		if errors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &clusterRoleBinding); errCreate != nil {
+				log.Errorf("Create ClusterRoleBinding err: %v", errCreate)
+				return errCreate
+			}
+		} else {
+			log.Errorf("Get ClusterRoleBinding err: %v", err)
+			return err
+		}
 	}
 
 	return nil

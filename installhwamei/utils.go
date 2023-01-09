@@ -17,23 +17,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func EnsureTargetNamespaceExist(cli client.Client, targetNamespace string) error {
+func EnsureTargetNamespaceExist(cli client.Client, targetNamespace string) (bool, error) {
+	var reReconcile bool
 	key := types.NamespacedName{
 		Name: targetNamespace,
 	}
 	ns := corev1.Namespace{}
 	if err := cli.Get(context.TODO(), key, &ns) ; err == nil {
-		return nil
+		return reReconcile, nil
 	} else if errors.IsNotFound(err) {
 		ns.Name = targetNamespace
 		if createErr := cli.Create(context.TODO(), &ns); createErr != nil {
 			log.Errorf("Create namespace %v err", ns.Name)
-			return createErr
+			return reReconcile, createErr
 		}
-
-		return nil
+		reReconcile = true
+		return reReconcile, nil
 	} else {
-		return err
+		return reReconcile, err
 	}
 }
 
@@ -80,19 +81,25 @@ func ReadResourcesFromDir(dir string) ([][]byte, error) {
 			}
 		}
 
-		obj, _, err := syaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
+		// obj, _, err := syaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
+		// if err != nil {
+      	// log.Errorf("decode err: %v", err)
+		// 	return err
+		// }
+
+		// unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+		// if err != nil {
+      	// log.Errorf("convert err: %v", err)
+		// 	return err
+		// }
+
+		// unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
+
+		unstructuredObj, err := RawExtensionToUnstructured(rawObj)
 		if err != nil {
-      	log.Errorf("decode err: %v", err)
+			log.Errorf("RawExtensionToUnstructured err: %v", err)
 			return err
 		}
-
-		unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
-		if err != nil {
-      	log.Errorf("convert err: %v", err)
-			return err
-		}
-
-		unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
 
 		if unstructuredObj.GetKind() == "ConfigMap" {
 			unstructuredObj.SetNamespace(targetNamespace)
@@ -105,5 +112,22 @@ func ReadResourcesFromDir(dir string) ([][]byte, error) {
 	}
 
 	return nil
+}
+
+func RawExtensionToUnstructured(rawObj runtime.RawExtension) (*unstructured.Unstructured, error) {
+	obj, _, err := syaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme).Decode(rawObj.Raw, nil, nil)
+	if err != nil {
+	log.Errorf("decode err: %v", err)
+		return nil, err
+	}
+
+	unstructuredMap, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+	log.Errorf("convert err: %v", err)
+		return nil, err
+	}
+
+	unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
+	return unstructuredObj, nil
 }
   

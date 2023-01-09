@@ -17,8 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -163,9 +163,8 @@ type StorageClassSpec struct {
 type ClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
-	Phase Phase `json:"phase,omitempty"`
-
+	
+	InstalledCRDS bool `json:"installedCRDS"`
 	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
 	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
 	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`
@@ -175,12 +174,10 @@ type ClusterStatus struct {
 }
 
 type DeployStatus struct {
-	Pods []PodStatus `json:"pods"`
-	DesiredPodCount int `json:"desiredPodCount"`
-	CurrentPodCount int `json:"currentPodCount"`
-	ReadyPodCount int `json:"readyPodCount"`
-	UpToDatePodCount int `json:"upToDatePodCount"`
-	AvailablePodCount int `json:"availablePodCount"`
+	Pods []PodStatus `json:"pods,omitempty"`
+	DesiredPodCount int32 `json:"desiredPodCount"`
+	AvailablePodCount int32 `json:"availablePodCount"`
+	WorkloadType string `json:"workloadType"`
 }
 
 type PodStatus struct {
@@ -190,25 +187,30 @@ type PodStatus struct {
 }
 
 type LocalDiskManagerStatus struct {
-	Instances *DeployStatus `json:"instances"`
-	CSI *DeployStatus `json:"csi"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	CSI *DeployStatus `json:"csi,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 type LocalStorageStatus struct {
-	Instances *DeployStatus `json:"instances"`
-	CSI DeployStatus `json:"csi"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	CSI *DeployStatus `json:"csi,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 type SchedulerStatus struct {
-	Instances *DeployStatus `json:"instances"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 type EvictorStatus struct {
-	Instances *DeployStatus `json:"instances"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 type AdmissionControllerStatus struct {
-	Instances *DeployStatus `json:"instances"`
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
 }
 
 type ApiServerStatus struct {

@@ -5716,13 +5716,15 @@ spec:
             properties:
               admissionController:
                 properties:
+                  health:
+                    type: string
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5739,30 +5741,23 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
-                required:
-                - instances
                 type: object
               apiServer:
                 properties:
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5779,30 +5774,27 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
                 required:
                 - instances
                 type: object
               evictor:
                 properties:
+                  health:
+                    type: string
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5819,30 +5811,25 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
-                required:
-                - instances
                 type: object
+              installedCRDS:
+                type: boolean
               localDiskManager:
                 properties:
                   csi:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5859,25 +5846,22 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
+                  health:
+                    type: string
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5894,31 +5878,23 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
-                required:
-                - csi
-                - instances
                 type: object
               localStorage:
                 properties:
                   csi:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5935,25 +5911,22 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
+                  health:
+                    type: string
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -5970,34 +5943,25 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
-                required:
-                - csi
-                - instances
                 type: object
-              phase:
-                description: Phase is the phase of an operation
-                type: string
               scheduler:
                 properties:
+                  health:
+                    type: string
                   instances:
                     properties:
                       availablePodCount:
-                        type: integer
-                      currentPodCount:
+                        format: int32
                         type: integer
                       desiredPodCount:
+                        format: int32
                         type: integer
                       pods:
                         items:
@@ -6014,21 +5978,16 @@ spec:
                           - status
                           type: object
                         type: array
-                      readyPodCount:
-                        type: integer
-                      upToDatePodCount:
-                        type: integer
+                      workloadType:
+                        type: string
                     required:
                     - availablePodCount
-                    - currentPodCount
                     - desiredPodCount
-                    - pods
-                    - readyPodCount
-                    - upToDatePodCount
+                    - workloadType
                     type: object
-                required:
-                - instances
                 type: object
+            required:
+            - installedCRDS
             type: object
         type: object
     served: true
