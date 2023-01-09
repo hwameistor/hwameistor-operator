@@ -4,12 +4,26 @@ import (
 	"context"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+type AdmissionControllerServiceMaintainer struct {
+	Client client.Client
+	ClusterInstance *hwameistoriov1alpha1.Cluster
+}
+
+func NewAdmissionControllerServiceMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AdmissionControllerServiceMaintainer {
+	return &AdmissionControllerServiceMaintainer{
+		Client: cli,
+		ClusterInstance: clusterInstance,
+	}
+}
 
 var admissionControllerService = corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
@@ -35,10 +49,23 @@ func SetAdmissionControllerService(clusterInstance *hwameistoriov1alpha1.Cluster
 	admissionControllerService.Namespace = clusterInstance.Spec.TargetNamespace
 }
 
-func InstallAdmissionControllerService(cli client.Client) error {
-	if err := cli.Create(context.TODO(), &admissionControllerService); err != nil {
-		log.Errorf("Create Admission Controller Service err: %v", err)
-		return err
+func (m *AdmissionControllerServiceMaintainer) Ensure() error {
+	SetAdmissionControllerService(m.ClusterInstance)
+	key := types.NamespacedName{
+		Namespace: admissionControllerService.Namespace,
+		Name: admissionController.Name,
+	}
+	var gottenService corev1.Service
+	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
+		if errors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &admissionControllerService); errCreate != nil {
+				log.Errorf("Create AdmissionController Service err: %v", err)
+				return errCreate
+			}
+		} else {
+			log.Errorf("Get AdmissionController Service err: %v", err)
+			return err
+		}
 	}
 
 	return nil

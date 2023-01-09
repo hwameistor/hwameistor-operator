@@ -2,17 +2,35 @@ package localdiskmanager
 
 import (
 	"context"
+	"errors"
+	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	installhwamei "github.com/hwameistor/hwameistor-operator/installhwamei"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+type LDMCSIMaintainer struct {
+	Client client.Client
+	ClusterInstance *hwameistoriov1alpha1.Cluster
+}
+
+func NewLDMCSIMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LDMCSIMaintainer {
+	return &LDMCSIMaintainer{
+		Client: cli,
+		ClusterInstance: clusterInstance,
+	}
+}
+
 var ldmCSIControllerReplicas = int32(1)
+var ldmCSIControllerLabelSelectorKey = "app"
+var ldmCSIControllerLabelSelectorValue = "hwameistor-local-disk-csi-controller"
 
 var ldmCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -22,7 +40,7 @@ var ldmCSIController = appsv1.Deployment{
 		Replicas: &ldmCSIControllerReplicas,
 		Selector: &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				"app": "hwameistor-local-disk-csi-controller",
+				ldmCSIControllerLabelSelectorKey: ldmCSIControllerLabelSelectorValue,
 			},
 		},
 		Template: corev1.PodTemplateSpec{
@@ -105,6 +123,7 @@ var ldmCSIController = appsv1.Deployment{
 
 func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	ldmCSIController.Namespace = clusterInstance.Spec.TargetNamespace
+	ldmCSIController.OwnerReferences = append(ldmCSIController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	// ldmCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalDiskManager.CSI.Controller.Common.PriorityClassName
 	ldmCSIController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setLDMCSIControllerVolumes(clusterInstance)
@@ -142,11 +161,78 @@ func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster
 	}
 }
 
-func InstallLDMCSIController(cli client.Client) error {
-	if err := cli.Create(context.TODO(), &ldmCSIController); err != nil {
-		log.Errorf("Create LocalDiskManager CSI Controller err: %v", err)
-		return err
+func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
+	newClusterInstance := m.ClusterInstance.DeepCopy()
+	SetLDMCSIController(newClusterInstance)
+	key := types.NamespacedName{
+		Namespace: ldmCSIController.Namespace,
+		Name: ldmCSIController.Name,
+	}
+	var gottenCSIController appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gottenCSIController); err != nil {
+		if apierrors.IsNotFound(err) {
+			if errCreate := m.Client.Create(context.TODO(), &ldmCSIController); errCreate != nil {
+				log.Errorf("Create LDM CSIController err: %v", errCreate)
+				return newClusterInstance, errCreate
+			}
+			return newClusterInstance, nil
+		} else {
+			log.Errorf("Get LDM CSIController err: %v", err)
+			return newClusterInstance, err
+		}
 	}
 
-	return nil
+	var podList corev1.PodList
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmCSIController.Namespace}); err != nil {
+		log.Errorf("List pods err: %v", err)
+		return newClusterInstance, err
+	}
+
+	var podsManaged []corev1.Pod
+	for _, pod := range podList.Items {
+		if pod.Labels[ldmCSIControllerLabelSelectorKey] == ldmCSIControllerLabelSelectorValue {
+			podsManaged = append(podsManaged, pod)
+		}
+	}
+
+	if len(podsManaged) > int(gottenCSIController.Status.Replicas) {
+		podsManagedErr := errors.New("pods managed more than desired")
+		log.Errorf("err: %v", podsManagedErr)
+		return newClusterInstance, podsManagedErr
+	}
+
+	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
+	for _, pod := range podsManaged {
+		podStatus := hwameistoriov1alpha1.PodStatus{
+			Name: pod.Name,
+			Node: pod.Spec.NodeName,
+			Status: string(pod.Status.Phase),
+		}
+		podsStatus = append(podsStatus, podStatus)
+	}
+
+	csiDeployStatus := hwameistoriov1alpha1.DeployStatus{
+		Pods: podsStatus,
+		DesiredPodCount: gottenCSIController.Status.Replicas,
+		AvailablePodCount: gottenCSIController.Status.AvailableReplicas,
+		WorkloadType: "Deployment",
+	}
+
+	if newClusterInstance.Status.LocalDiskManager == nil {
+		newClusterInstance.Status.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerStatus{
+			CSI: &csiDeployStatus,
+		}
+		return newClusterInstance, nil
+	} else {
+		if newClusterInstance.Status.LocalDiskManager.CSI == nil {
+			newClusterInstance.Status.LocalDiskManager.CSI = &csiDeployStatus
+			return newClusterInstance, nil
+		} else {
+			if !reflect.DeepEqual(newClusterInstance.Status.LocalDiskManager.CSI, csiDeployStatus) {
+				newClusterInstance.Status.LocalDiskManager.CSI = &csiDeployStatus
+				return newClusterInstance, nil
+			}
+		}
+	}
+	return newClusterInstance, nil
 }

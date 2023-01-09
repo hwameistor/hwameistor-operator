@@ -18,23 +18,25 @@ package controllers
 
 import (
 	"context"
+	"reflect"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"k8s.io/apimachinery/pkg/api/errors"
 
 	log "github.com/sirupsen/logrus"
+	appsv1 "k8s.io/api/apps/v1"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/installhwamei"
-	installrbac "github.com/hwameistor/hwameistor-operator/installhwamei/rbac"
+	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
+	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
+	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
 	installldm "github.com/hwameistor/hwameistor-operator/installhwamei/localdiskmanager"
 	installls "github.com/hwameistor/hwameistor-operator/installhwamei/localstorage"
+	installrbac "github.com/hwameistor/hwameistor-operator/installhwamei/rbac"
 	installscheduler "github.com/hwameistor/hwameistor-operator/installhwamei/scheduler"
-	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
-	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
-	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
 	installstorageclass "github.com/hwameistor/hwameistor-operator/installhwamei/storageclass"
 )
 
@@ -70,110 +72,160 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	log.Infof("Cluster instance: %+v", instance)
+	newInstance := instance.DeepCopy()
 
-	switch instance.Status.Phase {
-	case hwameistoriov1alpha1.ClusterPhaseEmpty:
-		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseEnsuringTargetNamespaceExists
-		if err := r.Client.Status().Update(ctx, instance); err != nil {
+	reReconcile, err := installhwamei.EnsureTargetNamespaceExist(r.Client, newInstance.Spec.TargetNamespace)
+	if err != nil {
+		log.Errorf("Install err: %v", err)
+		return ctrl.Result{}, err
+	}
+	if reReconcile {
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	if !newInstance.Status.InstalledCRDS {
+		if err := installhwamei.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
+			log.Errorf("Install err: %v", err)
+			return ctrl.Result{}, err
+		}
+		newInstance.Status.InstalledCRDS = true
+		if err := r.Client.Status().Update(ctx, newInstance); err != nil {
 			log.Errorf("Update status err: %v", err)
 			return ctrl.Result{}, err
 		}
-	case hwameistoriov1alpha1.ClusterPhaseEnsuringTargetNamespaceExists:
-		if err := installhwamei.EnsureTargetNamespaceExist(r.Client, instance.Spec.TargetNamespace); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseToInstall
-		if err := r.Client.Status().Update(ctx, instance); err != nil {
-			log.Errorf("Update status err: %v", err)
-			return ctrl.Result{}, err
-		}
-	case hwameistoriov1alpha1.ClusterPhaseToInstall:
-		if err := installhwamei.InstallCRDs(r.Client, instance.Spec.TargetNamespace); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
+		return ctrl.Result{}, nil
+	}
 
-		installrbac.SetRBAC(instance)
-		if err := installrbac.InstallRBAC(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-		
-		installldm.SetLDMDaemonSet(instance)
-		if err := installldm.InstallLDM(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
+	rbacMaintainer := installrbac.NewRBACMaintainer(r.Client, newInstance)
+	if err := rbacMaintainer.Ensure(); err != nil {
+		log.Errorf("Ensure RBAC err: %v", err)
+		return ctrl.Result{}, err
+	}
 
-		installldm.SetLDMCSIController(instance)
-		if err := installldm.InstallLDMCSIController(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
+	ldmDaemonSetMaintainer := installldm.NewLocalDiskManagerMaintainer(r.Client, newInstance)
+	newInstance, err = ldmDaemonSetMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure LocalDiskManager DaemonSet err: %v", err)
+		return ctrl.Result{}, err
+	}
 
-		installls.SetLSDaemonSet(instance)
-		if err := installls.InstallLS(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
+	ldmCSIMaintainer := installldm.NewLDMCSIMaintainer(r.Client, newInstance)
+	newInstance, err = ldmCSIMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure LDM CSIController err: %v", err)
+		return ctrl.Result{}, err
+	}
 
-		installls.SetLSCSIController(instance)
-		if err := installls.InstallLSCSIController(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		// installscheduler.SetSchedulerConfigMap(instance)
-		if err := installscheduler.InstallSchedulerConfigMap(r.Client, instance.Spec.TargetNamespace); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		installscheduler.SetScheduler(instance)
-		if err := installscheduler.InstallScheduler(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		installadmissioncontroller.SetAdmissionController(instance)
-		if err := installadmissioncontroller.InstallAdmissionController(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		installadmissioncontroller.SetAdmissionControllerService(instance)
-		if err := installadmissioncontroller.InstallAdmissionControllerService(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		if err := installadmissioncontroller.InstallAdmissionControllerMutatingWebhookConfiguration(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		installevictor.SetEvictor(instance)
-		if err := installevictor.InstallEvictor(r.Client); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-
-		if instance.Spec.StorageClass.Enable {
-			installstorageclass.SetStorageClass(instance)
-			if err := installstorageclass.InstallStorageClass(r.Client); err != nil {
-				log.Errorf("Install err: %v", err)
-				return ctrl.Result{}, err
+	if ldm := newInstance.Status.LocalDiskManager; ldm != nil {
+		instances := ldm.Instances
+		csi := ldm.CSI
+		if (instances != nil) && (csi != nil) {
+			if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
+				newInstance.Status.LocalDiskManager.Health = "Normal"
+			} else {
+				newInstance.Status.LocalDiskManager.Health = "Abnormal"
 			}
 		}
+	}
 
-		instance.Status.Phase = hwameistoriov1alpha1.ClusterPhaseInstalled
-		if err := r.Client.Status().Update(ctx, instance); err != nil {
-			log.Errorf("Update status err: %v", err)
+	lsDaemonSetMaintainer := installls.NewLocalStorageMaintainer(r.Client, newInstance)
+	newInstance, err = lsDaemonSetMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure LocalStorage DaemonSet err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	lsCSIMaintainer := installls.NewLSCSIMaintainer(r.Client, newInstance)
+	newInstance, err = lsCSIMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure LS CSIController err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if ls := newInstance.Status.LocalStorage; ls != nil {
+		instances := ls.Instances
+		csi := ls.CSI
+		if (instances != nil) && (csi != nil) {
+			if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
+				newInstance.Status.LocalStorage.Health = "Normal"
+			} else {
+				newInstance.Status.LocalStorage.Health = "Abnormal"
+			}
 		}
-	default:
-		log.Infof("Phase to do nothing: %v", instance.Status.Phase)
+	}
+
+	admissionControllerMaintainer := installadmissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance)
+	newInstance, err = admissionControllerMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure AdmissionController err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if admissionController := newInstance.Status.AdmissionController; admissionController != nil {
+		instances := admissionController.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.AdmissionController.Health = "Normal"
+			} else {
+				newInstance.Status.AdmissionController.Health = "Abnormal"
+			}
+		}
+	}
+
+	admissionControllerServiceMaintainer := installadmissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance)
+	if err := admissionControllerServiceMaintainer.Ensure(); err != nil {
+		log.Errorf("Ensure AdmissionController Service err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	schedulerConfigMapMaintainer := installscheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance)
+	if err := schedulerConfigMapMaintainer.Ensure(); err != nil {
+		log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	schedulerMaintainer := installscheduler.NewSchedulerMaintainer(r.Client, newInstance)
+	newInstance, err = schedulerMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure Scheduler err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if scheduler := newInstance.Status.AdmissionController; scheduler != nil {
+		instances := scheduler.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.Scheduler.Health = "Normal"
+			} else {
+				newInstance.Status.Scheduler.Health = "Abnormal"
+			}
+		}
+	}
+
+	evictorMaintainer := installevictor.NewEvictorMaintainer(r.Client, newInstance)
+	newInstance, err = evictorMaintainer.Ensure()
+	if err != nil {
+		log.Errorf("Ensure Evictor err: %v", err)
+		return ctrl.Result{}, err
+	}
+
+	if evictor := newInstance.Status.AdmissionController; evictor != nil {
+		instances := evictor.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.Evictor.Health = "Normal"
+			} else {
+				newInstance.Status.Evictor.Health = "Abnormal"
+			}
+		}
+	}
+
+	if instance.Spec.StorageClass.Enable {
+		storageClassMaintainer := installstorageclass.NewStorageClassMaintainer(r.Client, newInstance)
+		if err := storageClassMaintainer.Ensure(); err != nil {
+			log.Errorf("Ensure StorageClass err: %v", err)
+			return ctrl.Result{}, err
+		}
 	}
 
 	if instance.Spec.DRBD.Enable {
@@ -184,7 +236,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	log.Infof("Instance phase: %v",instance.Status.Phase)
+	if reflect.DeepEqual(instance, newInstance) {
+		log.Infof("No need to update status")
+	} else {
+		if err := r.Client.Status().Update(ctx, newInstance); err != nil {
+			log.Errorf("Update status err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -193,5 +252,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&hwameistoriov1alpha1.Cluster{}).
+		Owns(&appsv1.DaemonSet{}).
+		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
