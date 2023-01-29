@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	installhwamei "github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -21,7 +21,14 @@ type LocalDiskManagerMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewLocalDiskManagerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalDiskManagerMaintainer {
+// func NewLocalDiskManagerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalDiskManagerMaintainer {
+// 	return &LocalDiskManagerMaintainer{
+// 		Client: cli,
+// 		ClusterInstance: clusterInstance,
+// 	}
+// }
+
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalDiskManagerMaintainer {
 	return &LocalDiskManagerMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
@@ -61,7 +68,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						},
 						ImagePullPolicy: "IfNotPresent",
 						SecurityContext: &corev1.SecurityContext{
-							Privileged: &installhwamei.SecurityContextPrivilegedTrue,
+							Privileged: &install.SecurityContextPrivilegedTrue,
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
@@ -125,7 +132,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/run/udev",
-								Type: &installhwamei.HostPathDirectory,
+								Type: &install.HostPathDirectory,
 							},
 						},
 					},
@@ -134,7 +141,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/proc",
-								Type: &installhwamei.HostPathDirectory,
+								Type: &install.HostPathDirectory,
 							},
 						},
 					},
@@ -143,7 +150,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/dev",
-								Type: &installhwamei.HostPathDirectory,
+								Type: &install.HostPathDirectory,
 							},
 						},
 					},
@@ -167,7 +174,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -177,7 +184,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins_registry/",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -187,7 +194,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -197,7 +204,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/pods",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -221,13 +228,13 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			pluginDirVolumeMount := corev1.VolumeMount{
 				Name: "plugin-dir",
 				MountPath: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins",
-				MountPropagation: &installhwamei.MountPropagationBidirectional,
+				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, pluginDirVolumeMount)
 			podsMountDirVolumeMount := corev1.VolumeMount{
 				Name: "pods-mount-dir",
 				MountPath: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/pods",
-				MountPropagation: &installhwamei.MountPropagationBidirectional,
+				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, podsMountDirVolumeMount)
 			container.Env = append(container.Env, corev1.EnvVar{

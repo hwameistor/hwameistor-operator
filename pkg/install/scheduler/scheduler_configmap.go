@@ -7,7 +7,7 @@ import (
 	"os"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	"github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -36,13 +36,13 @@ func InstallSchedulerConfigMap(cli client.Client, targetNamespace string) error 
 		filePath = "/scheduler-config.yaml"
 	}
 
-	fileBytes, err := installhwamei.GetFileBytes(filePath)
+	fileBytes, err := install.GetFileBytes(filePath)
 	if err != nil {
 		log.Errorf("GetFileBytes err: %v", err)
 		return err
 	}
 
-	if err := installhwamei.Install(cli, fileBytes, targetNamespace); err != nil {
+	if err := install.Install(cli, fileBytes, targetNamespace); err != nil {
 		log.Errorf("Create scheduler configmap err: %v", err)
 		return err
 	}
@@ -56,7 +56,7 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 		filePath = "/scheduler-config.yaml"
 	}
 
-	fileBytes, err := installhwamei.GetFileBytes(filePath)
+	fileBytes, err := install.GetFileBytes(filePath)
 	if err != nil {
 		log.Errorf("GetFileBytes err: %v", err)
 		return err
@@ -77,7 +77,7 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 			}
 		}
 
-		cmUnstructured, err = installhwamei.RawExtensionToUnstructured(rawObj)
+		cmUnstructured, err = install.RawExtensionToUnstructured(rawObj)
 		if err != nil {
 			log.Errorf("RawExtensionToUnstructured err: %v", err)
 			return err

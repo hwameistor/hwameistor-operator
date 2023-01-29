@@ -1,4 +1,4 @@
-package installhwamei
+package install
 
 import (
 	"bytes"

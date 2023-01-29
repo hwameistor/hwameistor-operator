@@ -1,4 +1,4 @@
-package localstorage
+package lscsicontroller
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	"github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -21,7 +21,7 @@ type LSCSIMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewLSCSIMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LSCSIMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LSCSIMaintainer {
 	return &LSCSIMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
@@ -146,7 +146,7 @@ var lsCSIController = appsv1.Deployment{
 				},
 				DNSPolicy: corev1.DNSClusterFirst,
 				RestartPolicy: corev1.RestartPolicyAlways,
-				TerminationGracePeriodSeconds: &installhwamei.TerminationGracePeriodSeconds30s,
+				TerminationGracePeriodSeconds: &install.TerminationGracePeriodSeconds30s,
 				Tolerations: []corev1.Toleration{
 					{
 						Key: "CriticalAddonsOnly",
@@ -190,7 +190,7 @@ func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}

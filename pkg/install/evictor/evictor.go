@@ -20,7 +20,7 @@ type EvictorMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewEvictorMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *EvictorMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *EvictorMaintainer {
 	return &EvictorMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,

@@ -18,7 +18,7 @@ type RBACMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewRBACMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *RBACMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *RBACMaintainer {
 	return &RBACMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,

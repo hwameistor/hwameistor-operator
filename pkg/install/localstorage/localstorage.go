@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	"github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -21,7 +21,7 @@ type LocalStorageMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewLocalStorageMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalStorageMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalStorageMaintainer {
 	return &LocalStorageMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
@@ -181,7 +181,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 									"SYS_ADMIN",
 								},
 							},
-							Privileged: &installhwamei.SecurityContextPrivilegedTrue,
+							Privileged: &install.SecurityContextPrivilegedTrue,
 						},
 						TerminationMessagePath: "/dev/termination-log",
 						TerminationMessagePolicy: "File",
@@ -193,17 +193,17 @@ var lsDaemonSet = appsv1.DaemonSet{
 							{
 								Name: "host-etc-drbd",
 								MountPath: "/etc/drbd.d",
-								MountPropagation: &installhwamei.MountPropagationBidirectional,
+								MountPropagation: &install.MountPropagationBidirectional,
 							},
 							{
 								Name: "ssh-dir",
 								MountPath: "/root/.ssh",
-								MountPropagation: &installhwamei.MountPropagationBidirectional,
+								MountPropagation: &install.MountPropagationBidirectional,
 							},
 							{
 								Name: "host-mnt",
 								MountPath: "/mnt",
-								MountPropagation: &installhwamei.MountPropagationBidirectional,
+								MountPropagation: &install.MountPropagationBidirectional,
 							},
 						},
 					},
@@ -212,14 +212,14 @@ var lsDaemonSet = appsv1.DaemonSet{
 				HostPID: true,
 				RestartPolicy: corev1.RestartPolicyAlways,
 				SchedulerName: "default-scheduler",
-				TerminationGracePeriodSeconds: &installhwamei.TerminationGracePeriodSeconds30s,
+				TerminationGracePeriodSeconds: &install.TerminationGracePeriodSeconds30s,
 				Volumes: []corev1.Volume{
 					{
 						Name: "host-dev",
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/dev",
-								Type: &installhwamei.HostPathTypeUnset,
+								Type: &install.HostPathTypeUnset,
 							},
 						},
 					},
@@ -228,7 +228,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/etc/drbd.d",
-								Type: &installhwamei.HostPathDirectoryOrCreate,
+								Type: &install.HostPathDirectoryOrCreate,
 							},
 						},
 					},
@@ -237,7 +237,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/root/.ssh",
-								Type: &installhwamei.HostPathDirectoryOrCreate,
+								Type: &install.HostPathDirectoryOrCreate,
 							},
 						},
 					},
@@ -246,7 +246,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/mnt",
-								Type: &installhwamei.HostPathDirectoryOrCreate,
+								Type: &install.HostPathDirectoryOrCreate,
 							},
 						},
 					},
@@ -280,7 +280,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -290,7 +290,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins",
-				Type: &installhwamei.HostPathDirectory,
+				Type: &install.HostPathDirectory,
 			},
 		},
 	}
@@ -300,7 +300,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins_registry/",
-				Type: &installhwamei.HostPathDirectory,
+				Type: &install.HostPathDirectory,
 			},
 		},
 	}
@@ -310,7 +310,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
 				Path: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/pods",
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 			},
 		},
 	}
@@ -347,7 +347,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			pluginDirVolumeMount := corev1.VolumeMount{
 				Name: "plugin-dir",
 				MountPath: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins",
-				MountPropagation: &installhwamei.MountPropagationBidirectional,
+				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, pluginDirVolumeMount)
 			registrationDirVolumeMount := corev1.VolumeMount{
@@ -358,7 +358,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			podsMountDirVolumeMount := corev1.VolumeMount{
 				Name: "pods-mount-dir",
 				MountPath: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/pods",
-				MountPropagation: &installhwamei.MountPropagationBidirectional,
+				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, podsMountDirVolumeMount)
 		}

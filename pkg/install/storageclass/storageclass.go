@@ -17,7 +17,7 @@ type StorageClassMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewStorageClassMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *StorageClassMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *StorageClassMaintainer {
 	return &StorageClassMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
