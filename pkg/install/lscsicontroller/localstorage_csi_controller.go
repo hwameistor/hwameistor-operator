@@ -274,6 +274,7 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		DesiredPodCount: gottenCSIController.Status.Replicas,
 		AvailablePodCount: gottenCSIController.Status.AvailableReplicas,
 		WorkloadType: "Deployment",
+		WorkloadName: gottenCSIController.Name,
 	}
 
 	if newClusterInstance.Status.LocalStorage == nil {

@@ -188,6 +188,7 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		DesiredPodCount: gottenAdmissionController.Status.Replicas,
 		AvailablePodCount: gottenAdmissionController.Status.AvailableReplicas,
 		WorkloadType: "Deployment",
+		WorkloadName: gottenAdmissionController.Name,
 	}
 
 	if newClusterInstance.Status.AdmissionController == nil {

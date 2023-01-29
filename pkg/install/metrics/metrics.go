@@ -149,6 +149,7 @@ func (m *MetricsMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		DesiredPodCount: gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
 		WorkloadType: "Deployment",
+		WorkloadName: gotten.Name,
 	}
 
 	if newClusterInstance.Status.Metrics == nil {
