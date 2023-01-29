@@ -345,6 +345,7 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 		DesiredPodCount: gottenDS.Status.DesiredNumberScheduled,
 		AvailablePodCount: gottenDS.Status.NumberAvailable,
 		WorkloadType: "DaemonSet",
+		WorkloadName: gottenDS.Name,
 	}
 
 	if newClusterInstance.Status.LocalDiskManager == nil {

@@ -415,6 +415,7 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 		DesiredPodCount: gottenDS.Status.DesiredNumberScheduled,
 		AvailablePodCount: gottenDS.Status.NumberAvailable,
 		WorkloadType: "DaemonSet",
+		WorkloadName: gottenDS.Name,
 	}
 
 	if newClusterInstance.Status.LocalStorage == nil {

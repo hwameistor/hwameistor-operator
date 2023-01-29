@@ -6368,11 +6368,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6403,11 +6406,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6438,11 +6444,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6473,11 +6482,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                   health:
@@ -6505,11 +6517,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6538,11 +6553,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                   health:
@@ -6570,11 +6588,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6605,11 +6626,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
@@ -6640,11 +6664,14 @@ spec:
                           - status
                           type: object
                         type: array
+                      workloadName:
+                        type: string
                       workloadType:
                         type: string
                     required:
                     - availablePodCount
                     - desiredPodCount
+                    - workloadName
                     - workloadType
                     type: object
                 type: object
