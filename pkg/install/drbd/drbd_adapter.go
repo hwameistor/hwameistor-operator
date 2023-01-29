@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -144,7 +144,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 									"/pkgs/entrypoint.adapter.sh",
 								},
 								SecurityContext: &corev1.SecurityContext{
-									Privileged: &installhwamei.SecurityContextPrivilegedTrue,
+									Privileged: &install.SecurityContextPrivilegedTrue,
 								},
 								Env: []corev1.EnvVar{
 									{
@@ -231,7 +231,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/os-release",
-										Type: &installhwamei.HostPathFileOrCreate,
+										Type: &install.HostPathFileOrCreate,
 									},
 								},
 							},
@@ -240,7 +240,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/centos-release",
-										Type: &installhwamei.HostPathFileOrCreate,
+										Type: &install.HostPathFileOrCreate,
 									},
 								},
 							},
@@ -273,7 +273,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/drbd.conf",
-										Type: &installhwamei.HostPathFileOrCreate,
+										Type: &install.HostPathFileOrCreate,
 									},
 								},
 							},
@@ -282,7 +282,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/drbd.d",
-										Type: &installhwamei.HostPathDirectoryOrCreate,
+										Type: &install.HostPathDirectoryOrCreate,
 									},
 								},
 							},
@@ -291,7 +291,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/var/lib/drbd",
-										Type: &installhwamei.HostPathDirectoryOrCreate,
+										Type: &install.HostPathDirectoryOrCreate,
 									},
 								},
 							},
@@ -300,7 +300,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/modules-load.d",
-										Type: &installhwamei.HostPathDirectoryOrCreate,
+										Type: &install.HostPathDirectoryOrCreate,
 									},
 								},
 							},
@@ -309,7 +309,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 								VolumeSource: corev1.VolumeSource{
 									HostPath: &corev1.HostPathVolumeSource{
 										Path: "/etc/sysconfig/modules",
-										Type: &installhwamei.HostPathDirectoryOrCreate,
+										Type: &install.HostPathDirectoryOrCreate,
 									},
 								},
 							},

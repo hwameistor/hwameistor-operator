@@ -1,4 +1,4 @@
-package localdiskmanager
+package ldmcsicontroller
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	installhwamei "github.com/hwameistor/hwameistor-operator/installhwamei"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -21,7 +21,7 @@ type LDMCSIMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
-func NewLDMCSIMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LDMCSIMaintainer {
+func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LDMCSIMaintainer {
 	return &LDMCSIMaintainer{
 		Client: cli,
 		ClusterInstance: clusterInstance,
@@ -135,7 +135,7 @@ func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		Name: "socket-dir",
 		VolumeSource: corev1.VolumeSource{
 			HostPath: &corev1.HostPathVolumeSource{
-				Type: &installhwamei.HostPathDirectoryOrCreate,
+				Type: &install.HostPathDirectoryOrCreate,
 				Path: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io",
 			},
 		},

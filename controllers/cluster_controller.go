@@ -29,17 +29,19 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	"github.com/hwameistor/hwameistor-operator/installhwamei"
-	installadmissioncontroller "github.com/hwameistor/hwameistor-operator/installhwamei/admissioncontroller"
-	installapiserver "github.com/hwameistor/hwameistor-operator/installhwamei/apiserver"
-	installmetrics "github.com/hwameistor/hwameistor-operator/installhwamei/metrics"
-	installdrbd "github.com/hwameistor/hwameistor-operator/installhwamei/drbd"
-	installevictor "github.com/hwameistor/hwameistor-operator/installhwamei/evictor"
-	installldm "github.com/hwameistor/hwameistor-operator/installhwamei/localdiskmanager"
-	installls "github.com/hwameistor/hwameistor-operator/installhwamei/localstorage"
-	installrbac "github.com/hwameistor/hwameistor-operator/installhwamei/rbac"
-	installscheduler "github.com/hwameistor/hwameistor-operator/installhwamei/scheduler"
-	installstorageclass "github.com/hwameistor/hwameistor-operator/installhwamei/storageclass"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/admissioncontroller"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/apiserver"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/metrics"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/drbd"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/evictor"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -76,7 +78,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	newInstance := instance.DeepCopy()
 
-	reReconcile, err := installhwamei.EnsureTargetNamespaceExist(r.Client, newInstance.Spec.TargetNamespace)
+	reReconcile, err := install.EnsureTargetNamespaceExist(r.Client, newInstance.Spec.TargetNamespace)
 	if err != nil {
 		log.Errorf("Install err: %v", err)
 		return ctrl.Result{}, err
@@ -86,7 +88,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if !newInstance.Status.InstalledCRDS {
-		if err := installhwamei.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
+		if err := install.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
 			log.Errorf("Install err: %v", err)
 			return ctrl.Result{}, err
 		}
@@ -98,21 +100,18 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	rbacMaintainer := installrbac.NewRBACMaintainer(r.Client, newInstance)
-	if err := rbacMaintainer.Ensure(); err != nil {
+	if err := rbac.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure RBAC err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	ldmDaemonSetMaintainer := installldm.NewLocalDiskManagerMaintainer(r.Client, newInstance)
-	newInstance, err = ldmDaemonSetMaintainer.Ensure()
+	newInstance, err = localdiskmanager.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure LocalDiskManager DaemonSet err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	ldmCSIMaintainer := installldm.NewLDMCSIMaintainer(r.Client, newInstance)
-	newInstance, err = ldmCSIMaintainer.Ensure()
+	newInstance, err = ldmcsicontroller.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure LDM CSIController err: %v", err)
 		return ctrl.Result{}, err
@@ -130,15 +129,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	lsDaemonSetMaintainer := installls.NewLocalStorageMaintainer(r.Client, newInstance)
-	newInstance, err = lsDaemonSetMaintainer.Ensure()
+	newInstance, err = localstorage.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure LocalStorage DaemonSet err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	lsCSIMaintainer := installls.NewLSCSIMaintainer(r.Client, newInstance)
-	newInstance, err = lsCSIMaintainer.Ensure()
+	newInstance, err = lscsicontroller.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure LS CSIController err: %v", err)
 		return ctrl.Result{}, err
@@ -156,8 +153,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	admissionControllerMaintainer := installadmissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance)
-	newInstance, err = admissionControllerMaintainer.Ensure()
+	newInstance, err =  admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure AdmissionController err: %v", err)
 		return ctrl.Result{}, err
@@ -174,20 +170,17 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	admissionControllerServiceMaintainer := installadmissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance)
-	if err := admissionControllerServiceMaintainer.Ensure(); err != nil {
+	if err := admissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure AdmissionController Service err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	schedulerConfigMapMaintainer := installscheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance)
-	if err := schedulerConfigMapMaintainer.Ensure(); err != nil {
+	if err := scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	schedulerMaintainer := installscheduler.NewSchedulerMaintainer(r.Client, newInstance)
-	newInstance, err = schedulerMaintainer.Ensure()
+	newInstance, err = scheduler.NewSchedulerMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure Scheduler err: %v", err)
 		return ctrl.Result{}, err
@@ -204,8 +197,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	evictorMaintainer := installevictor.NewEvictorMaintainer(r.Client, newInstance)
-	newInstance, err = evictorMaintainer.Ensure()
+	newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure Evictor err: %v", err)
 		return ctrl.Result{}, err
@@ -222,8 +214,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	apiServerMaintainer := installapiserver.NewApiServerMaintainer(r.Client, newInstance)
-	newInstance, err = apiServerMaintainer.Ensure()
+	newInstance, err = apiserver.NewApiServerMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure ApiServer err: %v", err)
 		return ctrl.Result{}, err
@@ -240,14 +231,12 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	apiServerServiceMaintainer := installapiserver.NewApiServerServiceMaintainer(r.Client, newInstance)
-	if err := apiServerServiceMaintainer.Ensure(); err != nil {
+	if err := apiserver.NewApiServerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure ApiServer Service err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	metricsMaintainer := installmetrics.NewMetricsMaintainer(r.Client, newInstance)
-	newInstance, err = metricsMaintainer.Ensure()
+	newInstance, err = metrics.NewMetricsMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure Metrics Collector err: %v", err)
 		return ctrl.Result{}, err
@@ -264,23 +253,21 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	metricsServiceMaintainer := installmetrics.NewMetricsServiceMaintainer(r.Client, newInstance)
-	if err := metricsServiceMaintainer.Ensure(); err != nil {
+	if err := metrics.NewMetricsServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure Metrics Service err: %v", err)
 		return ctrl.Result{}, err
 	}
 
 	if instance.Spec.StorageClass.Enable {
-		storageClassMaintainer := installstorageclass.NewStorageClassMaintainer(r.Client, newInstance)
-		if err := storageClassMaintainer.Ensure(); err != nil {
+		if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
 			log.Errorf("Ensure StorageClass err: %v", err)
 			return ctrl.Result{}, err
 		}
 	}
 
 	if instance.Spec.DRBD.Enable {
-		installdrbd.HandelDRBDConfigs(instance)
-		if err := installdrbd.CreateDRBDAdapter(r.Client); err != nil {
+		drbd.HandelDRBDConfigs(instance)
+		if err := drbd.CreateDRBDAdapter(r.Client); err != nil {
 			log.Errorf("Create DRBD Adapter err: %v", err)
 			return ctrl.Result{}, err
 		}
