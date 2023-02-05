@@ -30,6 +30,15 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 
 var lsDaemonSetLabelSelectorKey = "app"
 var lsDaemonSetLabelSelectorValue = "hwameistor-local-storage"
+var defaultKubeletRootDir = "/var/lib/kubelet"
+var defaultLSDaemonsetImageRegistry = "ghcr.m.daocloud.io"
+var defaultLSDaemonsetImageRepository = "hwameistor/local-storage"
+var defaultLSDaemonsetImageTag = "v0.7.1"
+var defaultLSDaemonsetCSIRegistrarImageRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLSDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver-registrar"
+var defaultLSDaemonsetCSIRegistrarImageTag = "v2.5.0"
+var defaultRCloneImageRepository = "rclone/rclone"
+var defaultRCloneImageTag = "1.53.2"
 
 var lsDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -339,7 +348,8 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			rcloneImageSpec := clusterInstance.Spec.LocalStorage.Member.RcloneImage
 			container.Env = append(container.Env, corev1.EnvVar{
 				Name: "MIGRAGE_RCLONE_IMAGE",
-				Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
+				// Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
+				Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 			})
 			imageSpec := clusterInstance.Spec.LocalStorage.Member.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" +imageSpec.Tag
@@ -435,4 +445,57 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillLSDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.LocalStorage == nil {
+		clusterInstance.Spec.LocalStorage = &hwameistoriov1alpha1.LocalStorageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.KubeletRootDir == "" {
+		clusterInstance.Spec.LocalStorage.KubeletRootDir = defaultKubeletRootDir
+	}
+	if clusterInstance.Spec.LocalStorage.Member == nil {
+		clusterInstance.Spec.LocalStorage.Member = &hwameistoriov1alpha1.MemberSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.Member.Image == nil {
+		clusterInstance.Spec.LocalStorage.Member.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.Member.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.Member.Image.Registry = defaultLSDaemonsetImageRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.Member.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.Member.Image.Repository = defaultLSDaemonsetImageRepository
+	}
+	if clusterInstance.Spec.LocalStorage.Member.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.Member.Image.Tag = defaultLSDaemonsetImageTag
+	}
+	if clusterInstance.Spec.LocalStorage.Member.RcloneImage == nil {
+		clusterInstance.Spec.LocalStorage.Member.RcloneImage = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.Member.RcloneImage.Repository == "" {
+		clusterInstance.Spec.LocalStorage.Member.RcloneImage.Repository = defaultRCloneImageRepository
+	}
+	if clusterInstance.Spec.LocalStorage.Member.RcloneImage.Tag == "" {
+		clusterInstance.Spec.LocalStorage.Member.RcloneImage.Tag = defaultRCloneImageTag
+	}
+	if clusterInstance.Spec.LocalStorage.CSI == nil {
+		clusterInstance.Spec.LocalStorage.CSI = &hwameistoriov1alpha1.CSISpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Registrar == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Registrar = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Registrar.Image == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Registrar.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Registry = defaultLSDaemonsetCSIRegistrarImageRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Repository = defaultLSDaemonsetCSIRegistrarImageRepository
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Registrar.Image.Tag = defaultLSDaemonsetCSIRegistrarImageTag
+	}
+
+	return clusterInstance
 }

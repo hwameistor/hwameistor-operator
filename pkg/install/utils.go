@@ -17,8 +17,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var defaultTargetNamespace = "hwameistor"
+
 func EnsureTargetNamespaceExist(cli client.Client, targetNamespace string) (bool, error) {
 	var reReconcile bool
+	if targetNamespace == "" {
+		targetNamespace = defaultTargetNamespace
+	}
 	key := types.NamespacedName{
 		Name: targetNamespace,
 	}

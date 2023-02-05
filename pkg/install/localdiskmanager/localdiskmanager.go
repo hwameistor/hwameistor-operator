@@ -37,6 +37,13 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 
 var ldmDaemonSetLabelSelectorKey = "app"
 var ldmDaemonSetLabelSelectorValue = "hwameistor-local-disk-manager"
+var defaultKubeletRootDir = "/var/lib/kubelet"
+var defaultLDMDaemonsetImageRegistry = "ghcr.m.daocloud.io"
+var defaultLDMDaemonsetImageRepository = "hwameistor/local-disk-manager"
+var defaultLDMDaemonsetImageTag = "v0.7.1"
+var defaultLDMDaemonsetCSIRegistrarImageRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver-registrar"
+var defaultLDMDaemonsetCSIRegistrarImageTag = "v2.5.0"
 
 var ldmDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -163,9 +170,26 @@ var ldmDaemonSet = appsv1.DaemonSet{
 func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	ldmDaemonSet.OwnerReferences = append(ldmDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	ldmDaemonSet.Namespace = clusterInstance.Spec.TargetNamespace
-	ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setLDMDaemonSetVolumes(clusterInstance)
-	setLDMDaemonSetContainers(clusterInstance)
+
+	newClusterInstance := clusterInstance.DeepCopy()
+	if newClusterInstance.Spec.LocalDiskManager == nil {
+		newClusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}
+	}
+
+	if newClusterInstance.Spec.RBAC.ServiceAccountName == "" {
+		ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = "hwameistor-admin"
+	} else {
+		ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	}
+
+	// ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	// setLDMDaemonSetVolumes(clusterInstance)
+	// if newClusterInstance.Spec.LocalDiskManager.KubeletRootDir == "" {
+	// 	newClusterInstance.Spec.LocalDiskManager.KubeletRootDir = defaultKubeletRootDir
+	// }
+	setLDMDaemonSetVolumes(newClusterInstance)
+	// setLDMDaemonSetContainers(clusterInstance)
+	setLDMDaemonSetContainers(newClusterInstance)
 }
 
 func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
@@ -212,12 +236,31 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 }
 
 func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
+	// if clusterInstance.Spec.LocalDiskManager.Manager == nil {
+	// 	clusterInstance.Spec.LocalDiskManager.Manager = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	// }
+	// if clusterInstance.Spec.LocalDiskManager.CSI == nil {
+	// 	clusterInstance.Spec.LocalDiskManager.CSI = &hwameistoriov1alpha1.CSISpec{}
+	// }
+
 	for i, container := range ldmDaemonSet.Spec.Template.Spec.Containers {
 		if container.Name == "manager" {
 			if resources := clusterInstance.Spec.LocalDiskManager.Manager.Resources; resources != nil {
 				container.Resources = *resources
 			}
+			// if clusterInstance.Spec.LocalDiskManager.Manager.Image == nil {
+			// 	clusterInstance.Spec.LocalDiskManager.Manager.Image = &hwameistoriov1alpha1.ImageSpec{}
+			// }
 			imageSpec := clusterInstance.Spec.LocalDiskManager.Manager.Image
+			// if imageSpec.Registry == "" {
+			// 	imageSpec.Registry = defaultLDMDaemonsetImageRegistry
+			// }
+			// if imageSpec.Repository == "" {
+			// 	imageSpec.Repository = defaultLDMDaemonsetImageRepository
+			// }
+			// if imageSpec.Tag == "" {
+			// 	imageSpec.Tag = defaultLDMDaemonsetImageTag
+			// }
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 			container.Args = append(container.Args, "--csi-enable=" + strconv.FormatBool(clusterInstance.Spec.LocalDiskManager.CSI.Enable))
 			registrationDirVolumeMount := corev1.VolumeMount{
@@ -246,7 +289,22 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	}
 
 	if clusterInstance.Spec.LocalDiskManager.CSI.Enable {
+		// if clusterInstance.Spec.LocalDiskManager.CSI.Registrar == nil {
+		// 	clusterInstance.Spec.LocalDiskManager.CSI.Registrar = &hwameistoriov1alpha1.ContainerCommonSpec{}
+		// }
+		// if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image == nil {
+		// 	clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image = &hwameistoriov1alpha1.ImageSpec{}
+		// }
 		imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image
+		// if imageSpec.Registry == "" {
+		// 	imageSpec.Registry = defaultLDMDaemonsetCSIRegistrarImageRegistry
+		// }
+		// if imageSpec.Repository == "" {
+		// 	imageSpec.Repository = defaultLDMDaemonsetCSIRegistrarImageRepository
+		// }
+		// if imageSpec.Tag == "" {
+		// 	imageSpec.Tag = defaultLDMDaemonsetCSIRegistrarImageTag
+		// }
 		container := corev1.Container{
 			Name: "registrar",
 			Image: imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag,
@@ -365,4 +423,50 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillLDMDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.LocalDiskManager == nil {
+		clusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.KubeletRootDir == "" {
+		clusterInstance.Spec.LocalDiskManager.KubeletRootDir = defaultKubeletRootDir
+	}
+	if clusterInstance.Spec.LocalDiskManager.Manager == nil {
+		clusterInstance.Spec.LocalDiskManager.Manager = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.Manager.Image == nil {
+		clusterInstance.Spec.LocalDiskManager.Manager.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.Manager.Image.Registry == "" {
+		clusterInstance.Spec.LocalDiskManager.Manager.Image.Registry = defaultLDMDaemonsetImageRegistry
+	}
+	if clusterInstance.Spec.LocalDiskManager.Manager.Image.Repository == "" {
+		clusterInstance.Spec.LocalDiskManager.Manager.Image.Repository = defaultLDMDaemonsetImageRepository
+	}
+	if clusterInstance.Spec.LocalDiskManager.Manager.Image.Tag == "" {
+		clusterInstance.Spec.LocalDiskManager.Manager.Image.Tag = defaultLDMDaemonsetImageTag
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI = &hwameistoriov1alpha1.CSISpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Enable {
+		if clusterInstance.Spec.LocalDiskManager.CSI.Registrar == nil {
+			clusterInstance.Spec.LocalDiskManager.CSI.Registrar = &hwameistoriov1alpha1.ContainerCommonSpec{}
+		}
+		if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image == nil {
+			clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image = &hwameistoriov1alpha1.ImageSpec{}
+		}
+		if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Registry == "" {
+			clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Registry = defaultLDMDaemonsetCSIRegistrarImageRegistry
+		}
+		if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Repository == "" {
+			clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Repository = defaultLDMDaemonsetCSIRegistrarImageRepository
+		}
+		if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Tag == "" {
+			clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Tag = defaultLDMDaemonsetCSIRegistrarImageTag
+		}
+	}
+
+	return clusterInstance
 }

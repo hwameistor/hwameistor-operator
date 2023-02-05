@@ -30,6 +30,17 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 
 var lsCSIControllerLabelSelectorKey = "app"
 var lsCSIControllerLabelSelectorValue =  "hwameistor-local-storage-csi-controller"
+var defaultKubeletRootDir = "/var/lib/kubelet"
+var defaultLSCSIControllerReplicas = int32(1)
+var defaultLSCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLSCSIProvisionerRepository = "sig-storage/csi-provisioner"
+var defaultLSCSIProvisionerTag = "v2.0.3"
+var defaultLSCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLSCSIAttacherRepository = "sig-storage/csi-attacher"
+var defaultLSCSIAttacherTag = "v3.0.1"
+var defaultLSCSIResizerRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLSCSIResizerRepository = "sig-storage/csi-resizer"
+var defaultLSCSIResizerTag = "v1.0.1"
 
 var lsCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -294,4 +305,69 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillLSCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.LocalStorage == nil {
+		clusterInstance.Spec.LocalStorage = &hwameistoriov1alpha1.LocalStorageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.KubeletRootDir == "" {
+		clusterInstance.Spec.LocalStorage.KubeletRootDir = defaultKubeletRootDir
+	}
+	if clusterInstance.Spec.LocalStorage.CSI == nil {
+		clusterInstance.Spec.LocalStorage.CSI = &hwameistoriov1alpha1.CSISpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller = &hwameistoriov1alpha1.CSIControllerSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Replicas == 0 {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Replicas = defaultLSCSIControllerReplicas
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Registry = defaultLSCSIProvisionerRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Repository = defaultLSCSIProvisionerRepository
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image.Tag = defaultLSCSIProvisionerTag
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Registry = defaultLSCSIAttacherRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Repository = defaultLSCSIAttacherRepository
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Tag = defaultLSCSIAttacherTag
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Registry = defaultLSCSIResizerRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Repository = defaultLSCSIResizerRepository
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag = defaultLSCSIResizerTag
+	}
+
+	return clusterInstance
 }

@@ -30,6 +30,9 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 var replicas = int32(1)
 var evictorLabelSelectorKey = "app"
 var evictorLabelSelectorValue = "hwameistor-volume-evictor"
+var defaultEvictorImageRegistry = "ghcr.m.daocloud.io"
+var defaultEvictorImageRepository = "hwameistor/evictor"
+var defaultEvictorImageTag = "v0.7.1"
 
 var evictorDeployment = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -159,4 +162,27 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillEvictorSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.Evictor == nil {
+		clusterInstance.Spec.Evictor = &hwameistoriov1alpha1.EvictorSpec{}
+	}
+	if clusterInstance.Spec.Evictor.Evictor == nil {
+		clusterInstance.Spec.Evictor.Evictor = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.Evictor.Evictor.Image == nil {
+		clusterInstance.Spec.Evictor.Evictor.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.Evictor.Evictor.Image.Registry == "" {
+		clusterInstance.Spec.Evictor.Evictor.Image.Registry = defaultEvictorImageRegistry
+	}
+	if clusterInstance.Spec.Evictor.Evictor.Image.Repository == "" {
+		clusterInstance.Spec.Evictor.Evictor.Image.Repository = defaultEvictorImageRepository
+	}
+	if clusterInstance.Spec.Evictor.Evictor.Image.Tag == "" {
+		clusterInstance.Spec.Evictor.Evictor.Image.Tag = defaultEvictorImageTag
+	}
+
+	return clusterInstance
 }

@@ -29,6 +29,10 @@ func NewApiServerMaintainer(cli client.Client, clusterInstance *hwameistoriov1al
 
 var apiServerLabelSelectorKey = "app"
 var apiServerLabelSelectorValue = "hwameistor-apiserver"
+var defaultApiServerReplicas = int32(1)
+var defaultApiServerImageRegistry = "ghcr.m.daocloud.io"
+var defaultApiServerImageRepository = "hwameistor/apiserver"
+var defaultApiServerImageTag = "v0.7.1"
 
 var apiServer = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -159,4 +163,30 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillApiServerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.ApiServer == nil {
+		clusterInstance.Spec.ApiServer = &hwameistoriov1alpha1.ApiServerSpec{}
+	}
+	if clusterInstance.Spec.ApiServer.Replicas == 0 {
+		clusterInstance.Spec.ApiServer.Replicas = defaultApiServerReplicas
+	}
+	if clusterInstance.Spec.ApiServer.Server == nil {
+		clusterInstance.Spec.ApiServer.Server = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.ApiServer.Server.Image == nil {
+		clusterInstance.Spec.ApiServer.Server.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.ApiServer.Server.Image.Registry == "" {
+		clusterInstance.Spec.ApiServer.Server.Image.Registry = defaultApiServerImageRegistry
+	}
+	if clusterInstance.Spec.ApiServer.Server.Image.Repository == "" {
+		clusterInstance.Spec.ApiServer.Server.Image.Repository = defaultApiServerImageRepository
+	}
+	if clusterInstance.Spec.ApiServer.Server.Image.Tag == "" {
+		clusterInstance.Spec.ApiServer.Server.Image.Tag = defaultApiServerImageTag
+	}
+
+	return clusterInstance
 }
