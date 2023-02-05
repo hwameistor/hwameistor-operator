@@ -31,6 +31,13 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 var ldmCSIControllerReplicas = int32(1)
 var ldmCSIControllerLabelSelectorKey = "app"
 var ldmCSIControllerLabelSelectorValue = "hwameistor-local-disk-csi-controller"
+var defaultKubeletRootDir = "/var/lib/kubelet"
+var defaultLDMCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMCSIProvisionerRepository = "sig-storage/csi-provisioner"
+var defaultLDMCSIProvisionerTag = "v2.0.3"
+var defaultLDMCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMCSIAttacherRepository = "sig-storage/csi-attacher"
+var defaultLDMCSIAttacherTag = "v3.0.1"
 
 var ldmCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -236,4 +243,51 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillLDMCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.LocalDiskManager == nil {
+		clusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.KubeletRootDir == "" {
+		clusterInstance.Spec.LocalDiskManager.KubeletRootDir = defaultKubeletRootDir
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI = &hwameistoriov1alpha1.CSISpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller = &hwameistoriov1alpha1.CSIControllerSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Registry == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Registry = defaultLDMCSIProvisionerRegistry
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Repository == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Repository = defaultLDMCSIProvisionerRepository
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Tag == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image.Tag = defaultLDMCSIProvisionerTag
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image == nil {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Registry == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Registry = defaultLDMCSIAttacherRegistry
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Repository == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Repository = defaultLDMCSIAttacherRepository
+	}
+	if clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Tag == "" {
+		clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image.Tag = defaultLDMCSIAttacherTag
+	}
+
+	return clusterInstance
 }

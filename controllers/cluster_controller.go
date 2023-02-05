@@ -32,16 +32,16 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/admissioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/apiserver"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/metrics"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/drbd"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/evictor"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/metrics"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -76,7 +76,17 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	newInstance := instance.DeepCopy()
+	fulfilledClusterInstance := FulfillClusterInstance(instance)
+	if !reflect.DeepEqual(instance, fulfilledClusterInstance) {
+		if err := r.Client.Update(ctx, fulfilledClusterInstance) ; err != nil {
+			log.Errorf("Update Cluster err: %v", err)
+			return ctrl.Result{}, err
+		} else {
+			return ctrl.Result{}, nil
+		}
+	}
+
+	newInstance := fulfilledClusterInstance.DeepCopy()
 
 	reReconcile, err := install.EnsureTargetNamespaceExist(r.Client, newInstance.Spec.TargetNamespace)
 	if err != nil {
@@ -292,4 +302,21 @@ func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&appsv1.DaemonSet{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
+}
+
+func FulfillClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	newClusterInstance := clusterInstance.DeepCopy()
+
+	newClusterInstance = rbac.FulfillRBACSpec(newClusterInstance)
+	newClusterInstance = localdiskmanager.FulfillLDMDaemonsetSpec(newClusterInstance)
+	newClusterInstance = ldmcsicontroller.FulfillLDMCSISpec(newClusterInstance)
+	newClusterInstance = localstorage.FulfillLSDaemonsetSpec(newClusterInstance)
+	newClusterInstance = lscsicontroller.FulfillLSCSISpec(newClusterInstance)
+	newClusterInstance = admissioncontroller.FulfillAdmissionControllerSpec(newClusterInstance)
+	newClusterInstance = scheduler.FulfillSchedulerSpec(newClusterInstance)
+	newClusterInstance = evictor.FulfillEvictorSpec(newClusterInstance)
+	newClusterInstance = apiserver.FulfillApiServerSpec(newClusterInstance)
+	newClusterInstance = metrics.FulfillMetricsSpec(newClusterInstance)
+	
+	return newClusterInstance
 }

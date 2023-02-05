@@ -29,6 +29,10 @@ func NewMetricsMaintainer(cli client.Client, clusterInstance *hwameistoriov1alph
 
 var metricsLabelSelectorKey = "app"
 var metricsLabelSelectorValue = "hwameistor-metrics-collector"
+var defaultMetricsReplicas = int32(1)
+var defaultMetricsImageRegistry = "ghcr.m.daocloud.io"
+var defaultMetricsImageRepository = "hwameistor/metrics"
+var defaultMetricsImageTag = "v0.7.1"
 
 var metrics = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -169,4 +173,30 @@ func (m *MetricsMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillMetricsSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.Metrics == nil {
+		clusterInstance.Spec.Metrics = &hwameistoriov1alpha1.MetricsSpec{}
+	}
+	if clusterInstance.Spec.Metrics.Replicas == 0 {
+		clusterInstance.Spec.Metrics.Replicas = defaultMetricsReplicas
+	}
+	if clusterInstance.Spec.Metrics.Collector == nil {
+		clusterInstance.Spec.Metrics.Collector = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.Metrics.Collector.Image == nil {
+		clusterInstance.Spec.Metrics.Collector.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.Metrics.Collector.Image.Registry == "" {
+		clusterInstance.Spec.Metrics.Collector.Image.Registry = defaultMetricsImageRegistry
+	}
+	if clusterInstance.Spec.Metrics.Collector.Image.Repository == "" {
+		clusterInstance.Spec.Metrics.Collector.Image.Repository = defaultMetricsImageRepository
+	}
+	if clusterInstance.Spec.Metrics.Collector.Image.Tag == "" {
+		clusterInstance.Spec.Metrics.Collector.Image.Tag = defaultMetricsImageTag
+	}
+
+	return clusterInstance
 }

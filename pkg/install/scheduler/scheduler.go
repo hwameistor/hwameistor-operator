@@ -29,6 +29,10 @@ func NewSchedulerMaintainer(cli client.Client, clusterInstance *hwameistoriov1al
 
 var schedulerLabelSelectorKey = "app"
 var schedulerLabelSelectorValue = "hwameistor-scheduler"
+var defaultSchedulerReplicas = int32(1)
+var defauldSchedulerImageRegistry = "ghcr.m.daocloud.io"
+var defaultSchedulerImageRepository = "hwameistor/scheduler"
+var defaultSchedulerImageTag = "v0.7.1"
 
 var schedulerDeploy = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -237,4 +241,30 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillSchedulerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.Scheduler == nil {
+		clusterInstance.Spec.Scheduler = &hwameistoriov1alpha1.SchedulerSpec{}
+	}
+	if clusterInstance.Spec.Scheduler.Replicas == 0 {
+		clusterInstance.Spec.Scheduler.Replicas = defaultSchedulerReplicas
+	}
+	if clusterInstance.Spec.Scheduler.Scheduler == nil {
+		clusterInstance.Spec.Scheduler.Scheduler = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.Scheduler.Scheduler.Image == nil {
+		clusterInstance.Spec.Scheduler.Scheduler.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.Scheduler.Scheduler.Image.Registry == "" {
+		clusterInstance.Spec.Scheduler.Scheduler.Image.Registry = defauldSchedulerImageRegistry
+	}
+	if clusterInstance.Spec.Scheduler.Scheduler.Image.Repository == "" {
+		clusterInstance.Spec.Scheduler.Scheduler.Image.Repository = defaultSchedulerImageRepository
+	}
+	if clusterInstance.Spec.Scheduler.Scheduler.Image.Tag == "" {
+		clusterInstance.Spec.Scheduler.Scheduler.Image.Tag = defaultSchedulerImageTag
+	}
+
+	return clusterInstance
 }

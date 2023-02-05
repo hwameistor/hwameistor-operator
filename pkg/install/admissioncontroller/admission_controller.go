@@ -30,6 +30,9 @@ func NewAdmissionControllerMaintainer(cli client.Client, clusterInstance *hwamei
 var replicas = int32(1)
 var admissionControllerLabelSelectorKey = "app"
 var admissionControllerLabelSelectorValue = "hwameistor-admission-controller"
+var defaultAdmissionControllerImageRegistry = "ghcr.m.daocloud.io"
+var defaultAdmissionControllerImageRepository = "hwameistor/admission"
+var defaultAdmissionControllerImageTag = "v0.7.1"
 
 var admissionController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -208,4 +211,27 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func FulfillAdmissionControllerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.AdmissionController == nil {
+		clusterInstance.Spec.AdmissionController = &hwameistoriov1alpha1.AdmissionControllerSpec{}
+	}
+	if clusterInstance.Spec.AdmissionController.Controller == nil {
+		clusterInstance.Spec.AdmissionController.Controller = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.AdmissionController.Controller.Image == nil {
+		clusterInstance.Spec.AdmissionController.Controller.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.AdmissionController.Controller.Image.Registry == "" {
+		clusterInstance.Spec.AdmissionController.Controller.Image.Registry = defaultAdmissionControllerImageRegistry
+	}
+	if clusterInstance.Spec.AdmissionController.Controller.Image.Repository == "" {
+		clusterInstance.Spec.AdmissionController.Controller.Image.Repository = defaultAdmissionControllerImageRepository
+	}
+	if clusterInstance.Spec.AdmissionController.Controller.Image.Tag == "" {
+		clusterInstance.Spec.AdmissionController.Controller.Image.Tag = defaultAdmissionControllerImageTag
+	}
+
+	return clusterInstance
 }

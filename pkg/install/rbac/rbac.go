@@ -18,6 +18,8 @@ type RBACMaintainer struct {
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
+var defaultServiceAccountName = "hwameistor-admin"
+
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *RBACMaintainer {
 	return &RBACMaintainer{
 		Client: cli,
@@ -154,4 +156,15 @@ func (m *RBACMaintainer) ensureClusterRoleBinding() error {
 	}
 
 	return nil
+}
+
+func FulfillRBACSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.RBAC == nil {
+		clusterInstance.Spec.RBAC = &hwameistoriov1alpha1.RBACSpec{}
+	}
+	if clusterInstance.Spec.RBAC.ServiceAccountName == "" {
+		clusterInstance.Spec.RBAC.ServiceAccountName = defaultServiceAccountName
+	}
+
+	return clusterInstance
 }
