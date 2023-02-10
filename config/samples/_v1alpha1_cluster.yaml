@@ -98,9 +98,9 @@ spec:
         repository: "hwameistor/metrics"
         tag: "v0.7.1"
   drbd:
-    enable: false
     deployOnMaster: "no"
-    imageRegistry: "daocloud.io/daocloud"
+    imageRegistry: "ghcr.io"
+    imageRepoOwner: "hwameistor"
     imagePullPolicy: "IfNotPresent"
     drbdVersion: "v9.0.32-1"
     upgrade: "no"

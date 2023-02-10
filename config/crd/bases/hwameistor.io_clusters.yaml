@@ -1304,13 +1304,16 @@ spec:
                     type: string
                   deployOnMaster:
                     type: string
+                  disable:
+                    description: Enable bool `json:"enable,omitempty"`
+                    type: boolean
                   drbdVersion:
                     type: string
-                  enable:
-                    type: boolean
                   imagePullPolicy:
                     type: string
                   imageRegistry:
+                    type: string
+                  imageRepoOwner:
                     type: string
                   nodeAffinity:
                     description: Node affinity is a group of node affinity scheduling
@@ -6321,11 +6324,10 @@ spec:
               storageClass:
                 properties:
                   allowVolumeExpansion:
+                    description: Enable bool `json:"enable,omitempty"`
                     type: boolean
                   diskType:
                     type: string
-                  enable:
-                    type: boolean
                   fsType:
                     type: string
                   reclaimPolicy:
@@ -6335,8 +6337,6 @@ spec:
                 type: object
               targetNamespace:
                 type: string
-            required:
-            - targetNamespace
             type: object
           status:
             description: ClusterStatus defines the observed state of Cluster
@@ -6417,6 +6417,8 @@ spec:
                     - workloadType
                     type: object
                 type: object
+              drbdAdapterCreated:
+                type: boolean
               evictor:
                 properties:
                   health:
@@ -6676,6 +6678,7 @@ spec:
                     type: object
                 type: object
             required:
+            - drbdAdapterCreated
             - installedCRDS
             type: object
         type: object

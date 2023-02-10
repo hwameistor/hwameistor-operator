@@ -2,29 +2,3 @@ apiVersion: hwameistor.io/v1alpha1
 kind: Cluster
 metadata:
   name: cluster-sample
-spec:
-  targetNamespace: hwameistor
-  drbd:
-    enable: false
-    deployOnMaster: "no"
-    imageRegistry: "daocloud.io/daocloud"
-    imagePullPolicy: "IfNotPresent"
-    drbdVersion: "v9.0.32-1"
-    upgrade: "no"
-    checkHostName: "yes"
-    useAffinity: "no"
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: node-role.kubernetes.io/master
-            operator: DoesNotExist
-          - key: node-role.kubernetes.io/control-plane
-            operator: DoesNotExist
-    chartVersion: "v0.3.6"
-  storageClass:
-    enable: true
-    allowVolumeExpansion: true
-    reclaimPolicy: "Delete"
-    diskType: "HDD"
-    fsType: "xfs"

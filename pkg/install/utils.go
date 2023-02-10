@@ -15,15 +15,13 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 )
 
 var defaultTargetNamespace = "hwameistor"
 
 func EnsureTargetNamespaceExist(cli client.Client, targetNamespace string) (bool, error) {
 	var reReconcile bool
-	if targetNamespace == "" {
-		targetNamespace = defaultTargetNamespace
-	}
 	key := types.NamespacedName{
 		Name: targetNamespace,
 	}
@@ -134,5 +132,13 @@ func RawExtensionToUnstructured(rawObj runtime.RawExtension) (*unstructured.Unst
 
 	unstructuredObj := &unstructured.Unstructured{Object: unstructuredMap}
 	return unstructuredObj, nil
+}
+
+func FulfillTargetNamespaceSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.TargetNamespace == "" {
+		clusterInstance.Spec.TargetNamespace = defaultTargetNamespace
+	}
+
+	return clusterInstance
 }
   

@@ -6,6 +6,7 @@ import (
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -25,6 +26,10 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Clus
 }
 
 var volumeBindingWaitForFirstConsumer = storagev1.VolumeBindingWaitForFirstConsumer
+var defaultAllowVolumeExpansionBooleanValue = true
+var defaultReclaimPolicy = corev1.PersistentVolumeReclaimDelete
+var defaultDiskType = "HDD"
+var defaultFSType = "xfs"
 
 var sc = storagev1.StorageClass{
 	Provisioner: "lvm.hwameistor.io",
@@ -66,4 +71,24 @@ func (m *StorageClassMaintainer) Ensure() error {
 	}
 	
 	return nil
+}
+
+func FulfillStorageClassSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.StorageClass == nil {
+		clusterInstance.Spec.StorageClass = &hwameistoriov1alpha1.StorageClassSpec{}
+	}
+	// if clusterInstance.Spec.StorageClass.AllowVolumeExpansion == false {
+	// 	clusterInstance.Spec.StorageClass.AllowVolumeExpansion = defaultAllowVolumeExpansionBooleanValue
+	// }
+	if clusterInstance.Spec.StorageClass.ReclaimPolicy == "" {
+		clusterInstance.Spec.StorageClass.ReclaimPolicy = defaultReclaimPolicy
+	}
+	if clusterInstance.Spec.StorageClass.DiskType == "" {
+		clusterInstance.Spec.StorageClass.DiskType = defaultDiskType
+	}
+	if clusterInstance.Spec.StorageClass.FSType == "" {
+		clusterInstance.Spec.StorageClass.FSType = defaultFSType
+	}
+
+	return clusterInstance
 }

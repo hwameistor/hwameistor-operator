@@ -14,6 +14,30 @@ import (
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 )
 
+var defaultDeployOnMaster = "no"
+var defaultImageRegistry = "ghcr.io"
+var defaultImageRepoOwner = "hwameistor"
+var defaultImagePullPolicy = "IfNotPresent"
+var defaultDRBDVersion = "v9.0.32-1"
+var defaultDRBDUpgrade = "no"
+var defaultCheckHostName = "no"
+var defaultUseAffinity = "no"
+var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
+	{
+		MatchExpressions: []corev1.NodeSelectorRequirement{
+			{
+				Key: "node-role.kubernetes.io/master",
+				Operator: corev1.NodeSelectorOpDoesNotExist,
+			},
+			{
+				Key: "node-role.kubernetes.io/control-plane",
+				Operator: corev1.NodeSelectorOpDoesNotExist,
+			},
+		},
+	},
+}
+var defaultChartVersion = "v0.3.6"
+
 var distroRegexMap = map[string]string{
 	"(red hat enterprise|centos|almalinux|rocky linux) .*7": "rhel7",
 	"(red hat enterprise|centos|almalinux|rocky linux) .*8": "rhel8",
@@ -33,6 +57,7 @@ var drbdVersion string
 var tag string
 var imagePullPolicy string
 var imageRegistry string
+var imageRepoOwner string
 var chartVersion string
 var upgrade string
 var checkHostName string
@@ -55,12 +80,13 @@ func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	drbdVersion = drbdConfigs.DRBDVersion
 	tag = drbdVersion
 	imageRegistry = drbdConfigs.ImageRegistry
+	imageRepoOwner = drbdConfigs.ImageRepoOwner
 	imagePullPolicy = drbdConfigs.ImagePullPolicy
 	chartVersion = drbdConfigs.ChartVersion
 	upgrade = drbdConfigs.Upgrade
 	checkHostName = drbdConfigs.CheckHostName
 	useAffinity = drbdConfigs.UseAffinity
-	nodeAffinity = drbdConfigs.NodeAffinity
+	nodeAffinity = *drbdConfigs.NodeAffinity
 }
 
 func CreateDRBDAdapter(cli client.Client) error {
@@ -127,7 +153,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 						Containers: []corev1.Container{
 							{
 								Name: "shipper",
-								Image: imageRegistry + "/" + "drbd9-shipper" + ":" + drbdVersion+"_"+chartVersion,
+								Image: imageRegistry + "/" + imageRepoOwner + "/" + "drbd9-shipper" + ":" + drbdVersion+"_"+chartVersion,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								VolumeMounts: []corev1.VolumeMount{
 									{
@@ -138,7 +164,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 							},
 							{
 								Name: distro,
-								Image: imageRegistry + "/" + "drbd9"+"-"+distro + ":" + tag,
+								Image: imageRegistry + "/" + imageRepoOwner + "/" + "drbd9"+"-"+distro + ":" + tag,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								Command: []string{
 									"/pkgs/entrypoint.adapter.sh",
@@ -347,4 +373,48 @@ func CreateDRBDAdapter(cli client.Client) error {
 	}
 
 	return nil
+}
+
+func FulfillDRBDSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+	if clusterInstance.Spec.DRBD == nil {
+		clusterInstance.Spec.DRBD = &hwameistoriov1alpha1.DRBDSpec{}
+	}
+	if clusterInstance.Spec.DRBD.DeployOnMaster == "" {
+		clusterInstance.Spec.DRBD.DeployOnMaster = defaultDeployOnMaster
+	}
+	if clusterInstance.Spec.DRBD.ImageRegistry == "" {
+		clusterInstance.Spec.DRBD.ImageRegistry = defaultImageRegistry
+	}
+	if clusterInstance.Spec.DRBD.ImageRepoOwner == "" {
+		clusterInstance.Spec.DRBD.ImageRepoOwner = defaultImageRepoOwner
+	}
+	if clusterInstance.Spec.DRBD.ImagePullPolicy == "" {
+		clusterInstance.Spec.DRBD.ImagePullPolicy = defaultImagePullPolicy
+	}
+	if clusterInstance.Spec.DRBD.DRBDVersion == "" {
+		clusterInstance.Spec.DRBD.DRBDVersion = defaultDRBDVersion
+	}
+	if clusterInstance.Spec.DRBD.Upgrade == "" {
+		clusterInstance.Spec.DRBD.Upgrade = defaultDRBDUpgrade
+	}
+	if clusterInstance.Spec.DRBD.CheckHostName == "" {
+		clusterInstance.Spec.DRBD.CheckHostName = defaultCheckHostName
+	}
+	if clusterInstance.Spec.DRBD.UseAffinity == "" {
+		clusterInstance.Spec.DRBD.UseAffinity = defaultUseAffinity
+	}
+	if clusterInstance.Spec.DRBD.NodeAffinity == nil {
+		clusterInstance.Spec.DRBD.NodeAffinity = &corev1.NodeAffinity{}
+	}
+	if clusterInstance.Spec.DRBD.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		clusterInstance.Spec.DRBD.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution = &corev1.NodeSelector{}
+	}
+	if clusterInstance.Spec.DRBD.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms == nil {
+		clusterInstance.Spec.DRBD.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms = defaultNodeSelectTerms
+	}
+	if clusterInstance.Spec.DRBD.ChartVersion == "" {
+		clusterInstance.Spec.DRBD.ChartVersion = defaultChartVersion
+	}
+
+	return clusterInstance
 }
