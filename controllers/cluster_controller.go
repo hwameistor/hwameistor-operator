@@ -268,18 +268,20 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if instance.Spec.StorageClass.Enable {
-		if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
-			log.Errorf("Ensure StorageClass err: %v", err)
-			return ctrl.Result{}, err
-		}
+	if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
+		log.Errorf("Ensure StorageClass err: %v", err)
+		return ctrl.Result{}, err
 	}
 
-	if instance.Spec.DRBD.Enable {
-		drbd.HandelDRBDConfigs(instance)
-		if err := drbd.CreateDRBDAdapter(r.Client); err != nil {
-			log.Errorf("Create DRBD Adapter err: %v", err)
-			return ctrl.Result{}, err
+	if !newInstance.Spec.DRBD.Disable {
+		if !newInstance.Status.DRBDAdapterCreated {
+			drbd.HandelDRBDConfigs(instance)
+			if err := drbd.CreateDRBDAdapter(r.Client); err != nil {
+				log.Errorf("Create DRBD Adapter err: %v", err)
+				return ctrl.Result{}, err
+			} else {
+				newInstance.Status.DRBDAdapterCreated = true
+			}
 		}
 	}
 
@@ -307,6 +309,7 @@ func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func FulfillClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	newClusterInstance := clusterInstance.DeepCopy()
 
+	newClusterInstance = install.FulfillTargetNamespaceSpec(newClusterInstance)
 	newClusterInstance = rbac.FulfillRBACSpec(newClusterInstance)
 	newClusterInstance = localdiskmanager.FulfillLDMDaemonsetSpec(newClusterInstance)
 	newClusterInstance = ldmcsicontroller.FulfillLDMCSISpec(newClusterInstance)
@@ -317,6 +320,8 @@ func FulfillClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) *hwam
 	newClusterInstance = evictor.FulfillEvictorSpec(newClusterInstance)
 	newClusterInstance = apiserver.FulfillApiServerSpec(newClusterInstance)
 	newClusterInstance = metrics.FulfillMetricsSpec(newClusterInstance)
-	
+	newClusterInstance = storageclass.FulfillStorageClassSpec(newClusterInstance)
+	newClusterInstance = drbd.FulfillDRBDSpec(newClusterInstance)
+
 	return newClusterInstance
 }

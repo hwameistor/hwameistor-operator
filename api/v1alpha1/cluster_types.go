@@ -29,8 +29,7 @@ type ClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	TargetNamespace string `json:"targetNamespace"`
-	// InstallDRBD bool `json:"installDRBD"`
+	TargetNamespace string `json:"targetNamespace,omitempty"`
 
 	// LocalDiskManager represents settings about LocalDiskManager
 	LocalDiskManager *LocalDiskManagerSpec `json:"localDiskManager,omitempty"`
@@ -143,15 +142,16 @@ type MetricsSpec struct {
 }
 
 type DRBDSpec struct {
-	Enable bool `json:"enable,omitempty"`
+	Disable bool `json:"disable,omitempty"`
 	DeployOnMaster string `json:"deployOnMaster,omitempty"`
 	ImageRegistry string `json:"imageRegistry,omitempty"`
+	ImageRepoOwner string `json:"imageRepoOwner,omitempty"`
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
 	DRBDVersion string `json:"drbdVersion,omitempty"`
 	Upgrade string `json:"upgrade,omitempty"`
 	CheckHostName string `json:"checkHostName,omitempty"`
 	UseAffinity string `json:"useAffinity,omitempty"`
-	NodeAffinity corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
 	ChartVersion string `json:"chartVersion,omitempty"`
 }
 
@@ -160,7 +160,7 @@ type RBACSpec struct {
 }
 
 type StorageClassSpec struct {
-	Enable bool `json:"enable,omitempty"`
+	// Enable bool `json:"enable,omitempty"`
 	AllowVolumeExpansion bool `json:"allowVolumeExpansion,omitempty"`
 	ReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	DiskType string `json:"diskType,omitempty"`
@@ -173,6 +173,7 @@ type ClusterStatus struct {
 	// Important: Run "make" to regenerate code after modifying this file
 	
 	InstalledCRDS bool `json:"installedCRDS"`
+	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
 	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
 	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
 	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`
