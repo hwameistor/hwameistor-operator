@@ -663,6 +663,8 @@ spec:
                             type: object
                         type: object
                     type: object
+                  disable:
+                    type: boolean
                   failurePolicy:
                     type: string
                   replicas:
@@ -1252,6 +1254,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                  disable:
+                    type: boolean
                   replicas:
                     format: int32
                     type: integer
@@ -1305,7 +1309,6 @@ spec:
                   deployOnMaster:
                     type: string
                   disable:
-                    description: Enable bool `json:"enable,omitempty"`
                     type: boolean
                   drbdVersion:
                     type: string
@@ -2109,6 +2112,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                  disable:
+                    type: boolean
                   evictor:
                     properties:
                       image:
@@ -4999,6 +5004,8 @@ spec:
                             type: object
                         type: object
                     type: object
+                  disable:
+                    type: boolean
                   kubeletRootDir:
                     type: string
                   member:
@@ -5679,6 +5686,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                  disable:
+                    type: boolean
                   replicas:
                     format: int32
                     type: integer
@@ -6275,6 +6284,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                  disable:
+                    type: boolean
                   replicas:
                     format: int32
                     type: integer
@@ -6324,6 +6335,8 @@ spec:
               storageClass:
                 properties:
                   allowVolumeExpansion:
+                    type: boolean
+                  disable:
                     description: Enable bool `json:"enable,omitempty"`
                     type: boolean
                   diskType:

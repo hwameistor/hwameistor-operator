@@ -97,6 +97,7 @@ type LocalDiskManagerSpec struct {
 }
 
 type LocalStorageSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	KubeletRootDir string `json:"kubeletRootDir,omitempty"`
 	CSI *CSISpec `json:"csi,omitempty"`
 	Member *MemberSpec `json:"member,omitempty"`
@@ -112,17 +113,20 @@ type MemberSpec struct {
 }
 
 type SchedulerSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Scheduler *ContainerCommonSpec `json:"scheduler,omitempty"`
 }
 
 type EvictorSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Evictor *ContainerCommonSpec `json:"evictor,omitempty"`
 }
 
 type AdmissionControllerSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	Replicas int `json:"replicas,omitempty"`
 	FailurePolicy string `json:"failurePolicy,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
@@ -130,12 +134,14 @@ type AdmissionControllerSpec struct {
 }
 
 type ApiServerSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Server *ContainerCommonSpec `json:"server,omitempty"`
 }
 
 type MetricsSpec struct {
+	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Collector *ContainerCommonSpec `json:"collector,omitempty"`
@@ -160,7 +166,7 @@ type RBACSpec struct {
 }
 
 type StorageClassSpec struct {
-	// Enable bool `json:"enable,omitempty"`
+	Disable bool `json:"disable,omitempty"`
 	AllowVolumeExpansion bool `json:"allowVolumeExpansion,omitempty"`
 	ReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
 	DiskType string `json:"diskType,omitempty"`
