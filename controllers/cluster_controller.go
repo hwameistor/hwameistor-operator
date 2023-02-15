@@ -139,114 +139,125 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	newInstance, err = localstorage.NewMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure LocalStorage DaemonSet err: %v", err)
-		return ctrl.Result{}, err
-	}
+	if !newInstance.Spec.LocalStorage.Disable {
+		newInstance, err = localstorage.NewMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure LocalStorage DaemonSet err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	newInstance, err = lscsicontroller.NewMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure LS CSIController err: %v", err)
-		return ctrl.Result{}, err
-	}
+		newInstance, err = lscsicontroller.NewMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure LS CSIController err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	if ls := newInstance.Status.LocalStorage; ls != nil {
-		instances := ls.Instances
-		csi := ls.CSI
-		if (instances != nil) && (csi != nil) {
-			if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
-				newInstance.Status.LocalStorage.Health = "Normal"
-			} else {
-				newInstance.Status.LocalStorage.Health = "Abnormal"
+		if ls := newInstance.Status.LocalStorage; ls != nil {
+			instances := ls.Instances
+			csi := ls.CSI
+			if (instances != nil) && (csi != nil) {
+				if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
+					newInstance.Status.LocalStorage.Health = "Normal"
+				} else {
+					newInstance.Status.LocalStorage.Health = "Abnormal"
+				}
 			}
 		}
 	}
 
-	newInstance, err =  admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure AdmissionController err: %v", err)
-		return ctrl.Result{}, err
-	}
+	if !newInstance.Spec.AdmissionController.Disable {
+		newInstance, err =  admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure AdmissionController err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	if admissionController := newInstance.Status.AdmissionController; admissionController != nil {
-		instances := admissionController.Instances
-		if instances != nil {
-			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.AdmissionController.Health = "Normal"
-			} else {
-				newInstance.Status.AdmissionController.Health = "Abnormal"
+		if admissionController := newInstance.Status.AdmissionController; admissionController != nil {
+			instances := admissionController.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.AdmissionController.Health = "Normal"
+				} else {
+					newInstance.Status.AdmissionController.Health = "Abnormal"
+				}
 			}
+		}
+
+		if err := admissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure AdmissionController Service err: %v", err)
+			return ctrl.Result{}, err
 		}
 	}
 
-	if err := admissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure AdmissionController Service err: %v", err)
-		return ctrl.Result{}, err
-	}
-
-	if err := scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
-		return ctrl.Result{}, err
-	}
-
-	newInstance, err = scheduler.NewSchedulerMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure Scheduler err: %v", err)
-		return ctrl.Result{}, err
-	}
-
-	if scheduler := newInstance.Status.Scheduler; scheduler != nil {
-		instances := scheduler.Instances
-		if instances != nil {
-			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.Scheduler.Health = "Normal"
-			} else {
-				newInstance.Status.Scheduler.Health = "Abnormal"
+	if !newInstance.Spec.Scheduler.Disable {
+		if err := scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
+			return ctrl.Result{}, err
+		}
+	
+		newInstance, err = scheduler.NewSchedulerMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure Scheduler err: %v", err)
+			return ctrl.Result{}, err
+		}
+	
+		if scheduler := newInstance.Status.Scheduler; scheduler != nil {
+			instances := scheduler.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.Scheduler.Health = "Normal"
+				} else {
+					newInstance.Status.Scheduler.Health = "Abnormal"
+				}
 			}
 		}
 	}
+	
+	if !newInstance.Spec.Evictor.Disable {
+		newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure Evictor err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure Evictor err: %v", err)
-		return ctrl.Result{}, err
-	}
-
-	if evictor := newInstance.Status.Evictor; evictor != nil {
-		instances := evictor.Instances
-		if instances != nil {
-			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.Evictor.Health = "Normal"
-			} else {
-				newInstance.Status.Evictor.Health = "Abnormal"
+		if evictor := newInstance.Status.Evictor; evictor != nil {
+			instances := evictor.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.Evictor.Health = "Normal"
+				} else {
+					newInstance.Status.Evictor.Health = "Abnormal"
+				}
 			}
 		}
 	}
+	
+	if !newInstance.Spec.ApiServer.Disable {
+		newInstance, err = apiserver.NewApiServerMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure ApiServer err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	newInstance, err = apiserver.NewApiServerMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure ApiServer err: %v", err)
-		return ctrl.Result{}, err
-	}
-
-	if apiServer := newInstance.Status.ApiServer; apiServer != nil {
-		instances := apiServer.Instances
-		if instances != nil {
-			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.ApiServer.Health = "Normal"
-			} else {
-				newInstance.Status.ApiServer.Health = "Abnormal"
+		if apiServer := newInstance.Status.ApiServer; apiServer != nil {
+			instances := apiServer.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.ApiServer.Health = "Normal"
+				} else {
+					newInstance.Status.ApiServer.Health = "Abnormal"
+				}
 			}
 		}
-	}
 
-	if err := apiserver.NewApiServerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure ApiServer Service err: %v", err)
-		return ctrl.Result{}, err
+		if err := apiserver.NewApiServerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure ApiServer Service err: %v", err)
+			return ctrl.Result{}, err
+		}
 	}
-
-	newInstance, err = metrics.NewMetricsMaintainer(r.Client, newInstance).Ensure()
+	
+	if !newInstance.Spec.Metrics.Disable {
+		newInstance, err = metrics.NewMetricsMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure Metrics Collector err: %v", err)
 		return ctrl.Result{}, err
@@ -267,10 +278,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		log.Errorf("Ensure Metrics Service err: %v", err)
 		return ctrl.Result{}, err
 	}
+	}
 
-	if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure StorageClass err: %v", err)
-		return ctrl.Result{}, err
+	if !newInstance.Spec.StorageClass.Disable {
+		if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure StorageClass err: %v", err)
+			return ctrl.Result{}, err
+		}
 	}
 
 	if !newInstance.Spec.DRBD.Disable {

@@ -116,7 +116,6 @@ spec:
             operator: DoesNotExist
     chartVersion: "v0.3.6"
   storageClass:
-    enable: true
     allowVolumeExpansion: true
     reclaimPolicy: "Delete"
     diskType: "HDD"
