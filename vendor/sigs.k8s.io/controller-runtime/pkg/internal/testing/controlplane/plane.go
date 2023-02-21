@@ -21,8 +21,9 @@ import (
 	"net/url"
 	"os"
 
-	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/rest"
+
 	"sigs.k8s.io/controller-runtime/pkg/internal/testing/certs"
 )
 
@@ -94,7 +95,7 @@ func (f *ControlPlane) Stop() error {
 		}
 	}
 
-	return kerrors.NewAggregate(errList)
+	return utilerrors.NewAggregate(errList)
 }
 
 // APIURL returns the URL you should connect to to talk to your API server.

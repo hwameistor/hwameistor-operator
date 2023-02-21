@@ -28,7 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 
-	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/admissioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/apiserver"
@@ -42,6 +42,7 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/utils"
 )
 
 // ClusterReconciler reconciles a Cluster object
@@ -66,7 +67,7 @@ type ClusterReconciler struct {
 func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log.Infof("Reconcile Cluster %s", req.Name)
 
-	instance := &hwameistoriov1alpha1.Cluster{}
+	instance := &hwameistoroperatorv1alpha1.Cluster{}
 	err := r.Client.Get(ctx, req.NamespacedName, instance)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -299,6 +300,33 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	switch newInstance.Status.DiskReserveState {
+	case "":
+		if utils.CheckComponentsInstalledSuccessfully(newInstance) {
+			newInstance.Status.DiskReserveState = "ToReserve"
+		}
+	case "ToReserve":
+		if err := utils.ReserveDisk(newInstance, r.Client); err != nil {
+			log.Errorf("Reserve Disk err: %v", err)
+			return ctrl.Result{}, err
+		}
+		newInstance.Status.DiskReserveState = "Reserved"
+	case "Reserved":
+		log.Infof("Disk Reserved")
+		localDisks, err := utils.ListLocalDisks(r.Client)
+		if err != nil {
+			log.Errorf("List Disks err: %v", err)
+			return ctrl.Result{}, err
+		}
+		localDisks = utils.SiftAvailableAndUnreservedDisks(localDisks)
+		localDiskClaims := utils.GenerateLocalDiskClaimsToCreateAccordingToLocalDisks(localDisks)
+		if err := utils.CreateLocalDiskClaims(r.Client, localDiskClaims); err != nil {
+			log.Errorf("Create LocalDiskClaims err: %v", err)
+			return ctrl.Result{}, err
+		}
+		newInstance.Status.DiskReserveState = "CreatedLDC"
+	}
+
 	if reflect.DeepEqual(instance, newInstance) {
 		log.Infof("No need to update status")
 	} else {
@@ -314,13 +342,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 // SetupWithManager sets up the controller with the Manager.
 func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&hwameistoriov1alpha1.Cluster{}).
+		For(&hwameistoroperatorv1alpha1.Cluster{}).
 		Owns(&appsv1.DaemonSet{}).
 		Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
 
-func FulfillClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillClusterInstance(clusterInstance *hwameistoroperatorv1alpha1.Cluster) *hwameistoroperatorv1alpha1.Cluster {
 	newClusterInstance := clusterInstance.DeepCopy()
 
 	newClusterInstance = install.FulfillTargetNamespaceSpec(newClusterInstance)

@@ -52,6 +52,7 @@ func NewInformersMap(config *rest.Config,
 	namespace string,
 	selectors SelectorsByGVK,
 ) *InformersMap {
+
 	return &InformersMap{
 		structured:   newStructuredInformersMap(config, scheme, mapper, resync, namespace, selectors),
 		unstructured: newUnstructuredInformersMap(config, scheme, mapper, resync, namespace, selectors),

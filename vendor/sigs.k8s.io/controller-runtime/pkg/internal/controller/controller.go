@@ -37,7 +37,7 @@ import (
 
 var _ inject.Injector = &Controller{}
 
-// Controller implements controller.Controller.
+// Controller implements controller.Controller
 type Controller struct {
 	// Name is used to uniquely identify a Controller in tracing, logging and monitoring.  Name is required.
 	Name string
@@ -94,14 +94,14 @@ type watchDescription struct {
 	predicates []predicate.Predicate
 }
 
-// Reconcile implements reconcile.Reconciler.
+// Reconcile implements reconcile.Reconciler
 func (c *Controller) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	log := c.Log.WithValues("name", req.Name, "namespace", req.Namespace)
 	ctx = logf.IntoContext(ctx, log)
 	return c.Do.Reconcile(ctx, req)
 }
 
-// Watch implements controller.Controller.
+// Watch implements controller.Controller
 func (c *Controller) Watch(src source.Source, evthdler handler.EventHandler, prct ...predicate.Predicate) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -131,7 +131,7 @@ func (c *Controller) Watch(src source.Source, evthdler handler.EventHandler, prc
 	return src.Start(c.ctx, evthdler, c.Queue, prct...)
 }
 
-// Start implements controller.Controller.
+// Start implements controller.Controller
 func (c *Controller) Start(ctx context.Context) error {
 	// use an IIFE to get proper lock handling
 	// but lock outside to get proper handling of the queue shutdown
@@ -295,14 +295,13 @@ func (c *Controller) reconcileHandler(ctx context.Context, obj interface{}) {
 
 	// RunInformersAndControllers the syncHandler, passing it the Namespace/Name string of the
 	// resource to be synced.
-	result, err := c.Do.Reconcile(ctx, req)
-	switch {
-	case err != nil:
+	if result, err := c.Do.Reconcile(ctx, req); err != nil {
 		c.Queue.AddRateLimited(req)
 		ctrlmetrics.ReconcileErrors.WithLabelValues(c.Name).Inc()
 		ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, labelError).Inc()
 		log.Error(err, "Reconciler error")
-	case result.RequeueAfter > 0:
+		return
+	} else if result.RequeueAfter > 0 {
 		// The result.RequeueAfter request will be lost, if it is returned
 		// along with a non-nil error. But this is intended as
 		// We need to drive to stable reconcile loops before queuing due
@@ -310,15 +309,18 @@ func (c *Controller) reconcileHandler(ctx context.Context, obj interface{}) {
 		c.Queue.Forget(obj)
 		c.Queue.AddAfter(req, result.RequeueAfter)
 		ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, labelRequeueAfter).Inc()
-	case result.Requeue:
+		return
+	} else if result.Requeue {
 		c.Queue.AddRateLimited(req)
 		ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, labelRequeue).Inc()
-	default:
-		// Finally, if no error occurs we Forget this item so it does not
-		// get queued again until another change happens.
-		c.Queue.Forget(obj)
-		ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, labelSuccess).Inc()
+		return
 	}
+
+	// Finally, if no error occurs we Forget this item so it does not
+	// get queued again until another change happens.
+	c.Queue.Forget(obj)
+
+	ctrlmetrics.ReconcileTotal.WithLabelValues(c.Name, labelSuccess).Inc()
 }
 
 // GetLogger returns this controller's logger.
@@ -326,13 +328,13 @@ func (c *Controller) GetLogger() logr.Logger {
 	return c.Log
 }
 
-// InjectFunc implement SetFields.Injector.
+// InjectFunc implement SetFields.Injector
 func (c *Controller) InjectFunc(f inject.Func) error {
 	c.SetFields = f
 	return nil
 }
 
-// updateMetrics updates prometheus metrics within the controller.
+// updateMetrics updates prometheus metrics within the controller
 func (c *Controller) updateMetrics(reconcileTime time.Duration) {
 	ctrlmetrics.ReconcileTime.WithLabelValues(c.Name).Observe(reconcileTime.Seconds())
 }
