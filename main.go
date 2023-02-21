@@ -31,7 +31,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	hwameistorv1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
+	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -44,7 +45,8 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(hwameistoriov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(hwameistoroperatorv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(hwameistorv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 

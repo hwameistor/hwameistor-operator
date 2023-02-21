@@ -31,6 +31,8 @@ type ClusterSpec struct {
 
 	TargetNamespace string `json:"targetNamespace,omitempty"`
 
+	DiskReserveConfigurations []DiskReserveConfiguration `json:"diskReserveConfigurations,omitempty"`
+
 	// LocalDiskManager represents settings about LocalDiskManager
 	LocalDiskManager *LocalDiskManagerSpec `json:"localDiskManager,omitempty"`
 
@@ -55,6 +57,11 @@ type ClusterSpec struct {
 	RBAC *RBACSpec `json:"rbac,omitempty"`
 
 	StorageClass *StorageClassSpec `json:"storageClass,omitempty"`
+}
+
+type DiskReserveConfiguration struct {
+	NodeName string `json:"nodeName"`
+	DiskType string `json:"diskType"`
 }
 
 type ImageSpec struct {
@@ -180,6 +187,7 @@ type ClusterStatus struct {
 	
 	InstalledCRDS bool `json:"installedCRDS"`
 	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
+	DiskReserveState string `json:"diskReserveState"`
 	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
 	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
 	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`

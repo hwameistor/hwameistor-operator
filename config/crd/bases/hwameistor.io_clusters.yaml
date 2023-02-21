@@ -1300,6 +1300,18 @@ spec:
                         type: object
                     type: object
                 type: object
+              diskReserveConfigurations:
+                items:
+                  properties:
+                    diskType:
+                      type: string
+                    nodeName:
+                      type: string
+                  required:
+                  - diskType
+                  - nodeName
+                  type: object
+                type: array
               drbd:
                 properties:
                   chartVersion:
@@ -6337,7 +6349,6 @@ spec:
                   allowVolumeExpansion:
                     type: boolean
                   disable:
-                    description: Enable bool `json:"enable,omitempty"`
                     type: boolean
                   diskType:
                     type: string
@@ -6430,6 +6441,8 @@ spec:
                     - workloadType
                     type: object
                 type: object
+              diskReserveState:
+                type: string
               drbdAdapterCreated:
                 type: boolean
               evictor:
@@ -6691,6 +6704,7 @@ spec:
                     type: object
                 type: object
             required:
+            - diskReserveState
             - drbdAdapterCreated
             - installedCRDS
             type: object

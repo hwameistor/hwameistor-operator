@@ -29,7 +29,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
-	kerrors "k8s.io/apimachinery/pkg/util/errors"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
@@ -251,7 +251,8 @@ func (cm *controllerManager) AddMetricsExtraHandler(path string, handler http.Ha
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
 
-	if _, found := cm.metricsExtraHandlers[path]; found {
+	_, found := cm.metricsExtraHandlers[path]
+	if found {
 		return fmt.Errorf("can't register extra handler by duplicate path %q on metrics http server", path)
 	}
 
@@ -260,7 +261,7 @@ func (cm *controllerManager) AddMetricsExtraHandler(path string, handler http.Ha
 	return nil
 }
 
-// AddHealthzCheck allows you to add Healthz checker.
+// AddHealthzCheck allows you to add Healthz checker
 func (cm *controllerManager) AddHealthzCheck(name string, check healthz.Checker) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -281,7 +282,7 @@ func (cm *controllerManager) AddHealthzCheck(name string, check healthz.Checker)
 	return nil
 }
 
-// AddReadyzCheck allows you to add Readyz checker.
+// AddReadyzCheck allows you to add Readyz checker
 func (cm *controllerManager) AddReadyzCheck(name string, check healthz.Checker) error {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -450,7 +451,7 @@ func (cm *controllerManager) Start(ctx context.Context) (err error) {
 				// Utilerrors.Aggregate allows to use errors.Is for all contained errors
 				// whereas fmt.Errorf allows wrapping at most one error which means the
 				// other one can not be found anymore.
-				err = kerrors.NewAggregate([]error{err, stopErr})
+				err = utilerrors.NewAggregate([]error{err, stopErr})
 			} else {
 				err = stopErr
 			}
