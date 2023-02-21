@@ -351,13 +351,14 @@ func CreateDRBDAdapter(cli client.Client) error {
 			return err
 		}
 		if matched {
-			for _, container := range job.Spec.Template.Spec.Containers {
+			for i, container := range job.Spec.Template.Spec.Containers {
 				if container.Name == distro {
 					container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
 						Name: "centos-release",
 						MountPath: "/etc/centos-release",
 						ReadOnly: true,
 					})
+					job.Spec.Template.Spec.Containers[i] = container
 				}
 			}
 		}
