@@ -4,7 +4,7 @@ metadata:
   name: hwameistor-operator
   namespace: default
 spec:
-  replicas: 1
+  replicas: {{ .Values.operator.replicas }}
   selector:
     matchLabels:
       app: hwameistor-operator
@@ -16,14 +16,13 @@ spec:
         app: hwameistor-operator
     spec:
       containers:
-      - args:
-        image: {{ .Values.imageRegistry}}/{{ .Values.imageRepository}}:{{ .Values.imageTag}}
+      - name: hwameistor-operator
+        image: {{ .Values.global.hwameistorImageRegistry}}/{{ .Values.operator.imageRepository}}:{{ template "operator.imageTag" . }}
         imagePullPolicy: IfNotPresent
-        name: hwameistor-operator
         resources:
           limits:
-            cpu: 300m
-            memory: 300Mi
+            cpu: 100m
+            memory: 100Mi
           requests:
             cpu: 100m
             memory: 100Mi

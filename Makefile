@@ -257,3 +257,7 @@ release: ## release
 	${DOCKER_BUILDX_CMD_ARM64} -t ${IMAGE_NAME}:${RELEASE_TAG}-arm64 ${PROJECT_SOURCE_CODE_DIR}
 	# push to a public registry
 	${MUILT_ARCH_PUSH_CMD} -i ${IMAGE_NAME}:${RELEASE_TAG}
+
+.PHONY: render-chart-values
+render-chart-values:
+	bash ./build/util/render-chart-values.sh
