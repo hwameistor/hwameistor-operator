@@ -50,7 +50,7 @@ type ClusterSpec struct {
 
 	ApiServer *ApiServerSpec `json:"apiServer,omitempty"`
 
-	Metrics *MetricsSpec `json:"metrics,omitempty"`
+	Exporter *ExporterSpec `json:"exporter,omitempty"`
 
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
 
@@ -147,7 +147,7 @@ type ApiServerSpec struct {
 	Server *ContainerCommonSpec `json:"server,omitempty"`
 }
 
-type MetricsSpec struct {
+type ExporterSpec struct {
 	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
@@ -194,7 +194,7 @@ type ClusterStatus struct {
 	Evictor *EvictorStatus `json:"evictor,omitempty"`
 	AdmissionController *AdmissionControllerStatus `json:"admissionController,omitempty"`
 	ApiServer *ApiServerStatus `json:"apiServer,omitempty"`
-	Metrics *MetricsStatus 	`json:"metrics,omitempty"`
+	Exporter *ExporterStatus 	`json:"exporter,omitempty"`
 }
 
 type DeployStatus struct {
@@ -243,7 +243,7 @@ type ApiServerStatus struct {
 	Health string `json:"health,omitempty"`
 }
 
-type MetricsStatus struct {
+type ExporterStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
 	Health string `json:"health,omitempty"`
 }

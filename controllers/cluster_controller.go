@@ -38,7 +38,7 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/metrics"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/exporter"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
@@ -257,26 +257,26 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 	
-	if !newInstance.Spec.Metrics.Disable {
-		newInstance, err = metrics.NewMetricsMaintainer(r.Client, newInstance).Ensure()
+	if !newInstance.Spec.Exporter.Disable {
+		newInstance, err = exporter.NewExporterMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
-		log.Errorf("Ensure Metrics Collector err: %v", err)
+		log.Errorf("Ensure Exporter Collector err: %v", err)
 		return ctrl.Result{}, err
 	}
 
-	if metrics := newInstance.Status.Metrics; metrics != nil {
-		instances := metrics.Instances
+	if exporter := newInstance.Status.Exporter; exporter != nil {
+		instances := exporter.Instances
 		if instances != nil {
 			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.Metrics.Health = "Normal"
+				newInstance.Status.Exporter.Health = "Normal"
 			} else {
-				newInstance.Status.Metrics.Health = "Abnormal"
+				newInstance.Status.Exporter.Health = "Abnormal"
 			}
 		}
 	}
 
-	if err := metrics.NewMetricsServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure Metrics Service err: %v", err)
+	if err := exporter.NewExporterServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
+		log.Errorf("Ensure Exporter Service err: %v", err)
 		return ctrl.Result{}, err
 	}
 	}
@@ -361,7 +361,7 @@ func FulfillClusterInstance(clusterInstance *hwameistoroperatorv1alpha1.Cluster)
 	newClusterInstance = scheduler.FulfillSchedulerSpec(newClusterInstance)
 	newClusterInstance = evictor.FulfillEvictorSpec(newClusterInstance)
 	newClusterInstance = apiserver.FulfillApiServerSpec(newClusterInstance)
-	newClusterInstance = metrics.FulfillMetricsSpec(newClusterInstance)
+	newClusterInstance = exporter.FulfillExporterSpec(newClusterInstance)
 	newClusterInstance = storageclass.FulfillStorageClassSpec(newClusterInstance)
 	newClusterInstance = drbd.FulfillDRBDSpec(newClusterInstance)
 
