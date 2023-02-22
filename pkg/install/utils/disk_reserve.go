@@ -41,8 +41,8 @@ func CheckComponentsInstalledSuccessfully(clusterInstance *hwameistoroperatorv1a
 			return false
 		}
 	}
-	if !clusterInstance.Spec.Metrics.Disable {
-		if clusterInstance.Status.Metrics.Health != "Normal" {
+	if !clusterInstance.Spec.Exporter.Disable {
+		if clusterInstance.Status.Exporter.Health != "Normal" {
 			return false
 		}
 	}
