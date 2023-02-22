@@ -1,18 +1,34 @@
-# hwameistor-operator
-Operator that manages HwameiStor.
+## Introduction of hwameistor-operator
 
-* LCM for HwameiStor components
-  * LocalStorage
-  * LocalDiskManager
-  * Scheduler
-  * AdmissionController
-  * Evictor
+Hwameistor-operator will be used for HwameiStor components management and installation automation.
 
-* Ensure HwameiStor Ready For Use after installing
-  * Auto Claim Disk
+### Life Cycle Management (LCM) for HwameiStor components:
 
-* Manage HwameiStor runtime config
-  * Admission Config
+    Apiserver
+    LocalStorage
+    LocalDiskManager
+    Scheduler
+    AdmissionController
+    VolumeEvictor
+    Exporter
+
+### Local disk claim automation for ensuring HwameiStor ready
+
+### Admission control configuration management for HwameiStor volume verification
+
+
+## HwameiStor-operator installation
+
+$ helm repo add hwameistor-operator https://hwameistor.io/hwameistor-operator
+
+$ helm repo update hwameistor-operator
+
+$ helm install hwameistor-operator hwameistor-operator/hwameistor-operator
+
+
+## HwameiStor installation with hwameistor-operator
+
+$ kubectl apply -f https://raw.githubusercontent.com/hwameistor/hwameistor-operator/main/config/samples/hwameistor.io_hwcluster.yaml
 
 ## Roadmap
 
