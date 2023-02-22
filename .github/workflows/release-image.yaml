@@ -31,6 +31,8 @@ jobs:
         uses: azure/setup-helm@v1
         with:
           version: v3.7.1
+      - name: Set env
+        run: echo "GIT_ORG=$( echo ${{ github.repository_owner }} | tr 'A-Z' 'a-z' )" >> $GITHUB_ENV
       - name: Render Chart Values
         run: |
           make render-chart-values
