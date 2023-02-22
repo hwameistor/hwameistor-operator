@@ -1,0 +1,8 @@
+> This is a sample for changelog, please delete this line in your offical release
+
+# Feature / Major changes
+## Operator
+
+* [1] Descriptions about feature(#<releated_pr>, @Author)
+* [2] Descriptions about bug fixes(#<releated_pr>, @Author)
+...
