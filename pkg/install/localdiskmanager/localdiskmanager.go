@@ -190,6 +190,35 @@ func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	setLDMDaemonSetVolumes(newClusterInstance)
 	// setLDMDaemonSetContainers(clusterInstance)
 	setLDMDaemonSetContainers(newClusterInstance)
+
+	if newClusterInstance.Spec.LocalDiskManager.TolerationOnMaster {
+		ldmDaemonSet.Spec.Template.Spec.Tolerations = []corev1.Toleration{
+			{
+				Key: "CriticalAddonsOnly",
+				Operator: corev1.TolerationOpExists,
+			},
+			{
+				Effect: corev1.TaintEffectNoSchedule,
+				Key: "node.kubernetes.io/not-ready",
+				Operator: corev1.TolerationOpExists,
+			},
+			{
+				Effect: corev1.TaintEffectNoSchedule,
+				Key: "node-role.kubernetes.io/master",
+				Operator: corev1.TolerationOpExists,
+			},
+			{
+				Effect: corev1.TaintEffectNoSchedule,
+				Key: "node-role.kubernetes.io/control-plane",
+				Operator: corev1.TolerationOpExists,
+			},
+			{
+				Effect: corev1.TaintEffectNoSchedule,
+				Key: "node.cloudprovider.kubernetes.io/uninitialized",
+				Operator: corev1.TolerationOpExists,
+			},
+		}
+	}
 }
 
 func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {

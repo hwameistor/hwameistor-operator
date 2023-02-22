@@ -4242,6 +4242,8 @@ spec:
                             type: object
                         type: object
                     type: object
+                  tolerationOnMaster:
+                    type: boolean
                 type: object
               localStorage:
                 description: LocalStorage represents settings about LocalStorage
@@ -5703,6 +5705,8 @@ spec:
                             type: object
                         type: object
                     type: object
+                  tolerationOnMaster:
+                    type: boolean
                 type: object
               rbac:
                 properties:
