@@ -38,10 +38,18 @@ jobs:
         uses: helm/chart-releaser-action@v1.3.0
         with:
           charts_dir: helm
-          charts_repo_url: https://hwameistor.io/hwameistor
+          charts_repo_url: https://${GIT_ORG}.github.io/hwameistor-operator
           config: helm/.cr/config.yaml
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Merge index.yaml
+          run: |
+            sudo snap install yq
+            sleep 10
+            curl https://raw.githubusercontent.com/${GIT_ORG}/hwameistor/gh-pages/index.yaml > hms.yaml
+            curl https://raw.githubusercontent.com/${GIT_ORG}/drbd-adapter/gh-pages/index.yaml > dra.yaml
+            yq eval-all '. as $item ireduce ({}; . * $item)' hms.yaml dra.yaml > index.yaml
+            cat index.yaml
 
   release-image:
     runs-on: ubuntu-latest
