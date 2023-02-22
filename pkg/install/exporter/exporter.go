@@ -90,7 +90,7 @@ func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	exporter.Spec.Replicas = &clusterInstance.Spec.Exporter.Replicas
 	exporter.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range exporter.Spec.Template.Spec.Containers {
-		if container.Name == "collector" {
+		if container.Name == "exporter" {
 			imageSpec := clusterInstance.Spec.Exporter.Collector.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 		}
