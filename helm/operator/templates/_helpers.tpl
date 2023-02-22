@@ -60,3 +60,8 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/* Allow Scheudler image tag to be overridden. */}}
+{{- define "operator.imageTag" -}}
+  {{- default .Chart.Version .Values.operator.tag -}}
+{{- end -}}

@@ -1,3 +1,7 @@
-imageRegistry: ghcr.io
-imageRepository: hwameistor/operator
-imageTag: alpha5
+global:
+  hwameistorImageRegistry: ghcr.io
+
+operator:
+  replicas: 1
+  imageRepository: hwameistor/operator
+  tag: ""
