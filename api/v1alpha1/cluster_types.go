@@ -101,6 +101,7 @@ type LocalDiskManagerSpec struct {
 	CSI *CSISpec `json:"csi,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Manager *ContainerCommonSpec `json:"manager,omitempty"`
+	TolerationOnMaster bool `json:"tolerationOnMaster,omitempty"`
 }
 
 type LocalStorageSpec struct {
@@ -109,6 +110,7 @@ type LocalStorageSpec struct {
 	CSI *CSISpec `json:"csi,omitempty"`
 	Member *MemberSpec `json:"member,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
+	TolerationOnMaster bool `json:"tolerationOnMaster,omitempty"`
 }
 
 type MemberSpec struct {

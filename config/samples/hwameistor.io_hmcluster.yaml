@@ -39,6 +39,7 @@ spec:
       rcloneImage:
         repository: "rclone/rclone"
         tag: "1.53.2"
+    tolerationOnMaster: true
   localDiskManager:
     kubeletRootDir: "/var/lib/kubelet"
     csi:
@@ -64,6 +65,7 @@ spec:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-disk-manager"
         tag: "v0.7.2"
+    tolerationOnMaster: true
   scheduler:
     replicas: 1
     scheduler:
