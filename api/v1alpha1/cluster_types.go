@@ -178,7 +178,6 @@ type StorageClassSpec struct {
 	Disable bool `json:"disable,omitempty"`
 	AllowVolumeExpansion bool `json:"allowVolumeExpansion,omitempty"`
 	ReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
-	DiskType string `json:"diskType,omitempty"`
 	FSType string `json:"fsType,omitempty"`
 }
 
@@ -189,6 +188,7 @@ type ClusterStatus struct {
 	
 	InstalledCRDS bool `json:"installedCRDS"`
 	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
+	DRBDAdapterCreatedJobNum int `json:"drbdAdapterCreatedJobNum"`
 	DiskReserveState string `json:"diskReserveState"`
 	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
 	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`

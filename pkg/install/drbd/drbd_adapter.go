@@ -65,6 +65,8 @@ var useAffinity string
 var nodeAffinity corev1.NodeAffinity
 var namespace string
 
+var adapterCreatedJobNum = 0
+
 func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	drbdConfigs := clusterInstance.Spec.DRBD
 	if drbdConfigs == nil {
@@ -89,11 +91,11 @@ func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	nodeAffinity = *drbdConfigs.NodeAffinity
 }
 
-func CreateDRBDAdapter(cli client.Client) error {
+func CreateDRBDAdapter(cli client.Client) (int, error) {
 	nodeList := corev1.NodeList{}
 	if err := cli.List(context.TODO(), &nodeList); err != nil {
 		log.Errorf("List nodes err: %v", err)
-		return err
+		return adapterCreatedJobNum, err
 	}
 
 	for _, node := range nodeList.Items {
@@ -111,7 +113,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 			matched, err := regexp.Match(k, []byte(osImage))
 			if err != nil {
 				log.Errorf("Regexp match err: %v", err)
-				return err
+				return adapterCreatedJobNum, err
 			}
 			if matched {
 				distro = v
@@ -348,7 +350,7 @@ func CreateDRBDAdapter(cli client.Client) error {
 		matched, err := regexp.Match("^rhel[78]$", []byte(distro))
 		if err != nil {
 			log.Errorf("Regexp match err: %v", err)
-			return err
+			return adapterCreatedJobNum, err
 		}
 		if matched {
 			for i, container := range job.Spec.Template.Spec.Containers {
@@ -369,11 +371,13 @@ func CreateDRBDAdapter(cli client.Client) error {
 
 		if err := cli.Create(context.TODO(), &job); err != nil {
 			log.Errorf("Create job err: %v", job)
-			return err
+			return adapterCreatedJobNum, err
+		} else {
+			adapterCreatedJobNum = adapterCreatedJobNum + 1
 		}
 	}
 
-	return nil
+	return adapterCreatedJobNum, nil
 }
 
 func FulfillDRBDSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {

@@ -281,21 +281,16 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 	}
 
-	if !newInstance.Spec.StorageClass.Disable {
-		if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
-			log.Errorf("Ensure StorageClass err: %v", err)
-			return ctrl.Result{}, err
-		}
-	}
-
 	if !newInstance.Spec.DRBD.Disable {
 		if !newInstance.Status.DRBDAdapterCreated {
 			drbd.HandelDRBDConfigs(instance)
-			if err := drbd.CreateDRBDAdapter(r.Client); err != nil {
+			drbdAdapterJobCreatedNum, err := drbd.CreateDRBDAdapter(r.Client)
+			if err != nil {
 				log.Errorf("Create DRBD Adapter err: %v", err)
 				return ctrl.Result{}, err
 			} else {
 				newInstance.Status.DRBDAdapterCreated = true
+				newInstance.Status.DRBDAdapterCreatedJobNum = drbdAdapterJobCreatedNum
 			}
 		}
 	}
@@ -325,6 +320,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 		newInstance.Status.DiskReserveState = "CreatedLDC"
+	case "CreatedLDC":
+		if !newInstance.Spec.StorageClass.Disable {
+			if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
+				log.Errorf("Ensure StorageClass err: %v", err)
+				return ctrl.Result{}, err
+			}
+		}
 	}
 
 	if reflect.DeepEqual(instance, newInstance) {
