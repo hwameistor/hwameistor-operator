@@ -28,7 +28,7 @@ $ helm install hwameistor-operator hwameistor-operator/hwameistor-operator
 
 ## HwameiStor installation with hwameistor-operator
 
-$ kubectl apply -f https://raw.githubusercontent.com/hwameistor/hwameistor-operator/main/config/samples/hwameistor.io_hwcluster.yaml
+$ kubectl apply -f https://raw.githubusercontent.com/hwameistor/hwameistor-operator/main/config/samples/hwameistor.io_hmcluster.yaml
 
 ## Roadmap
 
