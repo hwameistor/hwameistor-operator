@@ -120,5 +120,4 @@ spec:
   storageClass:
     allowVolumeExpansion: true
     reclaimPolicy: "Delete"
-    diskType: "HDD"
     fsType: "xfs"

@@ -6354,8 +6354,6 @@ spec:
                     type: boolean
                   disable:
                     type: boolean
-                  diskType:
-                    type: string
                   fsType:
                     type: string
                   reclaimPolicy:
@@ -6449,6 +6447,8 @@ spec:
                 type: string
               drbdAdapterCreated:
                 type: boolean
+              drbdAdapterCreatedJobNum:
+                type: integer
               evictor:
                 properties:
                   health:
@@ -6710,6 +6710,7 @@ spec:
             required:
             - diskReserveState
             - drbdAdapterCreated
+            - drbdAdapterCreatedJobNum
             - installedCRDS
             type: object
         type: object
