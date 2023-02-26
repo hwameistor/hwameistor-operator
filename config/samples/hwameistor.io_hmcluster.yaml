@@ -43,7 +43,6 @@ spec:
   localDiskManager:
     kubeletRootDir: "/var/lib/kubelet"
     csi:
-      enable: true
       registrar:
         image:
           registry: "k8s-gcr.m.daocloud.io"

@@ -4157,8 +4157,6 @@ spec:
                                 type: object
                             type: object
                         type: object
-                      enable:
-                        type: boolean
                       registrar:
                         properties:
                           image:
@@ -5605,8 +5603,6 @@ spec:
                                 type: object
                             type: object
                         type: object
-                      enable:
-                        type: boolean
                       registrar:
                         properties:
                           image:

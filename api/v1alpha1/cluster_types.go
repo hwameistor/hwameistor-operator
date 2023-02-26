@@ -91,7 +91,6 @@ type CSIControllerSpec struct {
 }
 
 type CSISpec struct {
-	Enable bool `json:"enable,omitempty"`
 	Registrar *ContainerCommonSpec `json:"registrar,omitempty"`
 	Controller *CSIControllerSpec `json:"controller,omitempty"`
 }
