@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -32,7 +33,7 @@ var schedulerLabelSelectorValue = "hwameistor-scheduler"
 var defaultSchedulerReplicas = int32(1)
 var defauldSchedulerImageRegistry = "ghcr.m.daocloud.io"
 var defaultSchedulerImageRepository = "hwameistor/scheduler"
-var defaultSchedulerImageTag = "v0.7.1"
+var defaultSchedulerImageTag = install.DefaultHwameistorVersion
 
 var schedulerDeploy = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
