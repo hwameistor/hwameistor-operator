@@ -19,11 +19,11 @@ Hwameistor-operator will be used for HwameiStor components management and instal
 
 ## HwameiStor-operator installation
 
-$ helm repo add hwameistor-operator https://hwameistor.io/hwameistor-operator
+$ helm repo add hwameistor https://hwameistor.io/hwameistor-operator
 
-$ helm repo update hwameistor-operator
+$ helm repo update hwameistor
 
-$ helm install hwameistor-operator hwameistor-operator/hwameistor-operator
+$ helm install hwameistor-operator hwameistor/hwameistor-operator
 
 
 ## HwameiStor installation with hwameistor-operator
