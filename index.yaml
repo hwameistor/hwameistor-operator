@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   hwameistor-operator:
   - apiVersion: v2
+    appVersion: v0.8.1-rc.1
+    created: "2023-03-01T12:25:02.738366121Z"
+    description: A Helm chart for Hwameistor Operator
+    digest: dd345b2a539b0c247b30af3fea6004ba3e0c06e1b519dcac3f0f91231a10c764
+    name: hwameistor-operator
+    type: application
+    urls:
+    - https://github.com/hwameistor/hwameistor-operator/releases/download/v0.8.1-rc.1/hwameistor-operator-v0.8.1-rc.1.tgz
+    version: v0.8.1-rc.1
+  - apiVersion: v2
     appVersion: v0.8.0
     created: "2023-02-24T10:41:45.646714763Z"
     description: A Helm chart for Hwameistor Operator
@@ -41,4 +51,4 @@ entries:
     urls:
     - https://github.com/hwameistor/hwameistor-operator/releases/download/v0.0.1-rc.3/hwameistor-operator-v0.0.1-rc.3.tgz
     version: v0.0.1-rc.3
-generated: "2023-02-24T10:41:45.646738263Z"
+generated: "2023-03-01T12:25:02.738392721Z"
