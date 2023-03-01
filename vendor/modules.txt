@@ -85,8 +85,9 @@ github.com/googleapis/gnostic/openapiv2
 ## explicit; go 1.12
 github.com/hashicorp/golang-lru
 github.com/hashicorp/golang-lru/simplelru
-# github.com/hwameistor/hwameistor v0.7.2
+# github.com/hwameistor/hwameistor v0.8.1-0.20230301082936-2e48f0b77597
 ## explicit; go 1.18
+github.com/hwameistor/hwameistor/deploy/crds
 github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1
 # github.com/imdario/mergo v0.3.12
 ## explicit; go 1.13
