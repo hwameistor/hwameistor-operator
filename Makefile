@@ -208,6 +208,7 @@ catalog-push: ## Push a catalog image.
 PROJECT_SOURCE_CODE_DIR ?= $(CURDIR)
 BINS_DIR = ${PROJECT_SOURCE_CODE_DIR}/_build
 OPERATOR_MODULE_NAME = operator
+OPERATOR_BUILD_INPUT = ${PROJECT_SOURCE_CODE_DIR}/main.go
 OPERATOR_BUILD_OUTPUT = ${BINS_DIR}/${OPERATOR_MODULE_NAME}
 
 GO_VERSION = $(shell go version)
@@ -235,11 +236,11 @@ MUILT_ARCH_PUSH_CMD = ${PROJECT_SOURCE_CODE_DIR}/docker-push-with-multi-arch.sh
 
 .PHONY: compile
 compile: ## compile
-	GOARCH=amd64 ${BUILD_ENVS} ${BUILD_CMD} ${BUILD_OPTIONS} -o ${OPERATOR_BUILD_OUTPUT}
+	GOARCH=amd64 ${BUILD_ENVS} ${BUILD_CMD} ${BUILD_OPTIONS} -o ${OPERATOR_BUILD_OUTPUT} ${OPERATOR_BUILD_INPUT}
 
 .PHONY: compile_arm64
 compile_arm64: ## compile arm64
-	GOARCH=arm64 ${BUILD_ENVS} ${BUILD_CMD} ${BUILD_OPTIONS} -o ${OPERATOR_BUILD_OUTPUT}
+	GOARCH=arm64 ${BUILD_ENVS} ${BUILD_CMD} ${BUILD_OPTIONS} -o ${OPERATOR_BUILD_OUTPUT} ${OPERATOR_BUILD_INPUT}
 
 .PHONY: build_image
 build_image: ## build image
@@ -261,3 +262,8 @@ release: ## release
 .PHONY: render-chart-values
 render-chart-values:
 	bash ./build/util/render-chart-values.sh
+
+.PHONY: vendor
+vendor:
+	go mod tidy -compat=1.18
+	go mod vendor
