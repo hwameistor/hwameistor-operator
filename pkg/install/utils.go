@@ -5,17 +5,18 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"strings"
 
+	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	syaml "k8s.io/apimachinery/pkg/runtime/serializer/yaml"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 )
 
 var defaultTargetNamespace = "hwameistor"
@@ -50,6 +51,9 @@ func ReadResourcesFromDir(dir string) ([][]byte, error) {
 		}
 	
 		for _, fileInfo := range fileInfos {
+			if !strings.HasSuffix(fileInfo.Name(), "crd.yaml") {
+				continue
+			}
 			content, err := GetFileBytes(dir + "/" + fileInfo.Name())
 			if err != nil {
 				log.Errorf("get file bytes err: %v\n", err)
