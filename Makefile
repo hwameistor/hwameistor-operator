@@ -267,3 +267,12 @@ render-chart-values:
 vendor:
 	go mod tidy -compat=1.18
 	go mod vendor
+
+
+.PHONY: e2e-test
+e2e-test:
+	bash test/e2e-test.sh
+
+.PHONY: pr-test
+pr-test:
+	bash test/pr-test.sh
