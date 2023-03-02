@@ -9,8 +9,7 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 
-	_ "github.com/hwameistor/hwameistor/test/e2e/E2eTest"
-	_ "github.com/hwameistor/hwameistor/test/e2e/adaptation_test"
+	_ "github.com/hwameistor/hwameistor-operator/test/e2e/E2eTest"
 )
 
 func TestMain(m *testing.M) {

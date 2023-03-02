@@ -23,9 +23,9 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/hwameistor/hwameistor-operator/test/e2e/framework"
 	clientset "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme"
 	v1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
-	"github.com/hwameistor/hwameistor/test/e2e/framework"
 )
 
 func Int32Ptr(i int32) *int32 { return &i }
