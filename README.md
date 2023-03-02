@@ -2,6 +2,18 @@
 
 Hwameistor-operator will be used for HwameiStor components management and installation automation.
 
+### Versioning
+
+Versions of Hwameistor are listed below:
+
+|  Components   | Hwameistor  |
+|---------------|-------------|
+|  Versions     | 0.8.x `[1]` | 
+
+NOTES:
+
+[1] `.x` means all the patch releases of Hwameistor can be naturally supported in one operator version.
+
 ### Life Cycle Management (LCM) for HwameiStor components:
 
     Apiserver
