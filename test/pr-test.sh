@@ -27,11 +27,14 @@ set -e
 date=$(date +%Y%m%d%H%M)
 IMAGE_TAG=v${date}
 export IMAGE_TAG=${IMAGE_TAG}
-MODULES=(local-storage local-disk-manager scheduler admission evictor exporter apiserver)
+OPERATOR_MODULE_NAME=operator
+IMAGE_REGISTRY=172.30.45.210/hwameistor
+export IMAGE_NAME=${IMAGE_REGISTRY}/${OPERATOR_MODULE_NAME}
+MODULES=(operator)
 
 function build_image(){
 	echo "Build hwameistor image"
-	export IMAGE_TAG=${IMAGE_TAG} && make image
+	export IMAGE_TAG=${IMAGE_TAG} && make build_image
 
 	for module in ${MODULES[@]}
 	do
@@ -67,7 +70,9 @@ function prepare_install_params() {
 }
 
 # Step1: build all images tagged with <image_registry>/<module>:<date>
-
+timer_start=`date "+%Y-%m-%d %H:%M:%S"`
+build_image
+timer_end=`date "+%Y-%m-%d %H:%M:%S"`
 
 # Step3: go e2e test
 pwd
