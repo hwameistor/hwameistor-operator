@@ -1303,12 +1303,14 @@ spec:
               diskReserveConfigurations:
                 items:
                   properties:
-                    diskType:
-                      type: string
+                    devices:
+                      items:
+                        type: string
+                      type: array
                     nodeName:
                       type: string
                   required:
-                  - diskType
+                  - devices
                   - nodeName
                   type: object
                 type: array

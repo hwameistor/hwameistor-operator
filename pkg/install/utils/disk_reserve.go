@@ -61,8 +61,13 @@ func ListLocalDisks (cli client.Client) ([]hwameistorv1alpha1.LocalDisk, error) 
 
 func checkLocalDiskReserveCondition (ld *hwameistorv1alpha1.LocalDisk, diskReserveConfigurations []hwameistoroperatorv1alpha1.DiskReserveConfiguration) bool {
 	for _, diskReserveConfiguration := range diskReserveConfigurations {
-		if (ld.Spec.NodeName == diskReserveConfiguration.NodeName) && (ld.Spec.DiskAttributes.Type == diskReserveConfiguration.DiskType) {
-			return true
+		if ld.Spec.NodeName != diskReserveConfiguration.NodeName {
+			continue
+		}
+		for _, deviceToReserve := range diskReserveConfiguration.Devices {
+			if ld.Spec.DevicePath == deviceToReserve {
+				return true
+			}
 		}
 	}
 	return false

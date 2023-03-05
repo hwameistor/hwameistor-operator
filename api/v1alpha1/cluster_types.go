@@ -61,7 +61,7 @@ type ClusterSpec struct {
 
 type DiskReserveConfiguration struct {
 	NodeName string `json:"nodeName"`
-	DiskType string `json:"diskType"`
+	Devices []string `json:"devices"`
 }
 
 type ImageSpec struct {
