@@ -369,6 +369,21 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 			job.Spec.Template.Spec.Affinity.NodeAffinity = &nodeAffinity
 		}
 
+		if deployOnMaster {
+			job.Spec.Template.Spec.Tolerations = []corev1.Toleration{
+				{
+					Effect: corev1.TaintEffectNoSchedule,
+					Key: "node-role.kubernetes.io/master",
+					Operator: corev1.TolerationOpExists,
+				},
+				{
+					Effect: corev1.TaintEffectNoSchedule,
+					Key: "node-role.kubernetes.io/control-plane",
+					Operator: corev1.TolerationOpExists,
+				},
+			}
+		}
+
 		if err := cli.Create(context.TODO(), &job); err != nil {
 			log.Errorf("Create job err: %v", job)
 			return adapterCreatedJobNum, err
