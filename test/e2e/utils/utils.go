@@ -357,6 +357,113 @@ func ConfigureEnvironment(ctx context.Context) error {
 	return err
 }
 
+func CheckHwameiInstall(ctx context.Context) error {
+
+	addLabels()
+	f := framework.NewDefaultFramework(v1alpha1.AddToScheme)
+	client := f.GetClient()
+
+	//drbd1 := &b1.Job{}
+	//drbdKey1 := k8sclient.ObjectKey{
+	//	Name:      "drbd-adapter-k8s-node1-rhel7",
+	//	Namespace: "hwameistor",
+	//}
+	//drbd2 := &b1.Job{}
+	//drbdKey2 := k8sclient.ObjectKey{
+	//	Name:      "drbd-adapter-k8s-node2-rhel7",
+	//	Namespace: "hwameistor",
+	//}
+
+	localStorage := &appsv1.DaemonSet{}
+	localStorageKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-local-storage",
+		Namespace: "hwameistor",
+	}
+	err := client.Get(ctx, localStorageKey, localStorage)
+
+	controller := &appsv1.Deployment{}
+	controllerKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-local-storage-csi-controller",
+		Namespace: "hwameistor",
+	}
+	err = client.Get(ctx, controllerKey, controller)
+
+	webhook := &appsv1.Deployment{}
+	webhookKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-admission-controller",
+		Namespace: "hwameistor",
+	}
+
+	scheduler := &appsv1.Deployment{}
+	schedulerKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-scheduler",
+		Namespace: "hwameistor",
+	}
+
+	localDiskManager := &appsv1.DaemonSet{}
+	localDiskManagerKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-local-disk-manager",
+		Namespace: "hwameistor",
+	}
+
+	//logrus.Infof("waiting for drbd ready")
+
+	//err = wait.PollImmediate(3*time.Second, 15*time.Minute, func() (done bool, err error) {
+	//	err = client.Get(ctx, drbdKey1, drbd1)
+	//	if err != nil {
+	//		logrus.Error(err)
+	//		f.ExpectNoError(err)
+	//	}
+	//	err = client.Get(ctx, drbdKey2, drbd2)
+	//	if err != nil {
+	//		logrus.Error(err)
+	//		f.ExpectNoError(err)
+	//	}
+	//	if drbd1.Status.Succeeded == int32(1) && drbd2.Status.Succeeded == int32(1) {
+	//		logrus.Printf("drbd ready")
+	//		return true, nil
+	//	}
+	//	return false, nil
+	//})
+
+	logrus.Infof("waiting for hwamei ready")
+
+	err = wait.PollImmediate(3*time.Second, 40*time.Minute, func() (done bool, err error) {
+		err = client.Get(ctx, localStorageKey, localStorage)
+		if err != nil {
+			logrus.Error(" localStorage error ", err)
+			f.ExpectNoError(err)
+		}
+		err = client.Get(ctx, controllerKey, controller)
+		if err != nil {
+			logrus.Error("controller error ", err)
+			f.ExpectNoError(err)
+		}
+		err = client.Get(ctx, schedulerKey, scheduler)
+		if err != nil {
+			logrus.Error("scheduler error ", err)
+			f.ExpectNoError(err)
+		}
+		err = client.Get(ctx, localDiskManagerKey, localDiskManager)
+		if err != nil {
+			logrus.Error("localDiskManager error ", err)
+			f.ExpectNoError(err)
+		}
+		err = client.Get(ctx, webhookKey, webhook)
+		if err != nil {
+			logrus.Error("admission-controller error ", err)
+			f.ExpectNoError(err)
+		}
+
+		if localStorage.Status.DesiredNumberScheduled == localStorage.Status.NumberAvailable && controller.Status.AvailableReplicas == int32(1) && scheduler.Status.AvailableReplicas == int32(1) && localDiskManager.Status.DesiredNumberScheduled == localDiskManager.Status.NumberAvailable && webhook.Status.AvailableReplicas == int32(1) {
+			return true, nil
+		}
+		return false, nil
+	})
+
+	return err
+}
+
 func ConfigureEnvironmentForPrTest(ctx context.Context) bool {
 	err := wait.PollImmediate(10*time.Second, 10*time.Minute, func() (done bool, err error) {
 		output := RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")

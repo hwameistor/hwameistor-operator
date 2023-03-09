@@ -1,0 +1,122 @@
+apiVersion: hwameistor.io/v1alpha1
+kind: Cluster
+metadata:
+  name: cluster-sample
+spec:
+  targetNamespace: hwameistor
+  rbac:
+    serviceAccountName: "hwameistor-admin"
+  localStorage:
+    kubeletRootDir: "/var/lib/kubelet"
+    csi:
+      registrar:
+        image:
+          registry: "k8s-gcr.m.daocloud.io"
+          repository: "sig-storage/csi-node-driver-registrar"
+          tag: "v2.5.0"
+      controller:
+        replicas: 1
+        provisioner:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-provisioner"
+            tag: "v2.0.3"
+        attacher:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-attacher"
+            tag: "v3.0.1"
+        resizer:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-resizer"
+            tag: "v1.0.1"
+    member:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/local-storage"
+        tag: "v0.8.0"
+      rcloneImage:
+        repository: "rclone/rclone"
+        tag: "1.53.2"
+    tolerationOnMaster: true
+  localDiskManager:
+    kubeletRootDir: "/var/lib/kubelet"
+    csi:
+      registrar:
+        image:
+          registry: "k8s-gcr.m.daocloud.io"
+          repository: "sig-storage/csi-node-driver-registrar"
+          tag: "v2.5.0"
+      controller:
+        provisioner:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-provisioner"
+            tag: "v2.0.3"
+        attacher:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-attacher"
+            tag: "v3.0.1"
+    manager:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/local-disk-manager"
+        tag: "v0.8.0"
+    tolerationOnMaster: true
+  scheduler:
+    replicas: 1
+    scheduler:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/scheduler"
+        tag: "v0.8.0"
+  admissionController:
+    controller:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/admission"
+        tag: "v0.8.0"
+  evictor:
+    evictor:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/evictor"
+        tag: "v0.8.0"
+  apiServer:
+    replicas: 1
+    server:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/apiserver"
+        tag: "v0.8.0"
+  exporter:
+    replicas: 1
+    collector:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/exporter"
+        tag: "v0.8.0"
+  drbd:
+    deployOnMaster: "no"
+    imageRegistry: "ghcr.io"
+    imageRepoOwner: "hwameistor"
+    imagePullPolicy: "IfNotPresent"
+    drbdVersion: "v9.0.32-1"
+    upgrade: "no"
+    checkHostName: "yes"
+    useAffinity: "no"
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+    chartVersion: "v0.3.6"
+  storageClass:
+    allowVolumeExpansion: true
+    reclaimPolicy: "Delete"
+    fsType: "xfs"
