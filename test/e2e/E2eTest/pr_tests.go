@@ -9,7 +9,6 @@ import (
 	"github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -65,23 +64,26 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	ginkgo.Context("create a hmcluster", func() {
 		ginkgo.It("create a hmcluster", func() {
 			//create sc
-			exampleCluster := &opv1.Cluster{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Cluster",
-					APIVersion: "hwameistor.io/v1alpha1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "cluster-sample",
-				},
-				Spec:   opv1.ClusterSpec{},
-				Status: opv1.ClusterStatus{},
-			}
-
-			err := client.Create(ctx, exampleCluster)
-			if err != nil {
-				logrus.Printf("Create hmcluster failed ：%+v ", err)
-				f.ExpectNoError(err)
-			}
+			//exampleCluster := &opv1.Cluster{
+			//	TypeMeta: metav1.TypeMeta{
+			//		Kind:       "Cluster",
+			//		APIVersion: "hwameistor.io/v1alpha1",
+			//	},
+			//	ObjectMeta: metav1.ObjectMeta{
+			//		Name: "cluster-sample",
+			//	},
+			//	Spec:   opv1.ClusterSpec{},
+			//	Status: opv1.ClusterStatus{},
+			//}
+			//
+			//err := client.Create(ctx, exampleCluster)
+			//if err != nil {
+			//	logrus.Printf("Create hmcluster failed ：%+v ", err)
+			//	f.ExpectNoError(err)
+			//}
+			_ = utils.RunInLinux("kubectl apply -f sample.yaml")
+			time.Sleep(1 * time.Minute)
+			err := utils.CheckHwameiInstall(ctx)
 			gomega.Expect(err).To(gomega.BeNil())
 		})
 	})
