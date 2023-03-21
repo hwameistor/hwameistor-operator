@@ -17,13 +17,13 @@ import (
 )
 
 type ExporterMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewExporterMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ExporterMaintainer {
 	return &ExporterMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -60,12 +60,12 @@ var exporter = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "exporter",
+						Name:            "exporter",
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Ports: []corev1.ContainerPort{
 							{
-								Name: "exporter-apis",
-								ContainerPort: 8080,
+								Name:          "metrics",
+								ContainerPort: 80,
 							},
 						},
 						Env: []corev1.EnvVar{
@@ -104,7 +104,7 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	SetExporter(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: exporter.Namespace,
-		Name: exporter.Name,
+		Name:      exporter.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -142,19 +142,19 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.Exporter == nil {
@@ -176,7 +176,7 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillExporterSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillExporterSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.Exporter == nil {
 		clusterInstance.Spec.Exporter = &hwameistoriov1alpha1.ExporterSpec{}
 	}
