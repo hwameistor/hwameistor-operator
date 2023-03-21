@@ -28,6 +28,9 @@ func NewExporterServiceMaintainer(cli client.Client, clusterInstance *hwameistor
 var exporterService = corev1.Service{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "hwameistor-exporter",
+		Labels: map[string]string{
+			exporterLabelSelectorKey: exporterLabelSelectorValue,
+		},
 	},
 	Spec: corev1.ServiceSpec{
 		Selector: map[string]string{
