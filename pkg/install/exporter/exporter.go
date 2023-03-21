@@ -65,7 +65,7 @@ var exporter = appsv1.Deployment{
 						Ports: []corev1.ContainerPort{
 							{
 								Name: "exporter-apis",
-								ContainerPort: 8080,
+								ContainerPort: 80,
 							},
 						},
 						Env: []corev1.EnvVar{

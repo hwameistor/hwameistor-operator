@@ -39,7 +39,7 @@ var exporterService = corev1.Service{
 					Type: intstr.String,
 					StrVal: "exporter-apis",
 				},
-				Port: 8080,
+				Port: 80,
 			},
 		},
 	},
