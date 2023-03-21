@@ -14,13 +14,13 @@ import (
 )
 
 type ExporterServiceMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewExporterServiceMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ExporterServiceMaintainer {
 	return &ExporterServiceMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -39,10 +39,11 @@ var exporterService = corev1.Service{
 		Ports: []corev1.ServicePort{
 			{
 				TargetPort: intstr.IntOrString{
-					Type: intstr.String,
-					StrVal: "exporter-apis",
+					Type:   intstr.String,
+					StrVal: "metrics",
 				},
 				Port: 80,
+				Name: "metrics",
 			},
 		},
 	},
@@ -56,7 +57,7 @@ func (m *ExporterServiceMaintainer) Ensure() error {
 	SetExporterService(m.ClusterInstance)
 	key := types.NamespacedName{
 		Namespace: exporterService.Namespace,
-		Name: exporterService.Name,
+		Name:      exporterService.Name,
 	}
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
