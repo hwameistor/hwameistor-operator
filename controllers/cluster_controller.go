@@ -34,11 +34,11 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/apiserver"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/drbd"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/evictor"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/exporter"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/exporter"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
@@ -79,7 +79,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	fulfilledClusterInstance := FulfillClusterInstance(instance)
 	if !reflect.DeepEqual(instance, fulfilledClusterInstance) {
-		if err := r.Client.Update(ctx, fulfilledClusterInstance) ; err != nil {
+		if err := r.Client.Update(ctx, fulfilledClusterInstance); err != nil {
 			log.Errorf("Update Cluster err: %v", err)
 			return ctrl.Result{}, err
 		} else {
@@ -167,7 +167,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if !newInstance.Spec.AdmissionController.Disable {
-		newInstance, err =  admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
+		newInstance, err = admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
 			log.Errorf("Ensure AdmissionController err: %v", err)
 			return ctrl.Result{}, err
@@ -195,13 +195,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
 			return ctrl.Result{}, err
 		}
-	
+
 		newInstance, err = scheduler.NewSchedulerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
 			log.Errorf("Ensure Scheduler err: %v", err)
 			return ctrl.Result{}, err
 		}
-	
+
 		if scheduler := newInstance.Status.Scheduler; scheduler != nil {
 			instances := scheduler.Instances
 			if instances != nil {
@@ -213,7 +213,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 	}
-	
+
 	if !newInstance.Spec.Evictor.Disable {
 		newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -232,7 +232,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 	}
-	
+
 	if !newInstance.Spec.ApiServer.Disable {
 		newInstance, err = apiserver.NewApiServerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -256,29 +256,29 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 	}
-	
+
 	if !newInstance.Spec.Exporter.Disable {
 		newInstance, err = exporter.NewExporterMaintainer(r.Client, newInstance).Ensure()
-	if err != nil {
-		log.Errorf("Ensure Exporter Collector err: %v", err)
-		return ctrl.Result{}, err
-	}
+		if err != nil {
+			log.Errorf("Ensure Exporter Collector err: %v", err)
+			return ctrl.Result{}, err
+		}
 
-	if exporter := newInstance.Status.Exporter; exporter != nil {
-		instances := exporter.Instances
-		if instances != nil {
-			if instances.AvailablePodCount == instances.DesiredPodCount {
-				newInstance.Status.Exporter.Health = "Normal"
-			} else {
-				newInstance.Status.Exporter.Health = "Abnormal"
+		if exporter := newInstance.Status.Exporter; exporter != nil {
+			instances := exporter.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.Exporter.Health = "Normal"
+				} else {
+					newInstance.Status.Exporter.Health = "Abnormal"
+				}
 			}
 		}
-	}
 
-	if err := exporter.NewExporterServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
-		log.Errorf("Ensure Exporter Service err: %v", err)
-		return ctrl.Result{}, err
-	}
+		if err := exporter.NewExporterServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure Exporter Service err: %v", err)
+			return ctrl.Result{}, err
+		}
 	}
 
 	if !newInstance.Spec.DRBD.Disable {
