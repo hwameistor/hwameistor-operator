@@ -420,18 +420,18 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 		WorkloadName: gottenDS.Name,
 	}
 
-	if newClusterInstance.Status.LocalDiskManager == nil {
-		newClusterInstance.Status.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerStatus{
+	if newClusterInstance.Status.ComponentStatus.LocalDiskManager == nil {
+		newClusterInstance.Status.ComponentStatus.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerStatus{
 			Instances: &instancesDeployStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.LocalDiskManager.Instances == nil {
-			newClusterInstance.Status.LocalDiskManager.Instances = &instancesDeployStatus
+		if newClusterInstance.Status.ComponentStatus.LocalDiskManager.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.LocalDiskManager.Instances = &instancesDeployStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.LocalDiskManager.Instances, instancesDeployStatus) {
-				newClusterInstance.Status.LocalDiskManager.Instances = &instancesDeployStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.LocalDiskManager.Instances, instancesDeployStatus) {
+				newClusterInstance.Status.ComponentStatus.LocalDiskManager.Instances = &instancesDeployStatus
 				return newClusterInstance, nil
 			}
 		}

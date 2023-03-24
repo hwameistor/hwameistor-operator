@@ -225,18 +225,18 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName: gotten.Name,
 	}
 
-	if newClusterInstance.Status.Scheduler == nil {
-		newClusterInstance.Status.Scheduler = &hwameistoriov1alpha1.SchedulerStatus{
+	if newClusterInstance.Status.ComponentStatus.Scheduler == nil {
+		newClusterInstance.Status.ComponentStatus.Scheduler = &hwameistoriov1alpha1.SchedulerStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.Scheduler.Instances == nil {
-			newClusterInstance.Status.Scheduler.Instances = &instancesStatus
+		if newClusterInstance.Status.ComponentStatus.Scheduler.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.Scheduler.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.Scheduler.Instances, instancesStatus) {
-				newClusterInstance.Status.Scheduler.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.Scheduler.Instances, instancesStatus) {
+				newClusterInstance.Status.ComponentStatus.Scheduler.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}

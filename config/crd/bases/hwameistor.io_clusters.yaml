@@ -6365,80 +6365,339 @@ spec:
           status:
             description: ClusterStatus defines the observed state of Cluster
             properties:
-              admissionController:
+              componentStatus:
                 properties:
-                  health:
-                    type: string
-                  instances:
+                  admissionController:
                     properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
+                      health:
                         type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
                     type: object
-                type: object
-              apiServer:
-                properties:
-                  health:
-                    type: string
-                  instances:
+                  apiServer:
                     properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
+                      health:
                         type: string
-                      workloadType:
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                    type: object
+                  evictor:
+                    properties:
+                      health:
                         type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                    type: object
+                  exporter:
+                    properties:
+                      health:
+                        type: string
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                    type: object
+                  localDiskManager:
+                    properties:
+                      csi:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                      health:
+                        type: string
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                    type: object
+                  localStorage:
+                    properties:
+                      csi:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                      health:
+                        type: string
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
+                    type: object
+                  scheduler:
+                    properties:
+                      health:
+                        type: string
+                      instances:
+                        properties:
+                          availablePodCount:
+                            format: int32
+                            type: integer
+                          desiredPodCount:
+                            format: int32
+                            type: integer
+                          pods:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                node:
+                                  type: string
+                                status:
+                                  type: string
+                              required:
+                              - name
+                              - node
+                              - status
+                              type: object
+                            type: array
+                          workloadName:
+                            type: string
+                          workloadType:
+                            type: string
+                        required:
+                        - availablePodCount
+                        - desiredPodCount
+                        - workloadName
+                        - workloadType
+                        type: object
                     type: object
                 type: object
               diskReserveState:
@@ -6447,265 +6706,10 @@ spec:
                 type: boolean
               drbdAdapterCreatedJobNum:
                 type: integer
-              evictor:
-                properties:
-                  health:
-                    type: string
-                  instances:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                type: object
-              exporter:
-                properties:
-                  health:
-                    type: string
-                  instances:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                type: object
               installedCRDS:
                 type: boolean
-              localDiskManager:
-                properties:
-                  csi:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                  health:
-                    type: string
-                  instances:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                type: object
-              localStorage:
-                properties:
-                  csi:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                  health:
-                    type: string
-                  instances:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                type: object
-              scheduler:
-                properties:
-                  health:
-                    type: string
-                  instances:
-                    properties:
-                      availablePodCount:
-                        format: int32
-                        type: integer
-                      desiredPodCount:
-                        format: int32
-                        type: integer
-                      pods:
-                        items:
-                          properties:
-                            name:
-                              type: string
-                            node:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - name
-                          - node
-                          - status
-                          type: object
-                        type: array
-                      workloadName:
-                        type: string
-                      workloadType:
-                        type: string
-                    required:
-                    - availablePodCount
-                    - desiredPodCount
-                    - workloadName
-                    - workloadType
-                    type: object
-                type: object
             required:
+            - componentStatus
             - diskReserveState
             - drbdAdapterCreated
             - drbdAdapterCreatedJobNum

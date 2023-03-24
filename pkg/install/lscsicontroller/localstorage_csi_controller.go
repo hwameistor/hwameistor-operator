@@ -288,18 +288,18 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName: gottenCSIController.Name,
 	}
 
-	if newClusterInstance.Status.LocalStorage == nil {
-		newClusterInstance.Status.LocalStorage = &hwameistoriov1alpha1.LocalStorageStatus{
+	if newClusterInstance.Status.ComponentStatus.LocalStorage == nil {
+		newClusterInstance.Status.ComponentStatus.LocalStorage = &hwameistoriov1alpha1.LocalStorageStatus{
 			CSI: &csiDeployStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.LocalStorage.CSI == nil {
-			newClusterInstance.Status.LocalStorage.CSI = &csiDeployStatus
+		if newClusterInstance.Status.ComponentStatus.LocalStorage.CSI == nil {
+			newClusterInstance.Status.ComponentStatus.LocalStorage.CSI = &csiDeployStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.LocalStorage.CSI, csiDeployStatus) {
-				newClusterInstance.Status.LocalStorage.CSI = &csiDeployStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.LocalStorage.CSI, csiDeployStatus) {
+				newClusterInstance.Status.ComponentStatus.LocalStorage.CSI = &csiDeployStatus
 				return newClusterInstance, nil
 			}
 		}

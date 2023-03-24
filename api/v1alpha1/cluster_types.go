@@ -189,6 +189,10 @@ type ClusterStatus struct {
 	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
 	DRBDAdapterCreatedJobNum int `json:"drbdAdapterCreatedJobNum"`
 	DiskReserveState string `json:"diskReserveState"`
+	ComponentStatus ComponentStatus `json:"componentStatus"`
+}
+
+type ComponentStatus struct {
 	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
 	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
 	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`

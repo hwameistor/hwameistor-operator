@@ -9,40 +9,40 @@ import (
 )
 
 func CheckComponentsInstalledSuccessfully(clusterInstance *hwameistoroperatorv1alpha1.Cluster) bool {
-	if ldmStatus := clusterInstance.Status.LocalDiskManager; ldmStatus == nil {
+	if ldmStatus := clusterInstance.Status.ComponentStatus.LocalDiskManager; ldmStatus == nil {
 		return false
 	} else if ldmStatus.Health != "Normal" {
 		return false
 	}
 	if !clusterInstance.Spec.LocalStorage.Disable {
-		if lsStatus := clusterInstance.Status.LocalStorage; lsStatus == nil {
+		if lsStatus := clusterInstance.Status.ComponentStatus.LocalStorage; lsStatus == nil {
 			return false
 		} else if lsStatus.Health != "Normal" {
 			return false
 		}
 	}
 	if !clusterInstance.Spec.AdmissionController.Disable {
-		if clusterInstance.Status.AdmissionController.Health != "Normal" {
+		if clusterInstance.Status.ComponentStatus.AdmissionController.Health != "Normal" {
 			return false
 		}
 	}
 	if !clusterInstance.Spec.Scheduler.Disable {
-		if clusterInstance.Status.Scheduler.Health != "Normal" {
+		if clusterInstance.Status.ComponentStatus.Scheduler.Health != "Normal" {
 			return false
 		}
 	}
 	if !clusterInstance.Spec.Evictor.Disable {
-		if clusterInstance.Status.Evictor.Health != "Normal" {
+		if clusterInstance.Status.ComponentStatus.Evictor.Health != "Normal" {
 			return false
 		}
 	}
 	if !clusterInstance.Spec.ApiServer.Disable {
-		if clusterInstance.Status.ApiServer.Health != "Normal" {
+		if clusterInstance.Status.ComponentStatus.ApiServer.Health != "Normal" {
 			return false
 		}
 	}
 	if !clusterInstance.Spec.Exporter.Disable {
-		if clusterInstance.Status.Exporter.Health != "Normal" {
+		if clusterInstance.Status.ComponentStatus.Exporter.Health != "Normal" {
 			return false
 		}
 	}

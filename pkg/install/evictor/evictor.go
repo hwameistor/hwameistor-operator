@@ -146,18 +146,18 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName: gotten.Name,
 	}
 
-	if newClusterInstance.Status.Evictor == nil {
-		newClusterInstance.Status.Evictor = &hwameistoriov1alpha1.EvictorStatus{
+	if newClusterInstance.Status.ComponentStatus.Evictor == nil {
+		newClusterInstance.Status.ComponentStatus.Evictor = &hwameistoriov1alpha1.EvictorStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.Evictor.Instances == nil {
-			newClusterInstance.Status.Evictor.Instances = &instancesStatus
+		if newClusterInstance.Status.ComponentStatus.Evictor.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.Evictor.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.Evictor.Instances, instancesStatus) {
-				newClusterInstance.Status.Evictor.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.Evictor.Instances, instancesStatus) {
+				newClusterInstance.Status.ComponentStatus.Evictor.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}
