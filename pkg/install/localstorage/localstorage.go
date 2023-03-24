@@ -457,18 +457,18 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 		WorkloadName: gottenDS.Name,
 	}
 
-	if newClusterInstance.Status.LocalStorage == nil {
-		newClusterInstance.Status.LocalStorage = &hwameistoriov1alpha1.LocalStorageStatus{
+	if newClusterInstance.Status.ComponentStatus.LocalStorage == nil {
+		newClusterInstance.Status.ComponentStatus.LocalStorage = &hwameistoriov1alpha1.LocalStorageStatus{
 			Instances: &instancesDeployStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.LocalStorage.Instances == nil {
-			newClusterInstance.Status.LocalStorage.Instances = &instancesDeployStatus
+		if newClusterInstance.Status.ComponentStatus.LocalStorage.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.LocalStorage.Instances = &instancesDeployStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.LocalStorage.Instances, instancesDeployStatus) {
-				newClusterInstance.Status.LocalStorage.Instances = &instancesDeployStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.LocalStorage.Instances, instancesDeployStatus) {
+				newClusterInstance.Status.ComponentStatus.LocalStorage.Instances = &instancesDeployStatus
 				return newClusterInstance, nil
 			}
 		}

@@ -157,18 +157,18 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName:      gotten.Name,
 	}
 
-	if newClusterInstance.Status.Exporter == nil {
-		newClusterInstance.Status.Exporter = &hwameistoriov1alpha1.ExporterStatus{
+	if newClusterInstance.Status.ComponentStatus.Exporter == nil {
+		newClusterInstance.Status.ComponentStatus.Exporter = &hwameistoriov1alpha1.ExporterStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.Exporter.Instances == nil {
-			newClusterInstance.Status.Exporter.Instances = &instancesStatus
+		if newClusterInstance.Status.ComponentStatus.Exporter.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.Exporter.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.Exporter.Instances, instancesStatus) {
-				newClusterInstance.Status.Exporter.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.Exporter.Instances, instancesStatus) {
+				newClusterInstance.Status.ComponentStatus.Exporter.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}

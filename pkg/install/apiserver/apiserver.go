@@ -147,18 +147,18 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName: gotten.Name,
 	}
 
-	if newClusterInstance.Status.ApiServer == nil {
-		newClusterInstance.Status.ApiServer = &hwameistoriov1alpha1.ApiServerStatus{
+	if newClusterInstance.Status.ComponentStatus.ApiServer == nil {
+		newClusterInstance.Status.ComponentStatus.ApiServer = &hwameistoriov1alpha1.ApiServerStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.ApiServer.Instances == nil {
-			newClusterInstance.Status.ApiServer.Instances = &instancesStatus
+		if newClusterInstance.Status.ComponentStatus.ApiServer.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.ApiServer.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.ApiServer.Instances, instancesStatus) {
-				newClusterInstance.Status.ApiServer.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.ApiServer.Instances, instancesStatus) {
+				newClusterInstance.Status.ComponentStatus.ApiServer.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}

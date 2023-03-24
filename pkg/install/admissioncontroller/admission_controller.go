@@ -195,18 +195,18 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		WorkloadName: gottenAdmissionController.Name,
 	}
 
-	if newClusterInstance.Status.AdmissionController == nil {
-		newClusterInstance.Status.AdmissionController = &hwameistoriov1alpha1.AdmissionControllerStatus{
+	if newClusterInstance.Status.ComponentStatus.AdmissionController == nil {
+		newClusterInstance.Status.ComponentStatus.AdmissionController = &hwameistoriov1alpha1.AdmissionControllerStatus{
 			Instances: &instancesStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.AdmissionController.Instances == nil {
-			newClusterInstance.Status.AdmissionController.Instances = &instancesStatus
+		if newClusterInstance.Status.ComponentStatus.AdmissionController.Instances == nil {
+			newClusterInstance.Status.ComponentStatus.AdmissionController.Instances = &instancesStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.AdmissionController.Instances, instancesStatus) {
-				newClusterInstance.Status.AdmissionController.Instances = &instancesStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.AdmissionController.Instances, instancesStatus) {
+				newClusterInstance.Status.ComponentStatus.AdmissionController.Instances = &instancesStatus
 				return newClusterInstance, nil
 			}
 		}

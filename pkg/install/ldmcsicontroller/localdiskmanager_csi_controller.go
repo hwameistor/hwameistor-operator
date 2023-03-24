@@ -226,18 +226,18 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		WorkloadName: gottenCSIController.Name,
 	}
 
-	if newClusterInstance.Status.LocalDiskManager == nil {
-		newClusterInstance.Status.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerStatus{
+	if newClusterInstance.Status.ComponentStatus.LocalDiskManager == nil {
+		newClusterInstance.Status.ComponentStatus.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerStatus{
 			CSI: &csiDeployStatus,
 		}
 		return newClusterInstance, nil
 	} else {
-		if newClusterInstance.Status.LocalDiskManager.CSI == nil {
-			newClusterInstance.Status.LocalDiskManager.CSI = &csiDeployStatus
+		if newClusterInstance.Status.ComponentStatus.LocalDiskManager.CSI == nil {
+			newClusterInstance.Status.ComponentStatus.LocalDiskManager.CSI = &csiDeployStatus
 			return newClusterInstance, nil
 		} else {
-			if !reflect.DeepEqual(newClusterInstance.Status.LocalDiskManager.CSI, csiDeployStatus) {
-				newClusterInstance.Status.LocalDiskManager.CSI = &csiDeployStatus
+			if !reflect.DeepEqual(newClusterInstance.Status.ComponentStatus.LocalDiskManager.CSI, csiDeployStatus) {
+				newClusterInstance.Status.ComponentStatus.LocalDiskManager.CSI = &csiDeployStatus
 				return newClusterInstance, nil
 			}
 		}

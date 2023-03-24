@@ -128,14 +128,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	if ldm := newInstance.Status.LocalDiskManager; ldm != nil {
+	if ldm := newInstance.Status.ComponentStatus.LocalDiskManager; ldm != nil {
 		instances := ldm.Instances
 		csi := ldm.CSI
 		if (instances != nil) && (csi != nil) {
 			if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
-				newInstance.Status.LocalDiskManager.Health = "Normal"
+				newInstance.Status.ComponentStatus.LocalDiskManager.Health = "Normal"
 			} else {
-				newInstance.Status.LocalDiskManager.Health = "Abnormal"
+				newInstance.Status.ComponentStatus.LocalDiskManager.Health = "Abnormal"
 			}
 		}
 	}
@@ -153,14 +153,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if ls := newInstance.Status.LocalStorage; ls != nil {
+		if ls := newInstance.Status.ComponentStatus.LocalStorage; ls != nil {
 			instances := ls.Instances
 			csi := ls.CSI
 			if (instances != nil) && (csi != nil) {
 				if (instances.AvailablePodCount == instances.DesiredPodCount) && (csi.AvailablePodCount == csi.DesiredPodCount) {
-					newInstance.Status.LocalStorage.Health = "Normal"
+					newInstance.Status.ComponentStatus.LocalStorage.Health = "Normal"
 				} else {
-					newInstance.Status.LocalStorage.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.LocalStorage.Health = "Abnormal"
 				}
 			}
 		}
@@ -173,13 +173,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if admissionController := newInstance.Status.AdmissionController; admissionController != nil {
+		if admissionController := newInstance.Status.ComponentStatus.AdmissionController; admissionController != nil {
 			instances := admissionController.Instances
 			if instances != nil {
 				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.AdmissionController.Health = "Normal"
+					newInstance.Status.ComponentStatus.AdmissionController.Health = "Normal"
 				} else {
-					newInstance.Status.AdmissionController.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.AdmissionController.Health = "Abnormal"
 				}
 			}
 		}
@@ -202,13 +202,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if scheduler := newInstance.Status.Scheduler; scheduler != nil {
+		if scheduler := newInstance.Status.ComponentStatus.Scheduler; scheduler != nil {
 			instances := scheduler.Instances
 			if instances != nil {
 				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.Scheduler.Health = "Normal"
+					newInstance.Status.ComponentStatus.Scheduler.Health = "Normal"
 				} else {
-					newInstance.Status.Scheduler.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.Scheduler.Health = "Abnormal"
 				}
 			}
 		}
@@ -221,13 +221,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if evictor := newInstance.Status.Evictor; evictor != nil {
+		if evictor := newInstance.Status.ComponentStatus.Evictor; evictor != nil {
 			instances := evictor.Instances
 			if instances != nil {
 				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.Evictor.Health = "Normal"
+					newInstance.Status.ComponentStatus.Evictor.Health = "Normal"
 				} else {
-					newInstance.Status.Evictor.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.Evictor.Health = "Abnormal"
 				}
 			}
 		}
@@ -240,13 +240,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if apiServer := newInstance.Status.ApiServer; apiServer != nil {
+		if apiServer := newInstance.Status.ComponentStatus.ApiServer; apiServer != nil {
 			instances := apiServer.Instances
 			if instances != nil {
 				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.ApiServer.Health = "Normal"
+					newInstance.Status.ComponentStatus.ApiServer.Health = "Normal"
 				} else {
-					newInstance.Status.ApiServer.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.ApiServer.Health = "Abnormal"
 				}
 			}
 		}
@@ -264,13 +264,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			return ctrl.Result{}, err
 		}
 
-		if exporter := newInstance.Status.Exporter; exporter != nil {
+		if exporter := newInstance.Status.ComponentStatus.Exporter; exporter != nil {
 			instances := exporter.Instances
 			if instances != nil {
 				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.Exporter.Health = "Normal"
+					newInstance.Status.ComponentStatus.Exporter.Health = "Normal"
 				} else {
-					newInstance.Status.Exporter.Health = "Abnormal"
+					newInstance.Status.ComponentStatus.Exporter.Health = "Abnormal"
 				}
 			}
 		}
