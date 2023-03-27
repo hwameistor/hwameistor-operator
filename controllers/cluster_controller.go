@@ -42,6 +42,7 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/ui"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/utils"
 )
 
@@ -281,6 +282,19 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if !newInstance.Spec.UI.Disable {
+		newInstance, err = ui.NewUIMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure UI err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if err := ui.NewUIServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			log.Errorf("Ensure UI Service err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.DRBD.Disable {
 		if !newInstance.Status.DRBDAdapterCreated {
 			drbd.HandelDRBDConfigs(instance)
@@ -364,6 +378,7 @@ func FulfillClusterInstance(clusterInstance *hwameistoroperatorv1alpha1.Cluster)
 	newClusterInstance = evictor.FulfillEvictorSpec(newClusterInstance)
 	newClusterInstance = apiserver.FulfillApiServerSpec(newClusterInstance)
 	newClusterInstance = exporter.FulfillExporterSpec(newClusterInstance)
+	newClusterInstance = ui.FulfillUISpec(newClusterInstance)
 	newClusterInstance = storageclass.FulfillStorageClassSpec(newClusterInstance)
 	newClusterInstance = drbd.FulfillDRBDSpec(newClusterInstance)
 
