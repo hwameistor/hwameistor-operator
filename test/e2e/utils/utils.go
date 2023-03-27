@@ -359,7 +359,6 @@ func ConfigureEnvironment(ctx context.Context) error {
 
 func CheckHwameiInstall(ctx context.Context) error {
 
-	addLabels()
 	f := framework.NewDefaultFramework(v1alpha1.AddToScheme)
 	client := f.GetClient()
 

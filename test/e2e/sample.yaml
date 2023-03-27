@@ -11,30 +11,30 @@ spec:
     csi:
       registrar:
         image:
-          registry: "k8s-gcr.m.daocloud.io"
-          repository: "sig-storage/csi-node-driver-registrar"
+          registry: "172.30.45.210"
+          repository: "hwameistorex/csi-node-driver-registrar"
           tag: "v2.5.0"
       controller:
         replicas: 1
         provisioner:
           image:
-            registry: "k8s-gcr.m.daocloud.io"
-            repository: "sig-storage/csi-provisioner"
+            registry: "172.30.45.210"
+            repository: "hwameistorex/csi-provisioner"
             tag: "v2.0.3"
         attacher:
           image:
-            registry: "k8s-gcr.m.daocloud.io"
-            repository: "sig-storage/csi-attacher"
+            registry: "172.30.45.210"
+            repository: "hwameistorex/csi-attacher"
             tag: "v3.0.1"
         resizer:
           image:
-            registry: "k8s-gcr.m.daocloud.io"
-            repository: "sig-storage/csi-resizer"
+            registry: "172.30.45.210"
+            repository: "hwameistorex/csi-resizer"
             tag: "v1.0.1"
     member:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/local-storage"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/local-storage"
         tag: "v0.8.0"
       rcloneImage:
         repository: "rclone/rclone"
@@ -45,62 +45,62 @@ spec:
     csi:
       registrar:
         image:
-          registry: "k8s-gcr.m.daocloud.io"
-          repository: "sig-storage/csi-node-driver-registrar"
+          registry: "172.30.45.210"
+          repository: "hwameistorex/csi-node-driver-registrar"
           tag: "v2.5.0"
       controller:
         provisioner:
           image:
-            registry: "k8s-gcr.m.daocloud.io"
-            repository: "sig-storage/csi-provisioner"
+            registry: "172.30.45.210"
+            repository: "hwameistorex/csi-provisioner"
             tag: "v2.0.3"
         attacher:
           image:
-            registry: "k8s-gcr.m.daocloud.io"
-            repository: "sig-storage/csi-attacher"
+            registry: "172.30.45.210"
+            repository: "hwameistorex/csi-attacher"
             tag: "v3.0.1"
     manager:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/local-disk-manager"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/local-disk-manager"
         tag: "v0.8.0"
     tolerationOnMaster: true
   scheduler:
     replicas: 1
     scheduler:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/scheduler"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/scheduler"
         tag: "v0.8.0"
   admissionController:
     controller:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/admission"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/admission"
         tag: "v0.8.0"
   evictor:
     evictor:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/evictor"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/evictor"
         tag: "v0.8.0"
   apiServer:
     replicas: 1
     server:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/apiserver"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/apiserver"
         tag: "v0.8.0"
   exporter:
     replicas: 1
     collector:
       image:
-        registry: "ghcr.m.daocloud.io"
-        repository: "hwameistor/exporter"
+        registry: "172.30.45.210"
+        repository: "hwameistorex/exporter"
         tag: "v0.8.0"
   drbd:
     deployOnMaster: "no"
-    imageRegistry: "ghcr.io"
+    imageRegistry: "172.30.45.210"
     imageRepoOwner: "hwameistor"
     imagePullPolicy: "IfNotPresent"
     drbdVersion: "v9.0.32-1"
