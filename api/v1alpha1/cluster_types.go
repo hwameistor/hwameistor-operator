@@ -52,6 +52,8 @@ type ClusterSpec struct {
 
 	Exporter *ExporterSpec `json:"exporter,omitempty"`
 
+	UI *UISpec `json:"ui,omitempty"`
+
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
 
 	RBAC *RBACSpec `json:"rbac,omitempty"`
@@ -153,6 +155,12 @@ type ExporterSpec struct {
 	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Collector *ContainerCommonSpec `json:"collector,omitempty"`
+}
+
+type UISpec struct {
+	Disable bool `json:"disable,omitempty"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	UI *ContainerCommonSpec `json:"ui,omitempty"`
 }
 
 type DRBDSpec struct {

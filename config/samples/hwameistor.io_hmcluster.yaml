@@ -98,6 +98,12 @@ spec:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/exporter"
         tag: "v0.8.0"
+  ui:
+    ui:
+      image:
+        registry: "ghcr.m.daocloud.io"
+        repository: "hwameistor/hwameistor-ui"
+        tag: "v0.8.0"
   drbd:
     deployOnMaster: "no"
     imageRegistry: "ghcr.io"
