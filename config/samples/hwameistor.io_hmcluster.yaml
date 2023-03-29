@@ -31,11 +31,16 @@ spec:
             registry: "k8s-gcr.m.daocloud.io"
             repository: "sig-storage/csi-resizer"
             tag: "v1.0.1"
+        monitor:
+          image:
+            registry: "k8s-gcr.m.daocloud.io"
+            repository: "sig-storage/csi-external-health-monitor-controller"
+            tag: "v0.8.0"
     member:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-storage"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
       rcloneImage:
         repository: "rclone/rclone"
         tag: "1.53.2"
@@ -63,7 +68,7 @@ spec:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-disk-manager"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
     tolerationOnMaster: true
   scheduler:
     replicas: 1
@@ -71,39 +76,39 @@ spec:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/scheduler"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   admissionController:
     controller:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/admission"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   evictor:
     evictor:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/evictor"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   apiServer:
     replicas: 1
     server:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/apiserver"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   exporter:
     replicas: 1
     collector:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/exporter"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   ui:
     ui:
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/hwameistor-ui"
-        tag: "v0.8.0"
+        tag: "v0.9.2"
   drbd:
     deployOnMaster: "no"
     imageRegistry: "ghcr.io"

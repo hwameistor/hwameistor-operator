@@ -89,6 +89,7 @@ type CSIControllerSpec struct {
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Provisioner *ContainerCommonSpec `json:"provisioner,omitempty"`
 	Attacher *ContainerCommonSpec `json:"attacher,omitempty"`
+	Monitor *ContainerCommonSpec `json:"monitor,omitempty"`
 	Resizer *ContainerCommonSpec `json:"resizer,omitempty"`
 }
 

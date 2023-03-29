@@ -134,6 +134,11 @@ func (in *CSIControllerSpec) DeepCopyInto(out *CSIControllerSpec) {
 		*out = new(ContainerCommonSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Monitor != nil {
+		in, out := &in.Monitor, &out.Monitor
+		*out = new(ContainerCommonSpec)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Resizer != nil {
 		in, out := &in.Resizer, &out.Resizer
 		*out = new(ContainerCommonSpec)

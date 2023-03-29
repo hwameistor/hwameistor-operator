@@ -13,6 +13,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -38,6 +39,9 @@ var defaultLSCSIProvisionerTag = "v2.0.3"
 var defaultLSCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIAttacherRepository = "sig-storage/csi-attacher"
 var defaultLSCSIAttacherTag = "v3.0.1"
+var defaultLSCSIMonitorRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLSCSIMonitorRepository = "sig-storage/csi-external-health-monitor-controller"
+var defaultLSCSIMonitorTag = "v0.8.0"
 var defaultLSCSIResizerRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIResizerRepository = "sig-storage/csi-resizer"
 var defaultLSCSIResizerTag = "v1.0.1"
@@ -129,6 +133,50 @@ var lsCSIController = appsv1.Deployment{
 								Name: "socket-dir",
 								MountPath: "/csi",
 							},
+						},
+					},
+					{
+						Name: "monitor",
+						Args: []string{
+							"--v=5",
+							"--csi-address=$(CSI_ADDRESS)",
+							"--leader-election",
+							"--http-endpoint=:8080",
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name: "CSI_ADDRESS",
+								Value: "/csi/csi.sock",
+							},
+						},
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								Name: "socket-dir",
+								MountPath: "/csi",
+							},
+						},
+						Ports: []corev1.ContainerPort{
+							{
+								ContainerPort: 8080,
+								Name: "http-endpoint",
+								Protocol: corev1.ProtocolTCP,
+							},
+						},
+						LivenessProbe: &corev1.Probe{
+							FailureThreshold: 1,
+							Handler: corev1.Handler{
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: "/healthz/leader-election",
+									Port: intstr.IntOrString{
+										Type: intstr.String,
+										StrVal: "http-endpoint",
+									},
+								},
+							},
+							InitialDelaySeconds: 10,
+							TimeoutSeconds: 10,
+							PeriodSeconds: 20,
 						},
 					},
 					{
@@ -225,6 +273,10 @@ func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster)
 			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Resources
+		}
+		if container.Name == "monitor" {
+			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image
+			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 		}
 		lsCSIController.Spec.Template.Spec.Containers[i] = container
 	}
@@ -352,6 +404,21 @@ func FulfillLSCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameisto
 	}
 	if clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Tag == "" {
 		clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image.Tag = defaultLSCSIAttacherTag
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor = &hwameistoriov1alpha1.ContainerCommonSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image == nil {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Registry == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Registry = defaultLSCSIMonitorRegistry
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Repository == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Repository = defaultLSCSIMonitorRepository
+	}
+	if clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Tag == "" {
+		clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image.Tag = defaultLSCSIMonitorTag
 	}
 	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer == nil {
 		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer = &hwameistoriov1alpha1.ContainerCommonSpec{}
