@@ -124,7 +124,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 							"--namespace=$(POD_NAMESPACE)",
 							"--csi-address=$(CSI_ENDPOINT)",
 							"--http-port=80",
-							"--debug=true",
+							"--v=5",
 						},
 						Env: []corev1.EnvVar{
 							{
