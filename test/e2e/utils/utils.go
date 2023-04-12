@@ -459,7 +459,9 @@ func CheckHwameiInstall(ctx context.Context) error {
 		}
 		return false, nil
 	})
-
+	if err != nil {
+		logrus.Error(err)
+	}
 	return err
 }
 
