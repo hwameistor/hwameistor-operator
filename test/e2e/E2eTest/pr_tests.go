@@ -29,8 +29,6 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	ctx := context.TODO()
 
 	ginkgo.It("Configure the base environment", func() {
-		logrus.Info("start rollback")
-		_ = utils.RunInLinux("sh rollback.sh")
 		err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
 			output := utils.RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")
 			if output != "1\n" {
