@@ -38,6 +38,7 @@ func GenerateLocalDiskClaimsToCreateAccordingToLocalDisks(localDisks []hwameisto
 				Description: hwameistorv1alpha1.DiskClaimDescription{
 					DiskType: localDisk.Spec.DiskAttributes.Type,
 				},
+				Owner: "local-storage",
 			},
 		}
 		localDiskClaims = append(localDiskClaims, localDiskClaim)
