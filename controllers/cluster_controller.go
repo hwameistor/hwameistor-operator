@@ -79,11 +79,15 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	fulfilledClusterInstance := FulfillClusterInstance(instance)
-	if !reflect.DeepEqual(instance, fulfilledClusterInstance) {
+	if !reflect.DeepEqual(instance.Spec, fulfilledClusterInstance.Spec) {
+		log.Infof("Not equal between origin instance and fulfilled instance")
+		log.Infof("Instance spec: %+v", instance.Spec)
+		log.Infof("FulfilledClusterInstance spec: %+v", fulfilledClusterInstance.Spec)
 		if err := r.Client.Update(ctx, fulfilledClusterInstance); err != nil {
 			log.Errorf("Update Cluster err: %v", err)
 			return ctrl.Result{}, err
 		} else {
+			log.Infof("Updated Cluster successfully")
 			return ctrl.Result{}, nil
 		}
 	}
@@ -98,6 +102,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if reReconcile {
 		return ctrl.Result{Requeue: true}, nil
 	}
+	log.Infof("Target namespace check passed")
 
 	if !newInstance.Status.InstalledCRDS {
 		if err := install.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
@@ -111,11 +116,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 		return ctrl.Result{}, nil
 	}
+	log.Infof("Handling of crds passed")
 
 	if err := rbac.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure RBAC err: %v", err)
 		return ctrl.Result{}, err
 	}
+	log.Infof("RBAC Ensured")
 
 	newInstance, err = localdiskmanager.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
