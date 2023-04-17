@@ -1,0 +1,136 @@
+apiVersion: hwameistor.io/v1alpha1
+kind: Cluster
+metadata:
+  name: hwameistor-cluster
+  annotations: 
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-failed
+spec:
+  targetNamespace: {{ $.Values.global.targetNamespace }}
+  rbac:
+    serviceAccountName: "hwameistor-admin"
+  localDiskManager:
+    kubeletRootDir: {{ $.Values.localDiskManager.kubeletRootDir | quote }}
+    csi:
+      registrar:
+        image:
+          registry: {{ $.Values.global.k8sImageRegistry }}
+          repository: {{ $.Values.localDiskManager.csi.registrar.imageRepository }}
+          tag: {{ $.Values.localDiskManager.csi.registrar.tag }}
+      controller:
+        provisioner:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localDiskManager.csi.provisioner.imageRepository }}
+            tag: {{ $.Values.localDiskManager.csi.provisioner.tag }}
+        attacher:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localDiskManager.csi.attacher.imageRepository }}
+            tag: {{ $.Values.localDiskManager.csi.attacher.tag }}
+    manager:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.localDiskManager.manager.imageRepository }}
+        tag: {{ template "hwameistor.localDiskManagerImageTag" . }}
+    tolerationOnMaster: {{ $.Values.localDiskManager.tolerationOnMaster }}
+  localStorage:
+    kubeletRootDir: {{ $.Values.localStorage.kubeletRootDir | quote }}
+    csi:
+      registrar:
+        image:
+          registry: {{ $.Values.global.k8sImageRegistry }}
+          repository: {{ $.Values.localStorage.csi.registrar.imageRepository }}
+          tag: {{ $.Values.localStorage.csi.registrar.tag }}
+      controller:
+        replicas: 1
+        provisioner:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.provisioner.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.provisioner.tag }}
+        attacher:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.attacher.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.attacher.tag }}
+        resizer:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.resizer.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.resizer.tag }}
+        monitor:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.monitor.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.monitor.tag }}
+    member:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.localStorage.member.imageRepository }}
+        tag: {{ template "hwameistor.localStorageImageTag" . }}
+      rcloneImage:
+        repository: "rclone/rclone"
+        tag: "1.53.2"
+    tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
+  scheduler:
+    replicas: 1
+    scheduler:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.scheduler.imageRepository }}
+        tag: {{ template "hwameistor.schedulerImageTag" . }}
+  admissionController:
+    controller:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.admission.imageRepository }}
+        tag: {{ template "hwameistor.admissionImageTag" . }}
+  evictor:
+    evictor:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.evictor.imageRepository }}
+        tag: {{ template "hwameistor.evictorImageTag" . }}
+  apiServer:
+    replicas: 1
+    server:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.apiserver.repository }}
+        tag: {{ template "hwameistor.apiserverImageTag" . }}
+  exporter:
+    replicas: 1
+    collector:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.exporter.repository }}
+        tag: {{ template "hwameistor.exporterImageTag" . }}
+  ui:
+    ui:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.ui.imageRepository }}
+        tag: {{ template "hwameistor.uiImageTag" . }}
+  drbd:
+    deployOnMaster: {{ $.Values.ha.deployOnMaster | quote }}
+    imageRegistry: {{ $.Values.global.hwameistorImageRegistry }}
+    imageRepoOwner: "hwameistor"
+    imagePullPolicy: "IfNotPresent"
+    drbdVersion: "v9.0.32-1"
+    upgrade: "no"
+    checkHostName: "yes"
+    useAffinity: "no"
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: DoesNotExist
+          - key: node-role.kubernetes.io/control-plane
+            operator: DoesNotExist
+    chartVersion: "v0.3.6"
+  storageClass:
+    allowVolumeExpansion: true
+    reclaimPolicy: "Delete"
+    fsType: "xfs"
