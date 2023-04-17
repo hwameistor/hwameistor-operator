@@ -2,9 +2,9 @@ package E2eTest
 
 import (
 	"context"
-	opv1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/test/e2e/framework"
 	"github.com/hwameistor/hwameistor-operator/test/e2e/utils"
+	clientset "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme"
 	"github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
@@ -27,9 +27,8 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	var f *framework.Framework
 	var client ctrlclient.Client
 	ctx := context.TODO()
-	f = framework.NewDefaultFramework(opv1.AddToScheme)
-	client = f.GetClient()
-	ginkgo.It("install hwameistor-operator", func() {
+
+	ginkgo.It("Configure the base environment", func() {
 		err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
 			output := utils.RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")
 			if output != "1\n" {
@@ -43,6 +42,12 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 		if err != nil {
 			logrus.Error(err)
 		}
+
+		f = framework.NewDefaultFramework(clientset.AddToScheme)
+		client = f.GetClient()
+
+	})
+	ginkgo.It("install hwameistor-operator", func() {
 		logrus.Infof("helm install hwameistor-operator")
 		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace ")
 
@@ -51,7 +56,7 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 			Name:      "hwameistor-operator",
 			Namespace: "default",
 		}
-		err = wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
+		err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
 			err = client.Get(ctx, OperatorKey, Operator)
 			if err != nil {
 				logrus.Error(err)
