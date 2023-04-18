@@ -1,7 +1,80 @@
 global:
+  targetNamespace: hwameistor
   hwameistorImageRegistry: ghcr.io
+  #hwameistorImageRegistry: ghcr.m.daocloud.io
+  k8sImageRegistry: registry.k8s.io
+  # k8sImageRegistry: m.daocloud.io/registry.k8s.io
+  hwameistorVersion: v0.9.2
 
 operator:
   replicas: 1
   imageRepository: hwameistor/operator
   tag: ""
+ 
+localDiskManager:
+  tolerationOnMaster: true
+  kubeletRootDir: /var/lib/kubelet
+  manager:
+    imageRepository: hwameistor/local-disk-manager
+    tag: ""
+  csi:
+    registrar:
+      imageRepository: sig-storage/csi-node-driver-registrar
+      tag: v2.5.0
+    provisioner:
+      imageRepository: sig-storage/csi-provisioner
+      tag: v2.0.3
+    attacher:
+      imageRepository: sig-storage/csi-attacher
+      tag: v3.0.1
+
+localStorage:
+  tolerationOnMaster: true
+  kubeletRootDir: /var/lib/kubelet
+  member:
+    imageRepository: hwameistor/local-storage
+    tag: ""
+  csi:
+    registrar:
+      imageRepository: sig-storage/csi-node-driver-registrar
+      tag: v2.5.0
+    provisioner:
+      imageRepository: sig-storage/csi-provisioner
+      tag: v2.0.3
+    attacher:
+      imageRepository: sig-storage/csi-attacher
+      tag: v3.0.1
+    resizer:
+      imageRepository: sig-storage/csi-resizer
+      tag: v1.0.1
+    monitor:
+      imageRepository: sig-storage/csi-external-health-monitor-controller
+      tag: v0.8.0
+
+scheduler:
+  imageRepository: hwameistor/scheduler
+  tag: ""
+
+admission:
+  imageRepository: hwameistor/admission
+  tag: ""
+
+evictor:
+  imageRepository: hwameistor/evictor
+  tag: ""
+
+apiserver:
+  imageRepository: hwameistor/apiserver
+  tag: ""
+
+exporter:
+  imageRepository: hwameistor/exporter
+  tag: ""
+
+ui:
+  imageRepository: hwameistor/hwameistor-ui
+  tag: ""
+
+ha:
+  module: drbd
+  deployOnMaster: "yes"

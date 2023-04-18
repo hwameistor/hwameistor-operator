@@ -65,3 +65,43 @@ Create the name of the service account to use
 {{- define "operator.imageTag" -}}
   {{- default .Chart.Version .Values.operator.tag -}}
 {{- end -}}
+
+{{/* Allow LocalDiskManager image tag to be overridden. */}}
+{{- define "hwameistor.localDiskManagerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.localDiskManager.manager.tag -}}
+{{- end -}}
+
+{{/* Allow LocalStorage image tag to be overridden. */}}
+{{- define "hwameistor.localStorageImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.localStorage.member.tag -}}
+{{- end -}}
+
+{{/* Allow Scheduler image tag to be overridden. */}}
+{{- define "hwameistor.schedulerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.scheduler.tag -}}
+{{- end -}}
+
+{{/* Allow Admission image tag to be overridden. */}}
+{{- define "hwameistor.admissionImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.admission.tag -}}
+{{- end -}}
+
+{{/* Allow Evictor image tag to be overridden. */}}
+{{- define "hwameistor.evictorImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.evictor.tag -}}
+{{- end -}}
+
+{{/* Allow Apiserver image tag to be overridden. */}}
+{{- define "hwameistor.apiserverImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.apiserver.tag -}}
+{{- end -}}
+
+{{/* Allow Exporter image tag to be overridden. */}}
+{{- define "hwameistor.exporterImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.exporter.tag -}}
+{{- end -}}
+
+{{/* Allow UI image tag to be overridden. */}}
+{{- define "hwameistor.uiImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.ui.tag -}}
+{{- end -}}
