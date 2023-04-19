@@ -88,7 +88,12 @@ github.com/hashicorp/golang-lru/simplelru
 # github.com/hwameistor/hwameistor v0.9.2
 ## explicit; go 1.18
 github.com/hwameistor/hwameistor/deploy/crds
+github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme
+github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/typed/hwameistor/v1alpha1
+github.com/hwameistor/hwameistor/pkg/apis/client/informers/externalversions/hwameistor/v1alpha1
+github.com/hwameistor/hwameistor/pkg/apis/client/informers/externalversions/internalinterfaces
+github.com/hwameistor/hwameistor/pkg/apis/client/listers/hwameistor/v1alpha1
 github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1
 # github.com/imdario/mergo v0.3.12
 ## explicit; go 1.13

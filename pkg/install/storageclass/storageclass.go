@@ -5,10 +5,17 @@ import (
 	"strings"
 
 	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	hwameistorclient "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned"
+	hwameistorinformer "github.com/hwameistor/hwameistor/pkg/apis/client/informers/externalversions/hwameistor/v1alpha1"
 	hwameistorv1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+	// "k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -54,13 +61,17 @@ func (m *StorageClassMaintainer) Ensure() error {
 		log.Errorf("List StorageNodes err: %v", err)
 		return err
 	}
+	log.Infof("StorageNodes list: %+v", localStorageNodes)
 	storageClassNameToCreate := generateStorageClassNameToCreateAccordingToLocalStorageNodes(localStorageNodes)
+	log.Infof("Generate storageClassName to create: %+v", storageClassNameToCreate)
 	existingStorageClass, err := listStorageClass(m.Client)
 	if err != nil {
 		log.Errorf("List StorageClass err: %v", err)
 		return err
 	}
-	storageClassNameToCreate = deleteExistingStorageClassNameFromMapOfStorageClassNameToCreate(existingStorageClass, storageClassNameToCreate)
+	log.Infof("Existing storageClass list: %+v", existingStorageClass)
+	// storageClassNameToCreate = deleteExistingStorageClassNameFromMapOfStorageClassNameToCreate(existingStorageClass, storageClassNameToCreate)
+	log.Infof("StorageClassName to create finally: %+v", storageClassNameToCreate)
 
 	SetStorageClassTemplate(m.ClusterInstance)
 
@@ -77,12 +88,15 @@ func (m *StorageClassMaintainer) Ensure() error {
 		needHAStorageClass = false
 	}
 
+	log.Infof("Going to generate storageClass to create, needConvertibleStorageClass: %v, needHAStorageClass: %v", needConvertibleStorageClass, needHAStorageClass)
 	storageClassesToCreate := generateStorageClass(storageClassNameToCreate, needConvertibleStorageClass, needHAStorageClass)
+	log.Infof("Generated storageClass to create: %+v", storageClassesToCreate)
 
 	for _, storageClassToCreate := range storageClassesToCreate {
 		if err := m.Client.Create(context.TODO(), &storageClassToCreate); err != nil {
 			log.Errorf("Create StorageClass err: %v", err)
-			return err
+			// return err
+			continue
 		}
 	}
 	
@@ -163,4 +177,62 @@ func generateStorageClass(storageClassNameToCreate map[string]string, needConver
 	}
 
 	return storageClasses
+}
+
+func WatchLocalStorageNodes(cli client.Client, clusterKey types.NamespacedName, stopCh <-chan struct{}) {
+	fcs := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			log.Infof("OnAdd: %+v", obj)
+			clusterInstance := &hwameistoroperatorv1alpha1.Cluster{}
+			err := cli.Get(context.TODO(), clusterKey, clusterInstance)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.WithError(err).Error("Cluster instance not found")
+					return
+				}
+				log.Errorf("Get instance err: %v", err)
+				return
+			}
+			NewMaintainer(cli, clusterInstance).Ensure()
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			log.Infof("OnUpdate: old: %+v", oldObj)
+			log.Infof("OnUpdate: new: %+v", newObj)
+			clusterInstance := &hwameistoroperatorv1alpha1.Cluster{}
+			err := cli.Get(context.TODO(), clusterKey, clusterInstance)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.WithError(err).Error("Cluster instance not found")
+					return
+				}
+				log.Errorf("Get instance err: %v", err)
+				return
+			}
+			NewMaintainer(cli, clusterInstance).Ensure()
+		},
+		DeleteFunc: func(obj interface{}) {
+			log.Infof("OnDelete: %+v", obj)
+		},
+	}
+	config, err := rest.InClusterConfig()
+	// config, err := clientcmd.BuildConfigFromFlags("", "/Users/home/.kube/config")
+	if err != nil {
+		log.WithError(err).Error("Failed to build kubernetes config")
+		return
+		// return err
+	}
+	clientset, err := hwameistorclient.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Error("Failed to build clientset")
+		return
+		// return err
+	}
+	lsnInformer := hwameistorinformer.NewLocalStorageNodeInformer(clientset, 0, cache.Indexers{})
+	lsnInformer.AddEventHandler(fcs)
+	log.Infof("Going to run informer")
+	lsnInformer.Run(stopCh)
+	log.Infof("Informer run over")
+
+	// return nil
+	// return
 }
