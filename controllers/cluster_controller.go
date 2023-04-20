@@ -343,10 +343,12 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		newInstance.Status.DiskReserveState = "CreatedLDC"
 	case "CreatedLDC":
 		if !newInstance.Spec.StorageClass.Disable {
-			if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
-				log.Errorf("Ensure StorageClass err: %v", err)
-				return ctrl.Result{}, err
-			}
+			// if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
+			// 	log.Errorf("Ensure StorageClass err: %v", err)
+			// 	return ctrl.Result{}, err
+			// }
+			storageclass.EnsureWatcherStarted(r.Client, req.NamespacedName)
+			log.Infof("LocalStorageNodeWatcher started")
 		}
 	}
 
