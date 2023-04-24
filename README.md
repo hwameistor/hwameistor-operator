@@ -29,18 +29,13 @@ NOTES:
 ### Admission control configuration management for HwameiStor volume verification
 
 
-## HwameiStor-operator installation
+## HwameiStor-operator installation with Hwameistor cluster setup
 
 $ helm repo add hwameistor https://hwameistor.io/hwameistor-operator
 
 $ helm repo update hwameistor
 
 $ helm install hwameistor-operator hwameistor/hwameistor-operator
-
-
-## HwameiStor installation with hwameistor-operator
-
-$ kubectl apply -f https://raw.githubusercontent.com/hwameistor/hwameistor-operator/main/config/samples/hwameistor.io_hmcluster.yaml
 
 ## Roadmap
 
