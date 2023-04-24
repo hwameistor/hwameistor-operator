@@ -25,7 +25,9 @@ function build_image(){
 
 function prepare_install_params() {
 	# FIXME: image tags should be passed by helm install params
-	sed -i '/.*ghcr.io*/c\ \ hwameistorImageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+		# sed -i '/.*ghcr.io*/c\ \ hwameistorImageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+  	sed -i '/operator:/a\ \ imageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+  	sed -i ' s/.Values.global.hwameistorImageRegistry/.Values.operator.imageRegistry/' helm/operator/templates/deployment.yaml
    IMAGE_VERSION=$(sed -n '/version:/p' helm/operator/Chart.yaml)
    export IMAGE_VERSION=${IMAGE_VERSION}
    sed -i "s/${IMAGE_VERSION}/version: ${IMAGE_TAG}/" helm/operator/Chart.yaml

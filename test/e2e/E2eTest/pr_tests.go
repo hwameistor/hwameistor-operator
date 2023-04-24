@@ -49,7 +49,7 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	})
 	ginkgo.It("install hwameistor-operator", func() {
 		logrus.Infof("helm install hwameistor-operator")
-		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace ")
+		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace    --set global.k8sImageRegistry=m.daocloud.io/registry.k8s.io   --set global.hwameistorImageRegistry=ghcr.m.daocloud.io")
 
 		Operator := &appsv1.Deployment{}
 		OperatorKey := k8sclient.ObjectKey{
@@ -94,7 +94,7 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 			//	logrus.Printf("Create hmcluster failed ：%+v ", err)
 			//	f.ExpectNoError(err)
 			//}
-			_ = utils.RunInLinux("kubectl apply -f sample.yaml")
+			//_ = utils.RunInLinux("kubectl apply -f sample.yaml")
 			time.Sleep(1 * time.Minute)
 			err := utils.CheckHwameiInstall(ctx)
 			gomega.Expect(err).To(gomega.BeNil())
