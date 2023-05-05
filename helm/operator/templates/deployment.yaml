@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hwameistor-operator
-  namespace: default
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: {{ .Values.operator.replicas }}
   selector:
