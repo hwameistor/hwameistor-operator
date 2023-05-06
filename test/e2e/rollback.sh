@@ -32,3 +32,6 @@ for i in `seq 1 15`; do
   echo -e "\033[35m === `date  '+%Y-%m-%d %H:%M:%S'` === \033[0m"
   sleep 6s
 done
+
+
+
