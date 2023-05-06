@@ -89,7 +89,7 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 			//	logrus.Printf("Create hmcluster failed ：%+v ", err)
 			//	f.ExpectNoError(err)
 			//}
-			_ = utils.RunInLinux("kubectl apply -f sample.yaml")
+			//_ = utils.RunInLinux("kubectl apply -f sample.yaml")
 			time.Sleep(1 * time.Minute)
 			err := utils.CheckHwameiInstall(ctx)
 			gomega.Expect(err).To(gomega.BeNil())

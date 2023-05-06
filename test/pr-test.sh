@@ -44,7 +44,9 @@ function build_image(){
 
 function prepare_install_params() {
 	# FIXME: image tags should be passed by helm install params
-	sed -i '/.*ghcr.io*/c\ \ hwameistorImageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+	# sed -i '/.*ghcr.io*/c\ \ hwameistorImageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+	sed -i '/operator:/a\ \ imageRegistry: '$ImageRegistry'' helm/operator/values.yaml
+	sed -i ' s/.Values.global.hwameistorImageRegistry/.Values.operator.imageRegistry/' helm/operator/templates/deployment.yaml
 #
 #	# sed -i '/hwameistor\/local-disk-manager/{n;d}' helm/hwameistor/values.yaml
 #	 sed -i "/hwameistor\/local-disk-manager/a \ \ \ \ tag: ${IMAGE_TAG}" helm/hwameistor/values.yaml

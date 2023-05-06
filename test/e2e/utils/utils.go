@@ -427,7 +427,7 @@ func CheckHwameiInstall(ctx context.Context) error {
 
 	logrus.Infof("waiting for hwamei ready")
 
-	err = wait.PollImmediate(3*time.Second, 40*time.Minute, func() (done bool, err error) {
+	err = wait.PollImmediate(3*time.Second, 60*time.Minute, func() (done bool, err error) {
 		err = client.Get(ctx, localStorageKey, localStorage)
 		if err != nil {
 			logrus.Error(" localStorage error ", err)
