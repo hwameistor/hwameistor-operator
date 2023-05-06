@@ -54,7 +54,7 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 		Operator := &appsv1.Deployment{}
 		OperatorKey := k8sclient.ObjectKey{
 			Name:      "hwameistor-operator",
-			Namespace: "default",
+			Namespace: "hwameistor-operator",
 		}
 		err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
 			err = client.Get(ctx, OperatorKey, Operator)

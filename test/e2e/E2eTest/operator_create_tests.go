@@ -44,12 +44,12 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 	})
 	ginkgo.It("install hwameistor-operator", func() {
 		logrus.Infof("helm install hwameistor-operator")
-		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace ")
+		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace --set global.k8sImageRegistry=m.daocloud.io/registry.k8s.io   --set global.hwameistorImageRegistry=ghcr.m.daocloud.io")
 
 		Operator := &appsv1.Deployment{}
 		OperatorKey := k8sclient.ObjectKey{
 			Name:      "hwameistor-operator",
-			Namespace: "default",
+			Namespace: "hwameistor-operator",
 		}
 		err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
 			err = client.Get(ctx, OperatorKey, Operator)
