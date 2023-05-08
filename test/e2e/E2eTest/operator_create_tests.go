@@ -22,7 +22,7 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 	ginkgo.It("Configure the base environment", func() {
 		logrus.Info("start rollback")
 		_ = utils.RunInLinux("sh rollback.sh")
-		err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
+		err := wait.PollImmediate(10*time.Second, 30*time.Minute, func() (done bool, err error) {
 			output := utils.RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")
 			if output != "1\n" {
 				return false, nil
