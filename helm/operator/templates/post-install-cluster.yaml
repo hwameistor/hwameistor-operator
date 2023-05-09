@@ -18,6 +18,7 @@ spec:
           repository: {{ $.Values.localDiskManager.csi.registrar.imageRepository }}
           tag: {{ $.Values.localDiskManager.csi.registrar.tag }}
       controller:
+        replicas: {{ $.Values.localDiskManager.csi.controller.replicas }}
         provisioner:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
@@ -43,7 +44,7 @@ spec:
           repository: {{ $.Values.localStorage.csi.registrar.imageRepository }}
           tag: {{ $.Values.localStorage.csi.registrar.tag }}
       controller:
-        replicas: 1
+        replicas: {{ $.Values.localStorage.csi.controller.replicas }}
         provisioner:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
@@ -74,39 +75,42 @@ spec:
         tag: "1.53.2"
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
   scheduler:
-    replicas: 1
+    replicas: {{ $.Values.scheduler.replicas }}
     scheduler:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.scheduler.imageRepository }}
         tag: {{ template "hwameistor.schedulerImageTag" . }}
   admissionController:
+    replicas: {{ $.Values.admission.replicas }}
     controller:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.admission.imageRepository }}
         tag: {{ template "hwameistor.admissionImageTag" . }}
   evictor:
+    replicas: {{ $.Values.admission.replicas }}
     evictor:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.evictor.imageRepository }}
         tag: {{ template "hwameistor.evictorImageTag" . }}
   apiServer:
-    replicas: 1
+    replicas: {{ $.Values.apiserver.replicas }}
     server:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.apiserver.repository }}
         tag: {{ template "hwameistor.apiserverImageTag" . }}
   exporter:
-    replicas: 1
+    replicas: {{ $.Values.exporter.replicas }}
     collector:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.exporter.repository }}
         tag: {{ template "hwameistor.exporterImageTag" . }}
   ui:
+    replicas: {{ $.Values.ui.replicas }}
     ui:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}

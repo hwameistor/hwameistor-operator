@@ -73,6 +73,7 @@ var ui = appsv1.Deployment{
 
 func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	ui.Namespace = clusterInstance.Spec.TargetNamespace
+	ui.Spec.Replicas = &clusterInstance.Spec.UI.Replicas
 	ui.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range ui.Spec.Template.Spec.Containers {
 		if container.Name == "hwameistor-ui" {

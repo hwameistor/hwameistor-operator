@@ -73,6 +73,7 @@ var evictorDeployment = appsv1.Deployment{
 func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	evictorDeployment.Namespace = clusterInstance.Spec.TargetNamespace
 	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	evictorDeployment.Spec.Replicas = &clusterInstance.Spec.Evictor.Replicas
 	evictorDeployment.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setEvictorContainers(clusterInstance)
 }

@@ -112,6 +112,7 @@ var admissionController = appsv1.Deployment{
 func SetAdmissionController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	admissionController.Namespace = clusterInstance.Spec.TargetNamespace
 	admissionController.OwnerReferences = append(admissionController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	admissionController.Spec.Replicas = &clusterInstance.Spec.AdmissionController.Replicas
 	admissionController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setAdmissionControllerContainers(clusterInstance)
 }

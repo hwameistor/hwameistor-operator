@@ -132,6 +132,7 @@ func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	ldmCSIController.Namespace = clusterInstance.Spec.TargetNamespace
 	ldmCSIController.OwnerReferences = append(ldmCSIController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	// ldmCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalDiskManager.CSI.Controller.Common.PriorityClassName
+	ldmCSIController.Spec.Replicas = &clusterInstance.Spec.LocalDiskManager.CSI.Controller.Replicas
 	ldmCSIController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setLDMCSIControllerVolumes(clusterInstance)
 	setLDMCSIControllerContainers(clusterInstance)

@@ -21,6 +21,8 @@ localDiskManager:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
       tag: v2.5.0
+    controller:
+      replicas: 1
     provisioner:
       imageRepository: sig-storage/csi-provisioner
       tag: v2.0.3
@@ -38,6 +40,8 @@ localStorage:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
       tag: v2.5.0
+    controller:
+      replicas: 1
     provisioner:
       imageRepository: sig-storage/csi-provisioner
       tag: v2.0.3
@@ -52,26 +56,32 @@ localStorage:
       tag: v0.8.0
 
 scheduler:
+  replicas: 1
   imageRepository: hwameistor/scheduler
   tag: ""
 
 admission:
+  replicas: 1
   imageRepository: hwameistor/admission
   tag: ""
 
 evictor:
+  replicas: 1
   imageRepository: hwameistor/evictor
   tag: ""
 
 apiserver:
+  replicas: 1
   imageRepository: hwameistor/apiserver
   tag: ""
 
 exporter:
+  replicas: 1
   imageRepository: hwameistor/exporter
   tag: ""
 
 ui:
+  replicas: 1
   imageRepository: hwameistor/hwameistor-ui
   tag: ""
 
