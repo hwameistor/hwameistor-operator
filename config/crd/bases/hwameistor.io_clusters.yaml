@@ -668,6 +668,7 @@ spec:
                   failurePolicy:
                     type: string
                   replicas:
+                    format: int32
                     type: integer
                 type: object
               apiServer:
@@ -2168,6 +2169,11 @@ spec:
                             type: object
                         type: object
                     type: object
+                  replicas:
+                    format: int32
+                    type: integer
+                required:
+                - replicas
                 type: object
               exporter:
                 properties:
@@ -7029,6 +7035,9 @@ spec:
                     type: object
                   disable:
                     type: boolean
+                  replicas:
+                    format: int32
+                    type: integer
                   ui:
                     properties:
                       image:
@@ -7069,6 +7078,8 @@ spec:
                             type: object
                         type: object
                     type: object
+                required:
+                - replicas
                 type: object
             type: object
           status:

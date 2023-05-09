@@ -132,13 +132,14 @@ type SchedulerSpec struct {
 
 type EvictorSpec struct {
 	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Evictor *ContainerCommonSpec `json:"evictor,omitempty"`
 }
 
 type AdmissionControllerSpec struct {
 	Disable bool `json:"disable,omitempty"`
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 	FailurePolicy string `json:"failurePolicy,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Controller *ContainerCommonSpec `json:"controller,omitempty"`
@@ -160,6 +161,7 @@ type ExporterSpec struct {
 
 type UISpec struct {
 	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	UI *ContainerCommonSpec `json:"ui,omitempty"`
 }
