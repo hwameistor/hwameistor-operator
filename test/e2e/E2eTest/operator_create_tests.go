@@ -10,10 +10,8 @@ import (
 	"github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck"), func() {
@@ -24,7 +22,7 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 	ginkgo.It("Configure the base environment", func() {
 		logrus.Info("start rollback")
 		_ = utils.RunInLinux("sh rollback.sh")
-		err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
+		err := wait.PollImmediate(10*time.Second, 30*time.Minute, func() (done bool, err error) {
 			output := utils.RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")
 			if output != "1\n" {
 				return false, nil
@@ -43,29 +41,7 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 
 	})
 	ginkgo.It("install hwameistor-operator", func() {
-		logrus.Infof("helm install hwameistor-operator")
-		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace --set global.k8sImageRegistry=m.daocloud.io/registry.k8s.io   --set global.hwameistorImageRegistry=ghcr.m.daocloud.io")
-
-		Operator := &appsv1.Deployment{}
-		OperatorKey := k8sclient.ObjectKey{
-			Name:      "hwameistor-operator",
-			Namespace: "hwameistor-operator",
-		}
-		err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
-			err = client.Get(ctx, OperatorKey, Operator)
-			if err != nil {
-				logrus.Error(err)
-			}
-			if Operator.Status.AvailableReplicas == int32(1) {
-				logrus.Infof("hwameistor-operator ready")
-				return true, nil
-
-			}
-			return false, nil
-		})
-		if err != nil {
-			logrus.Error(err)
-		}
+		err := utils.InstallHwameistorOperator(ctx, client)
 		gomega.Expect(err).To(gomega.BeNil())
 
 	})

@@ -18,7 +18,6 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/util/wait"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
-	k8sclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"time"
 )
@@ -29,7 +28,7 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	ctx := context.TODO()
 
 	ginkgo.It("Configure the base environment", func() {
-		err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
+		err := wait.PollImmediate(10*time.Second, 30*time.Minute, func() (done bool, err error) {
 			output := utils.RunInLinux("kubectl get pod -A  |grep -v Running |wc -l")
 			if output != "1\n" {
 				return false, nil
@@ -45,32 +44,11 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 
 		f = framework.NewDefaultFramework(clientset.AddToScheme)
 		client = f.GetClient()
+		gomega.Expect(err).To(gomega.BeNil())
 
 	})
 	ginkgo.It("install hwameistor-operator", func() {
-		logrus.Infof("helm install hwameistor-operator")
-		_ = utils.RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace    --set global.k8sImageRegistry=m.daocloud.io/registry.k8s.io   --set global.hwameistorImageRegistry=ghcr.m.daocloud.io")
-
-		Operator := &appsv1.Deployment{}
-		OperatorKey := k8sclient.ObjectKey{
-			Name:      "hwameistor-operator",
-			Namespace: "hwameistor-operator",
-		}
-		err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
-			err = client.Get(ctx, OperatorKey, Operator)
-			if err != nil {
-				logrus.Error(err)
-			}
-			if Operator.Status.AvailableReplicas == int32(1) {
-				logrus.Infof("hwameistor-operator ready")
-				return true, nil
-
-			}
-			return false, nil
-		})
-		if err != nil {
-			logrus.Error(err)
-		}
+		err := utils.InstallHwameistorOperator(ctx, client)
 		gomega.Expect(err).To(gomega.BeNil())
 
 	})
@@ -98,6 +76,22 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 			time.Sleep(1 * time.Minute)
 			err := utils.CheckHwameiInstall(ctx)
 			gomega.Expect(err).To(gomega.BeNil())
+		})
+	})
+	ginkgo.Context("check StorageClass", func() {
+		ginkgo.It("check", func() {
+			//每10秒判断一次，最多等待10分钟
+			logrus.Infof("check StorageClass")
+			err := wait.PollImmediate(10*time.Second, 10*time.Minute, func() (done bool, err error) {
+				sc := &storagev1.StorageClass{}
+				err = client.Get(ctx, ctrlclient.ObjectKey{Name: "hwameistor-storage-lvm-hdd"}, sc)
+				if err != nil {
+					return false, err
+				}
+				return true, nil
+			})
+			gomega.Expect(err).To(gomega.BeNil())
+
 		})
 	})
 	ginkgo.Context("create a StorageClass", func() {

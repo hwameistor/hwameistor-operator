@@ -26,6 +26,7 @@ import (
 	"github.com/hwameistor/hwameistor-operator/test/e2e/framework"
 	clientset "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme"
 	v1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func Int32Ptr(i int32) *int32 { return &i }
@@ -791,4 +792,49 @@ func installDrbd() {
 	logrus.Printf("installing drbd")
 	_ = RunInLinux("sh install_drbd.sh")
 
+}
+
+func InstallHwameistorOperator(ctx context.Context, client ctrlclient.Client) error {
+	logrus.Infof("helm install hwameistor-operator")
+	_ = RunInLinux("helm install hwameistor-operator -n hwameistor-operator ../../helm/operator --create-namespace --set global.k8sImageRegistry=m.daocloud.io/registry.k8s.io   --set global.hwameistorImageRegistry=ghcr.m.daocloud.io")
+	Operator := &appsv1.Deployment{}
+	OperatorKey := k8sclient.ObjectKey{
+		Name:      "hwameistor-operator",
+		Namespace: "hwameistor-operator",
+	}
+	err := wait.PollImmediate(3*time.Second, 20*time.Minute, func() (done bool, err error) {
+		err = client.Get(ctx, OperatorKey, Operator)
+		if err != nil {
+			logrus.Error(err)
+		}
+		if Operator.Status.AvailableReplicas == int32(1) {
+			logrus.Infof("hwameistor-operator ready")
+			return true, nil
+
+		}
+		return false, nil
+	})
+	if err != nil {
+		logrus.Error(err)
+		return err
+	}
+	return nil
+}
+
+func CheckK8sStatus(ctx context.Context, client ctrlclient.Client) error {
+	err := wait.PollImmediate(10*time.Second, 20*time.Minute, func() (done bool, err error) {
+		podList := &corev1.PodList{}
+		err = client.List(ctx, podList)
+		if err != nil {
+			logrus.Error(err)
+
+		}
+		for _, pod := range podList.Items {
+			if pod.Status.Phase != "Running" {
+				return false, nil
+			}
+		}
+		return true, nil
+	})
+	return err
 }
