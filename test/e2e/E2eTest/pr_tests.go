@@ -80,13 +80,12 @@ var _ = ginkgo.Describe("pr test ", ginkgo.Ordered, ginkgo.Label("pr-e2e"), func
 	})
 	ginkgo.Context("check StorageClass", func() {
 		ginkgo.It("check", func() {
-			//每10秒判断一次，最多等待10分钟
 			logrus.Infof("check StorageClass")
 			err := wait.PollImmediate(10*time.Second, 10*time.Minute, func() (done bool, err error) {
 				sc := &storagev1.StorageClass{}
 				err = client.Get(ctx, ctrlclient.ObjectKey{Name: "hwameistor-storage-lvm-hdd"}, sc)
 				if err != nil {
-					return false, err
+					return false, nil
 				}
 				return true, nil
 			})
