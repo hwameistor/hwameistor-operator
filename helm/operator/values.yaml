@@ -4,7 +4,7 @@ global:
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
   # k8sImageRegistry: m.daocloud.io/registry.k8s.io
-  hwameistorVersion: v0.9.2
+  hwameistorVersion: v0.9.3
 
 operator:
   replicas: 1
