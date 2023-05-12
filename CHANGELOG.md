@@ -1,4 +1,9 @@
-> Sample Changelog
+v0.9.3 / 2023-5-12
+========================
+
+* support specifying the namespace to install operator #98(@buffalo1024)
+* support setting replicas of deployments by helm chart values #101(@buffalo1024)
+* bump the version of hwameistor to install to v0.9.3 #103(@buffalo1024)
 
 v0.0.1 / 2023-02-22
 ========================
