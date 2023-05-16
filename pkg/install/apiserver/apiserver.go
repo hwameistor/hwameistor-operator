@@ -62,6 +62,16 @@ var apiServer = appsv1.Deployment{
 					{
 						Name: "server",
 						ImagePullPolicy: corev1.PullIfNotPresent,
+						Env: []corev1.EnvVar{
+							{
+								Name: "NAMESPACE",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "metadata.namespace",
+									},
+								},
+							},
+						},
 						Ports: []corev1.ContainerPort{
 							{
 								Name: "http",
