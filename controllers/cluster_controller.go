@@ -334,8 +334,11 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Errorf("List Disks err: %v", err)
 			return ctrl.Result{}, err
 		}
+		log.Infof("LocalDisks: %+v", localDisks)
 		localDisks = utils.SiftAvailableAndUnreservedDisks(localDisks)
+		log.Infof("Sifted LocalDisks: %+v", localDisks)
 		localDiskClaims := utils.GenerateLocalDiskClaimsToCreateAccordingToLocalDisks(localDisks)
+		log.Infof("LocalDiskClaims to create: %+v", localDiskClaims)
 		if err := utils.CreateLocalDiskClaims(r.Client, localDiskClaims); err != nil {
 			log.Errorf("Create LocalDiskClaims err: %v", err)
 			return ctrl.Result{}, err
