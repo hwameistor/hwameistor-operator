@@ -71,8 +71,8 @@ spec:
         repository: {{ $.Values.localStorage.member.imageRepository }}
         tag: {{ template "hwameistor.localStorageImageTag" . }}
       rcloneImage:
-        repository: "rclone/rclone"
-        tag: "1.53.2"
+        repository: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
+        tag: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
   scheduler:
     replicas: {{ $.Values.scheduler.replicas }}
@@ -119,9 +119,11 @@ spec:
   drbd:
     deployOnMaster: {{ $.Values.ha.deployOnMaster | quote }}
     imageRegistry: {{ $.Values.global.hwameistorImageRegistry }}
-    imageRepoOwner: "hwameistor"
+    # imageRepoOwner: "hwameistor"
+    imageRepoOwner: {{ $.Values.ha.imageRepoOwner }}
     imagePullPolicy: "IfNotPresent"
-    drbdVersion: "v9.0.32-1"
+    # drbdVersion: "v9.0.32-1"
+    drbdVersion: {{ $.Values.ha.drbdVersion }}
     upgrade: "no"
     checkHostName: "yes"
     useAffinity: "no"

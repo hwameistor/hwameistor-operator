@@ -54,6 +54,10 @@ localStorage:
     monitor:
       imageRepository: sig-storage/csi-external-health-monitor-controller
       tag: v0.8.0
+  migrate:
+    rclone:
+      imageRepository: rclone/rclone
+      tag: 1.53.2
 
 scheduler:
   replicas: 1
@@ -88,3 +92,5 @@ ui:
 ha:
   module: drbd
   deployOnMaster: "yes"
+  imageRepoOwner: hwameistor
+  drbdVersion: v9.0.32-1
