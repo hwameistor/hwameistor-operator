@@ -9,14 +9,14 @@ global:
 operator:
   replicas: 1
   imageRepository: hwameistor/operator
-  tag: ""
+  tag: v0.9.5
  
 localDiskManager:
   tolerationOnMaster: true
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: ""
+    tag: v0.9.3
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -35,7 +35,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: ""
+    tag: v0.9.3
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -62,32 +62,32 @@ localStorage:
 scheduler:
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: ""
+  tag: v0.9.3
 
 admission:
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: ""
+  tag: v0.9.3
 
 evictor:
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: ""
+  tag: v0.9.3
 
 apiserver:
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: ""
+  tag: v0.9.3
 
 exporter:
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: ""
+  tag: v0.9.3
 
 ui:
   replicas: 1
   imageRepository: hwameistor/hwameistor-ui
-  tag: ""
+  tag: v0.9.3
 
 ha:
   module: drbd
