@@ -23,4 +23,4 @@
 - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-kylin10:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-bionic:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-focal:{{ .ha.drbdVersion }}"
-- "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-jammy:v9.1.11"
+# - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-jammy:v9.1.11"
