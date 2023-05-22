@@ -4,7 +4,7 @@ global:
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
   # k8sImageRegistry: m.daocloud.io/registry.k8s.io
-  hwameistorVersion: v0.9.3
+  hwameistorVersion: v0.10.1
 
 operator:
   replicas: 1
@@ -16,7 +16,7 @@ localDiskManager:
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: v0.9.3
+    tag: v0.10.1
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -35,7 +35,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: v0.9.3
+    tag: v0.10.1
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -62,27 +62,27 @@ localStorage:
 scheduler:
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: v0.9.3
+  tag: v0.10.1
 
 admission:
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: v0.9.3
+  tag: v0.10.1
 
 evictor:
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: v0.9.3
+  tag: v0.10.1
 
 apiserver:
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: v0.9.3
+  tag: v0.10.1
 
 exporter:
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: v0.9.3
+  tag: v0.10.1
 
 ui:
   replicas: 1
