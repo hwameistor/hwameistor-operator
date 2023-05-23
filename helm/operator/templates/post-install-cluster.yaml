@@ -100,14 +100,14 @@ spec:
     server:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
-        repository: {{ $.Values.apiserver.repository }}
+        repository: {{ $.Values.apiserver.imageRepository }}
         tag: {{ template "hwameistor.apiserverImageTag" . }}
   exporter:
     replicas: {{ $.Values.exporter.replicas }}
     collector:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
-        repository: {{ $.Values.exporter.repository }}
+        repository: {{ $.Values.exporter.imageRepository }}
         tag: {{ template "hwameistor.exporterImageTag" . }}
   ui:
     replicas: {{ $.Values.ui.replicas }}
