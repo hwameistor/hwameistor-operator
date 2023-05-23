@@ -71,6 +71,14 @@ var apiServer = appsv1.Deployment{
 									},
 								},
 							},
+							{
+								Name: "NODENAME",
+								ValueFrom: &corev1.EnvVarSource{
+									FieldRef: &corev1.ObjectFieldSelector{
+										FieldPath: "spec.nodeName",
+									},
+								},
+							},
 						},
 						Ports: []corev1.ContainerPort{
 							{
