@@ -31,6 +31,8 @@ function prepare_install_params() {
    IMAGE_VERSION=$(sed -n '/version:/p' helm/operator/Chart.yaml)
    export IMAGE_VERSION=${IMAGE_VERSION}
    sed -i "s/${IMAGE_VERSION}/version: ${IMAGE_TAG}/" helm/operator/Chart.yaml
+   sed -i '/hwameistor\/operator/{n;d}' helm/operator/values.yaml
+   sed -i "/hwameistor\/operator/a \ \ tag: ${IMAGE_TAG}" helm/operator/values.yaml
 
 }
 
