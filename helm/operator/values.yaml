@@ -90,6 +90,7 @@ ui:
   tag: v0.9.3
 
 ha:
+  disable: false
   module: drbd
   deployOnMaster: "yes"
   imageRepoOwner: hwameistor
