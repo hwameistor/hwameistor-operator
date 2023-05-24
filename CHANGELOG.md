@@ -1,3 +1,10 @@
+v0.10.0 / 2023-5-24
+========================
+
+* add NODENAME env for apiserver #120(@buffalo1024)
+* fix parameter name in helm template #122(@Vacant2333)
+* support disable ha while installing #124(@buffalo1024)
+
 v0.9.3 / 2023-5-12
 ========================
 
