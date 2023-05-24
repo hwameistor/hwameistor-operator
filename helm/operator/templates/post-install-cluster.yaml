@@ -117,6 +117,9 @@ spec:
         repository: {{ $.Values.ui.imageRepository }}
         tag: {{ template "hwameistor.uiImageTag" . }}
   drbd:
+    {{- if .Values.ha.disable }}
+    disable: true
+    {{- end }}
     deployOnMaster: {{ $.Values.ha.deployOnMaster | quote }}
     imageRegistry: {{ $.Values.global.hwameistorImageRegistry }}
     # imageRepoOwner: "hwameistor"
