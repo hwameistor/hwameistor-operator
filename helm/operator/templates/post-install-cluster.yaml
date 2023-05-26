@@ -102,6 +102,10 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.apiserver.imageRepository }}
         tag: {{ template "hwameistor.apiserverImageTag" . }}
+    authentication:
+      enable: {{ $.Values.apiserver.authentication.enable }}
+      accessId: {{ $.Values.apiserver.authentication.accessId }}
+      secretKey: {{ $.Values.apiserver.authentication.secretKey }}
   exporter:
     replicas: {{ $.Values.exporter.replicas }}
     collector:

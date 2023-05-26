@@ -145,11 +145,18 @@ type AdmissionControllerSpec struct {
 	Controller *ContainerCommonSpec `json:"controller,omitempty"`
 }
 
+type Authentication struct {
+	Enable bool `json:"enable,omitempty"`
+	AccessId string `json:"accessId,omitempty"`
+	SecretKey string `json:"secretKey,omitempty"`
+}
+
 type ApiServerSpec struct {
 	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	Server *ContainerCommonSpec `json:"server,omitempty"`
+	Authentication *Authentication `json:"authentication,omitempty"`
 }
 
 type ExporterSpec struct {

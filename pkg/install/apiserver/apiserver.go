@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strconv"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
@@ -102,6 +103,20 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		if container.Name == "server" {
 			imageSpec := clusterInstance.Spec.ApiServer.Server.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Env = append(container.Env, []corev1.EnvVar{
+				{
+					Name: "EnableAuth",
+					Value: strconv.FormatBool(clusterInstance.Spec.ApiServer.Authentication.Enable),
+				},
+				{
+					Name: "AuthAccessId",
+					Value: clusterInstance.Spec.ApiServer.Authentication.AccessId,
+				},
+				{
+					Name: "AuthSecretKey",
+					Value: clusterInstance.Spec.ApiServer.Authentication.SecretKey,
+				},
+			}...)
 		}
 		apiServer.Spec.Template.Spec.Containers[i] = container
 	}
@@ -190,6 +205,9 @@ func FulfillApiServerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwame
 	}
 	if clusterInstance.Spec.ApiServer.Replicas == 0 {
 		clusterInstance.Spec.ApiServer.Replicas = defaultApiServerReplicas
+	}
+	if clusterInstance.Spec.ApiServer.Authentication == nil {
+		clusterInstance.Spec.ApiServer.Authentication = &hwameistoriov1alpha1.Authentication{}
 	}
 	if clusterInstance.Spec.ApiServer.Server == nil {
 		clusterInstance.Spec.ApiServer.Server = &hwameistoriov1alpha1.ContainerCommonSpec{}
