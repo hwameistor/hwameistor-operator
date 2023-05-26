@@ -1,4 +1,9 @@
-v0.10.0 / 2023-5-24
+v0.10.2 / 2023-5-26
+========================
+
+*  add authentication for hwameistor-apiserver and bump hwameistor version to v0.10.3 #128(@buffalo1024)
+
+v0.10.1 / 2023-5-24
 ========================
 
 * add NODENAME env for apiserver #120(@buffalo1024)
