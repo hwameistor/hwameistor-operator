@@ -673,6 +673,15 @@ spec:
                 type: object
               apiServer:
                 properties:
+                  authentication:
+                    properties:
+                      accessId:
+                        type: string
+                      enable:
+                        type: boolean
+                      secretKey:
+                        type: string
+                    type: object
                   common:
                     properties:
                       nodeAffinity:
