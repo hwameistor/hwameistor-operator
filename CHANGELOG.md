@@ -1,3 +1,8 @@
+v0.10.3 / 2023-6-6
+========================
+
+* wait 2 minutes for localdiskmanager created localdisks #136(@buffalo1024)
+
 v0.10.2 / 2023-5-26
 ========================
 
