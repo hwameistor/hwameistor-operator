@@ -19,6 +19,7 @@ package controllers
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -322,6 +323,9 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			newInstance.Status.DiskReserveState = "ToReserve"
 		}
 	case "ToReserve":
+		log.Infof("sleep 2 minutes to wait for localdiskmanager created localdisks")
+		time.Sleep(time.Minute*2)
+		log.Infof("2 minutes waited, going to handle localdisks")
 		if err := utils.ReserveDisk(newInstance, r.Client); err != nil {
 			log.Errorf("Reserve Disk err: %v", err)
 			return ctrl.Result{}, err
