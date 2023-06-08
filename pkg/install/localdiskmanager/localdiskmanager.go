@@ -439,6 +439,57 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	return newClusterInstance, nil
 }
 
+func CheckLDMReallyReady(cli client.Client) bool {
+	key := types.NamespacedName{
+		Namespace: ldmDaemonSet.Namespace,
+		Name: ldmDaemonSet.Name,
+	}
+	var gottenDS appsv1.DaemonSet
+	if err := cli.Get(context.TODO(), key, &gottenDS); err != nil {
+		log.Errorf("get localdiskmanager daemonset err: %v", err)
+		return false
+	}
+
+	desiredPodsCount := gottenDS.Status.DesiredNumberScheduled
+	availablePodsCount := gottenDS.Status.NumberAvailable
+	if desiredPodsCount == 0 {
+		log.Errorf("desiredPodsCount of localdiskmanager is zero, desiredPodsCount: %v, availablePodsCount: %v", desiredPodsCount, availablePodsCount)
+		return false
+	}
+
+	if desiredPodsCount != availablePodsCount {
+		log.Errorf("desiredPodsCount and availablePodsCount not equal, desiredPodsCount: %v, availablePodsCount: %v", desiredPodsCount, availablePodsCount)
+		return false
+	}
+
+	var podList corev1.PodList
+	if err := cli.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmDaemonSet.Namespace}); err != nil {
+		log.Errorf("List pods err: %v", err)
+		return false
+	}
+
+	var podsManaged []corev1.Pod
+	for _, pod := range podList.Items {
+		if pod.Labels[ldmDaemonSetLabelSelectorKey] == ldmDaemonSetLabelSelectorValue {
+			podsManaged = append(podsManaged, pod)
+		}
+	}
+
+	if len(podsManaged) != int(desiredPodsCount) {
+		log.Errorf("localdiskmanager pods count not the same as desired, podsCount: %v, desired: %v", len(podsManaged), desiredPodsCount)
+		return false
+	}
+
+	for _, pod := range podsManaged {
+		if pod.Status.Phase != corev1.PodRunning {
+			log.Errorf("podPhase is not running, pod: %+v", pod)
+			return false
+		}
+	}
+
+	return true
+}
+
 func FulfillLDMDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalDiskManager == nil {
 		clusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}

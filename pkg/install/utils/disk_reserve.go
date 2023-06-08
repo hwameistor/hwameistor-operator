@@ -4,11 +4,13 @@ import (
 	"context"
 
 	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	hwameistorv1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	log "github.com/sirupsen/logrus"
 )
 
-func CheckComponentsInstalledSuccessfully(clusterInstance *hwameistoroperatorv1alpha1.Cluster) bool {
+func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hwameistoroperatorv1alpha1.Cluster) bool {
 	if ldmStatus := clusterInstance.Status.ComponentStatus.LocalDiskManager; ldmStatus == nil {
 		return false
 	} else if ldmStatus.Health != "Normal" {
@@ -45,6 +47,11 @@ func CheckComponentsInstalledSuccessfully(clusterInstance *hwameistoroperatorv1a
 		if clusterInstance.Status.ComponentStatus.Exporter.Health != "Normal" {
 			return false
 		}
+	}
+
+	if !localdiskmanager.CheckLDMReallyReady(cli) {
+		log.Errorf("localDiskManager is not really ready")
+		return false
 	}
 
 	return true
