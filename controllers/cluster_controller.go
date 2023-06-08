@@ -319,7 +319,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	switch newInstance.Status.DiskReserveState {
 	case "":
-		if utils.CheckComponentsInstalledSuccessfully(newInstance) {
+		if utils.CheckComponentsInstalledSuccessfully(r.Client, newInstance) {
 			newInstance.Status.DiskReserveState = "ToReserve"
 		}
 	case "ToReserve":
