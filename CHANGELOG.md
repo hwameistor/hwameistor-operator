@@ -1,3 +1,9 @@
+v0.10.4 / 2023-6-8
+========================
+
+* add extra check to ensure localdiskmanager is really ready #142(@buffalo1024)
+* add icon in Chart.yaml #143(@buffalo1024)
+
 v0.10.3 / 2023-6-6
 ========================
 
