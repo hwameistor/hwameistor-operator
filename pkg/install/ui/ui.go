@@ -15,13 +15,13 @@ import (
 )
 
 type UIMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *operatorv1alpha1.Cluster
 }
 
 func NewUIMaintainer(cli client.Client, clusterInstance *operatorv1alpha1.Cluster) *UIMaintainer {
 	return &UIMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -57,11 +57,11 @@ var ui = appsv1.Deployment{
 				Containers: []corev1.Container{
 					{
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name: "hwameistor-ui",
+						Name:            "hwameistor-ui",
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 80,
-								Protocol: corev1.ProtocolTCP,
+								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 					},
@@ -73,6 +73,7 @@ var ui = appsv1.Deployment{
 
 func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	ui.Namespace = clusterInstance.Spec.TargetNamespace
+	ui.OwnerReferences = append(ui.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	ui.Spec.Replicas = &clusterInstance.Spec.UI.Replicas
 	ui.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range ui.Spec.Template.Spec.Containers {
@@ -89,7 +90,7 @@ func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
 	SetUI(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: ui.Namespace,
-		Name: ui.Name,
+		Name:      ui.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
