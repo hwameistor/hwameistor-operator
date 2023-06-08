@@ -1,6 +1,7 @@
 apiVersion: v2
 name: hwameistor-operator
 description: A Helm chart for Hwameistor Operator
+icon: https://hwameistor.io/img/logo.svg
 
 # A chart can be either an 'application' or a 'library' chart.
 #
