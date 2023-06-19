@@ -72,7 +72,7 @@ spec:
         tag: {{ template "hwameistor.localStorageImageTag" . }}
       rcloneImage:
         repository: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
-        tag: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
+        tag: {{ $.Values.localStorage.migrate.rclone.tag }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
   scheduler:
     replicas: {{ $.Values.scheduler.replicas }}
