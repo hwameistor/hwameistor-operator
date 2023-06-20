@@ -45,6 +45,10 @@ var defaultLSCSIMonitorTag = "v0.8.0"
 var defaultLSCSIResizerRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIResizerRepository = "sig-storage/csi-resizer"
 var defaultLSCSIResizerTag = "v1.0.1"
+var provisionerContainerName = "provisioner"
+var attacherContainerName = "attacher"
+var monitorContainerName = "monitor"
+var resizerContainerName = "resizer"
 
 var lsCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -86,7 +90,7 @@ var lsCSIController = appsv1.Deployment{
 				},
 				Containers: []corev1.Container{
 					{
-						Name: "provisioner",
+						Name: provisionerContainerName,
 						Args: []string{
 							"--v=5",
 							"--csi-address=$(CSI_ADDRESS)",
@@ -112,7 +116,7 @@ var lsCSIController = appsv1.Deployment{
 						},
 					},
 					{
-						Name: "attacher",
+						Name: attacherContainerName,
 						Args: []string{
 							"--v=5",
 							"--csi-address=$(CSI_ADDRESS)",
@@ -136,7 +140,7 @@ var lsCSIController = appsv1.Deployment{
 						},
 					},
 					{
-						Name: "monitor",
+						Name: monitorContainerName,
 						Args: []string{
 							"--v=5",
 							"--csi-address=$(CSI_ADDRESS)",
@@ -180,7 +184,7 @@ var lsCSIController = appsv1.Deployment{
 						},
 					},
 					{
-						Name: "resizer",
+						Name: resizerContainerName,
 						Args: []string{
 							"--v=5",
 							"--csi-address=$(CSI_ADDRESS)",
@@ -259,27 +263,85 @@ func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range lsCSIController.Spec.Template.Spec.Containers {
-		if container.Name == "provisioner" {
-			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == provisionerContainerName {
+			container.Image = getProvisionerContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Resources
 		}
-		if container.Name == "attacher" {
-			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == attacherContainerName {
+			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Resources
 		}
-		if container.Name == "resizer" {
-			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == resizerContainerName {
+			container.Image = getResizerContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Resources
 		}
-		if container.Name == "monitor" {
-			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == monitorContainerName {
+			container.Image = getMonitorContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		lsCSIController.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getProvisionerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getAttacherContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getResizerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getMonitorContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
+	lsCSIControllerToUpdate := gottenCSIController.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range lsCSIControllerToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == provisionerContainerName {
+			wantedImage := getProvisionerContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == attacherContainerName {
+			wantedImage := getAttacherContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == resizerContainerName {
+			wantedImage := getResizerContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == monitorContainerName {
+			wantedImage := getMonitorContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, lsCSIControllerToUpdate
 }
 
 func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -299,6 +361,15 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get LS CSIController err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, csiControllerToUpdate := needOrNotToUpdateExporter(newClusterInstance, gottenCSIController)
+	if needToUpdate {
+		log.Infof("need to update ls csiController")
+		if err := m.Client.Update(context.TODO(), csiControllerToUpdate); err != nil {
+			log.Errorf("Update ls csiController err: %v", err)
 			return newClusterInstance, err
 		}
 	}

@@ -39,6 +39,8 @@ var defaultLSDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver
 var defaultLSDaemonsetCSIRegistrarImageTag = "v2.5.0"
 var defaultRCloneImageRepository = "rclone/rclone"
 var defaultRCloneImageTag = "1.53.2"
+var memberContainerName = "member"
+var registrarContainerName = "registrar"
 
 var lsDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -76,7 +78,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 				},
 				Containers: []corev1.Container{
 					{
-						Name: "registrar",
+						Name: registrarContainerName,
 						Args: []string{
 							"--v=5",
 							"--csi-address=/csi/csi.sock",
@@ -118,7 +120,7 @@ var lsDaemonSet = appsv1.DaemonSet{
 						},
 					},
 					{
-						Name: "member",
+						Name: memberContainerName,
 						Args: []string{
 							"--nodename=$(MY_NODENAME)",
 							"--namespace=$(POD_NAMESPACE)",
@@ -357,13 +359,12 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range lsDaemonSet.Spec.Template.Spec.Containers {
-		if container.Name == "registrar" {
+		if container.Name == registrarContainerName {
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock")
-			imageSpec := clusterInstance.Spec.LocalStorage.CSI.Registrar.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources
 		}
-		if container.Name == "member" {
+		if container.Name == memberContainerName {
 			// if clusterInstance.Spec.LocalStorage.Member.DRBDStartPort != 0 {
 			// 	container.Args = append(container.Args, "--drbd-start-port=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.DRBDStartPort))
 			// }
@@ -380,8 +381,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 				// Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 				Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 			})
-			imageSpec := clusterInstance.Spec.LocalStorage.Member.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" +imageSpec.Tag
+			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
 				Name: "plugin-dir",
@@ -405,6 +405,42 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	}
 }
 
+func getLSContainerMemberImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.Member.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Registrar.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
+	ds := gotten.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range ds.Spec.Template.Spec.Containers {
+		if container.Name == memberContainerName {
+			wantedImage := getLSContainerMemberImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ds.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == registrarContainerName {
+			wantedImage := getLSContainerRegistrarImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ds.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, ds
+}
+
 func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
 	SetLSDaemonSet(newClusterInstance)
@@ -422,6 +458,15 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get LocalStorage DaemonSet err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, dsToUpdate := needOrNotToUpdateLSDaemonset(newClusterInstance, gottenDS)
+	if needToUpdate {
+		log.Infof("need to update ls daemonset")
+		if err := m.Client.Update(context.TODO(), dsToUpdate); err != nil {
+			log.Errorf("Update ls daemonset err: %v", err)
 			return newClusterInstance, err
 		}
 	}

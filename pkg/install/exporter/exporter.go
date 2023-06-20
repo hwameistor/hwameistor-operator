@@ -34,6 +34,7 @@ var defaultExporterReplicas = int32(1)
 var defaultExporterImageRegistry = "ghcr.m.daocloud.io"
 var defaultExporterImageRepository = "hwameistor/exporter"
 var defaultExporterImageTag = install.DefaultHwameistorVersion
+var exporterContainerName = "exporter"
 
 var exporter = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -60,7 +61,7 @@ var exporter = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name:            "exporter",
+						Name: exporterContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Ports: []corev1.ContainerPort{
 							{
@@ -91,12 +92,34 @@ func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	exporter.Spec.Replicas = &clusterInstance.Spec.Exporter.Replicas
 	exporter.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range exporter.Spec.Template.Spec.Containers {
-		if container.Name == "exporter" {
-			imageSpec := clusterInstance.Spec.Exporter.Collector.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == exporterContainerName {
+			container.Image = getExporterContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		exporter.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getExporterContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.Exporter.Collector.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenExporter appsv1.Deployment) (bool, *appsv1.Deployment) {
+	exporterToUpdate := gottenExporter.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range exporterToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == exporterContainerName {
+			wantedImage := getExporterContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				exporterToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, exporterToUpdate
 }
 
 func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -116,6 +139,15 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get Exporter err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, exporterToUpdate := needOrNotToUpdateExporter(newClusterInstance, gotten)
+	if needToUpdate {
+		log.Infof("need to update exporter")
+		if err := m.Client.Update(context.TODO(), exporterToUpdate); err != nil {
+			log.Errorf("Update exporter err: %v", err)
 			return newClusterInstance, err
 		}
 	}

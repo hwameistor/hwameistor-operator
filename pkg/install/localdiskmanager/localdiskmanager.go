@@ -43,6 +43,8 @@ var defaultLDMDaemonsetImageTag = install.DefaultHwameistorVersion
 var defaultLDMDaemonsetCSIRegistrarImageRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLDMDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver-registrar"
 var defaultLDMDaemonsetCSIRegistrarImageTag = "v2.5.0"
+var managerContainerName = "manager"
+var registrarContainerName = "registrar"
 
 var ldmDaemonSet = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -65,7 +67,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 				HostPID: true,
 				Containers: []corev1.Container{
 					{
-						Name: "manager",
+						Name: managerContainerName,
 						Command: []string{"/local-disk-manager"},
 						Args: []string{
 							"--endpoint=$(CSI_ENDPOINT)",
@@ -132,7 +134,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						},
 					},
 					{
-						Name: "registrar",
+						Name: registrarContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Args: []string{
 							"--v=5",
@@ -311,14 +313,13 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	// }
 
 	for i, container := range ldmDaemonSet.Spec.Template.Spec.Containers {
-		if container.Name == "manager" {
+		if container.Name == managerContainerName {
 			if resources := clusterInstance.Spec.LocalDiskManager.Manager.Resources; resources != nil {
 				container.Resources = *resources
 			}
 			// if clusterInstance.Spec.LocalDiskManager.Manager.Image == nil {
 			// 	clusterInstance.Spec.LocalDiskManager.Manager.Image = &hwameistoriov1alpha1.ImageSpec{}
 			// }
-			imageSpec := clusterInstance.Spec.LocalDiskManager.Manager.Image
 			// if imageSpec.Registry == "" {
 			// 	imageSpec.Registry = defaultLDMDaemonsetImageRegistry
 			// }
@@ -328,7 +329,7 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			// if imageSpec.Tag == "" {
 			// 	imageSpec.Tag = defaultLDMDaemonsetImageTag
 			// }
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getLDMContainerManagerImageStringFromClusterInstance(clusterInstance)
 			// container.Args = append(container.Args, "--csi-enable=" + strconv.FormatBool(clusterInstance.Spec.LocalDiskManager.CSI.Enable))
 			container.Args = append(container.Args, "--csi-enable=true" )
 			registrationDirVolumeMount := corev1.VolumeMount{
@@ -355,13 +356,48 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			ldmDaemonSet.Spec.Template.Spec.Containers[i] = container
 		}
 
-		if container.Name == "registrar" {
-			imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == registrarContainerName {
+			container.Image = getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock")
 			ldmDaemonSet.Spec.Template.Spec.Containers[i] = container
 		}
 	}
+}
+
+func getLDMContainerManagerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalDiskManager.Manager.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateLDMDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
+	ds := gotten.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range ds.Spec.Template.Spec.Containers {
+		if container.Name == managerContainerName {
+			wantedImage := getLDMContainerManagerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ds.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == registrarContainerName {
+			wantedImage := getLDMContainerRegistrarImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ds.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, ds
 }
 
 func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -381,6 +417,15 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get LocalDiskManager DaemonSet err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	need, dsToUpdate := needOrNotToUpdateLDMDaemonset(newClusterInstance, gottenDS)
+	if need {
+		log.Infof("need to update ldm ds")
+		if err := m.Client.Update(context.TODO(), dsToUpdate); err != nil {
+			log.Errorf("Update LocalDiskManager DaemonSet err: %v", err)
 			return newClusterInstance, err
 		}
 	}

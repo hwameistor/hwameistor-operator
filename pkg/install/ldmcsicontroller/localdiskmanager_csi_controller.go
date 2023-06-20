@@ -38,6 +38,8 @@ var defaultLDMCSIProvisionerTag = "v2.0.3"
 var defaultLDMCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLDMCSIAttacherRepository = "sig-storage/csi-attacher"
 var defaultLDMCSIAttacherTag = "v3.0.1"
+var provisionerContainerName = "provisioner"
+var attacherContainerName = "attacher"
 
 var ldmCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -77,7 +79,7 @@ var ldmCSIController = appsv1.Deployment{
 				},
 				Containers: []corev1.Container{
 					{
-						Name: "provisioner",
+						Name: provisionerContainerName,
 						ImagePullPolicy: "IfNotPresent",
 						Args: []string{
 							"--v=5",
@@ -101,7 +103,7 @@ var ldmCSIController = appsv1.Deployment{
 						},
 					},
 					{
-						Name: "attacher",
+						Name: attacherContainerName,
 						ImagePullPolicy: "IfNotPresent",
 						Args: []string{
 							"--v=5",
@@ -154,19 +156,53 @@ func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range ldmCSIController.Spec.Template.Spec.Containers {
-		if container.Name == "provisioner" {
+		if container.Name == provisionerContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources
-			imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getProvisionerContainerImageStringFromClusterInstance(clusterInstance)
 		}
-		if container.Name == "attacher" {
+		if container.Name == attacherContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Resources
-			imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 		}
 
 		ldmCSIController.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getProvisionerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getAttacherContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateLDMCSIController (cluster *hwameistoriov1alpha1.Cluster, gottenLDMCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
+	ldmCSIControllerToUpdate := gottenLDMCSIController.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range ldmCSIControllerToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == provisionerContainerName {
+			wantedImage := getProvisionerContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ldmCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == attacherContainerName {
+			wantedImage := getAttacherContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				ldmCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, ldmCSIControllerToUpdate
 }
 
 func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -186,6 +222,15 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get LDM CSIController err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, csiControllerToUpdate := needOrNotToUpdateLDMCSIController(newClusterInstance, gottenCSIController)
+	if needToUpdate {
+		log.Infof("need to update ldm csiController")
+		if err := m.Client.Update(context.TODO(), csiControllerToUpdate); err != nil {
+			log.Errorf("Update ldm csiController err: %v", err)
 			return newClusterInstance, err
 		}
 	}
