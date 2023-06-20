@@ -34,6 +34,7 @@ var admissionControllerLabelSelectorValue = "hwameistor-admission-controller"
 var defaultAdmissionControllerImageRegistry = "ghcr.m.daocloud.io"
 var defaultAdmissionControllerImageRepository = "hwameistor/admission"
 var defaultAdmissionControllerImageTag = install.DefaultHwameistorVersion
+var admissionControllerContainerName = "server"
 
 var admissionController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -61,7 +62,7 @@ var admissionController = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "server",
+						Name: admissionControllerContainerName,
 						Args: []string{
 							"--cert-dir=/etc/webhook/certs",
 							"--tls-private-key-file=tls.key",
@@ -119,7 +120,7 @@ func SetAdmissionController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range admissionController.Spec.Template.Spec.Containers {
-		if container.Name == "server" {
+		if container.Name == admissionControllerContainerName {
 			// container.Resources = *clusterInstance.Spec.AdmissionController.Controller.Resources
 			imageSpec := clusterInstance.Spec.AdmissionController.Controller.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
@@ -136,6 +137,29 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 		}
 		admissionController.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getAdmissionControllerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.AdmissionController.Controller.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateAdmissionController (cluster *hwameistoriov1alpha1.Cluster, gottenAdmissionController appsv1.Deployment) (bool, *appsv1.Deployment) {
+	admissionController := gottenAdmissionController.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range admissionController.Spec.Template.Spec.Containers {
+		if container.Name == admissionControllerContainerName {
+			wantedImage := getAdmissionControllerContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				admissionController.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, admissionController
 }
 
 func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -155,6 +179,15 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get AdmissionController err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, admissionControllerToUpdate := needOrNotToUpdateAdmissionController(newClusterInstance, gottenAdmissionController)
+	if needToUpdate {
+		log.Infof("need to update admissionController")
+		if err := m.Client.Update(context.TODO(), admissionControllerToUpdate); err != nil {
+			log.Errorf("Update admissionController err: %v", err)
 			return newClusterInstance, err
 		}
 	}

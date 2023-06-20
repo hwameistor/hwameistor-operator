@@ -34,6 +34,7 @@ var evictorLabelSelectorValue = "hwameistor-volume-evictor"
 var defaultEvictorImageRegistry = "ghcr.m.daocloud.io"
 var defaultEvictorImageRepository = "hwameistor/evictor"
 var defaultEvictorImageTag = install.DefaultHwameistorVersion
+var evictorContainerName = "evictor"
 
 var evictorDeployment = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -61,7 +62,7 @@ var evictorDeployment = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "evictor",
+						Name: evictorContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 					},
 				},
@@ -80,13 +81,35 @@ func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setEvictorContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range evictorDeployment.Spec.Template.Spec.Containers {
-		if container.Name == "evictor" {
+		if container.Name == evictorContainerName {
 			// container.Resources = *clusterInstance.Spec.Evictor.Evictor.Resources
-			imageSpec := clusterInstance.Spec.Evictor.Evictor.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getEvictorContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		evictorDeployment.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getEvictorContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.Evictor.Evictor.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateEvictor (cluster *hwameistoriov1alpha1.Cluster, gottenEvictor appsv1.Deployment) (bool, *appsv1.Deployment) {
+	evictorToUpdate := gottenEvictor.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range evictorToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == evictorContainerName {
+			wantedImage := getEvictorContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				evictorToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, evictorToUpdate
 }
 
 func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -106,6 +129,15 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get Evictor err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, evictorToUpdate := needOrNotToUpdateEvictor(newClusterInstance, gotten)
+	if needToUpdate {
+		log.Infof("need to update evictor")
+		if err := m.Client.Update(context.TODO(), evictorToUpdate); err != nil {
+			log.Errorf("Update evictor err: %v", err)
 			return newClusterInstance, err
 		}
 	}

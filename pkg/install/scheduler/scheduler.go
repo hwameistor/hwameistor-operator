@@ -34,6 +34,7 @@ var defaultSchedulerReplicas = int32(1)
 var defauldSchedulerImageRegistry = "ghcr.m.daocloud.io"
 var defaultSchedulerImageRepository = "hwameistor/scheduler"
 var defaultSchedulerImageTag = install.DefaultHwameistorVersion
+var schedulerContainerName = "hwameistor-kube-scheduler"
 
 var schedulerDeploy = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -78,7 +79,7 @@ var schedulerDeploy = appsv1.Deployment{
 				},
 				Containers: []corev1.Container{
 					{
-						Name: "hwameistor-kube-scheduler",
+						Name: schedulerContainerName,
 						Args: []string{
 							"-v=2",
 							"--bind-address=0.0.0.0",
@@ -158,13 +159,35 @@ func SetScheduler(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 func setSchedulerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range schedulerDeploy.Spec.Template.Spec.Containers {
-		if container.Name == "hwameistor-kube-scheduler" {
+		if container.Name == schedulerContainerName {
 			// container.Resources = *clusterInstance.Spec.Scheduler.Scheduler.Resources
-			imageSpec := clusterInstance.Spec.Scheduler.Scheduler.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+			container.Image = getSchedulerContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		schedulerDeploy.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getSchedulerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.Scheduler.Scheduler.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateScheduler (cluster *hwameistoriov1alpha1.Cluster, gottenScheduler appsv1.Deployment) (bool, *appsv1.Deployment) {
+	schedulerToUpdate := gottenScheduler.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range schedulerToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == schedulerContainerName {
+			wantedImage := getSchedulerContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				schedulerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, schedulerToUpdate
 }
 
 func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
@@ -184,6 +207,15 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get Scheduler err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, schedulerToUpdate := needOrNotToUpdateScheduler(newClusterInstance, gotten)
+	if needToUpdate {
+		log.Infof("need to update scheduler")
+		if err := m.Client.Update(context.TODO(), schedulerToUpdate); err != nil {
+			log.Errorf("Update scheduler err: %v", err)
 			return newClusterInstance, err
 		}
 	}

@@ -31,6 +31,7 @@ var uiLabelValue = "hwameistor-ui"
 var defaultUIImageRegistry = "ghcr.m.daocloud.io"
 var defaultUIImageRepository = "hwameistor/hwameistor-ui"
 var defaultUIImageTag = install.DefaultHwameistorVersion
+var uiContainerName = "hwameistor-ui"
 
 var ui = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -57,7 +58,7 @@ var ui = appsv1.Deployment{
 				Containers: []corev1.Container{
 					{
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name: "hwameistor-ui",
+						Name: uiContainerName,
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 80,
@@ -76,12 +77,34 @@ func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	ui.Spec.Replicas = &clusterInstance.Spec.UI.Replicas
 	ui.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range ui.Spec.Template.Spec.Containers {
-		if container.Name == "hwameistor-ui" {
-			imageSpec := clusterInstance.Spec.UI.UI.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == uiContainerName {
+			container.Image = getUIContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		ui.Spec.Template.Spec.Containers[i] = container
 	}
+}
+
+func getUIContainerImageStringFromClusterInstance(clusterInstance *operatorv1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.UI.UI.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateUI (cluster *operatorv1alpha1.Cluster, gottenUI appsv1.Deployment) (bool, *appsv1.Deployment) {
+	uiToUpdate := gottenUI.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range uiToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == uiContainerName {
+			wantedImage := getUIContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				uiToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, uiToUpdate
 }
 
 func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
@@ -101,6 +124,15 @@ func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get UI err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, uiToUpdate := needOrNotToUpdateUI(newClusterInstance, gotten)
+	if needToUpdate {
+		log.Infof("need to update ui")
+		if err := m.Client.Update(context.TODO(), uiToUpdate); err != nil {
+			log.Errorf("Update ui err: %v", err)
 			return newClusterInstance, err
 		}
 	}

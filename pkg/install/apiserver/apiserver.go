@@ -35,6 +35,7 @@ var defaultApiServerReplicas = int32(1)
 var defaultApiServerImageRegistry = "ghcr.m.daocloud.io"
 var defaultApiServerImageRepository = "hwameistor/apiserver"
 var defaultApiServerImageTag = install.DefaultHwameistorVersion
+var apiserverContainerName = "server"
 
 var apiServer = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -61,7 +62,7 @@ var apiServer = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: "server",
+						Name: apiserverContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
 							{
@@ -100,9 +101,8 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	apiServer.Spec.Replicas = &clusterInstance.Spec.ApiServer.Replicas
 	apiServer.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range apiServer.Spec.Template.Spec.Containers {
-		if container.Name == "server" {
-			imageSpec := clusterInstance.Spec.ApiServer.Server.Image
-			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+		if container.Name == apiserverContainerName {
+			container.Image = getApiserverContainerImageStringFromClusterInstance(clusterInstance)
 			container.Env = append(container.Env, []corev1.EnvVar{
 				{
 					Name: "EnableAuth",
@@ -122,6 +122,29 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	}
 }
 
+func getApiserverContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.ApiServer.Server.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func needOrNotToUpdateApiserver (cluster *hwameistoriov1alpha1.Cluster, gottenApiserver appsv1.Deployment) (bool, *appsv1.Deployment) {
+	apiserverToUpdate := gottenApiserver.DeepCopy()
+	var needToUpdate bool
+
+	for i, container := range apiserverToUpdate.Spec.Template.Spec.Containers {
+		if container.Name == apiserverContainerName {
+			wantedImage := getApiserverContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				apiserverToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+	}
+
+	return needToUpdate, apiserverToUpdate
+}
+
 func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
 	SetApiServer(newClusterInstance)
@@ -139,6 +162,15 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 			return newClusterInstance, nil
 		} else {
 			log.Errorf("Get ApiServer err: %v", err)
+			return newClusterInstance, err
+		}
+	}
+
+	needToUpdate, apiserverToUpdate := needOrNotToUpdateApiserver(newClusterInstance, gotten)
+	if needToUpdate {
+		log.Infof("need to update apiserver")
+		if err := m.Client.Update(context.TODO(), apiserverToUpdate); err != nil {
+			log.Errorf("Update apiserver err: %v", err)
 			return newClusterInstance, err
 		}
 	}
