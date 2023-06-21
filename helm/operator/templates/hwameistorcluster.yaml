@@ -2,9 +2,6 @@ apiVersion: hwameistor.io/v1alpha1
 kind: Cluster
 metadata:
   name: hwameistor-cluster
-  annotations: 
-    "helm.sh/hook": post-install
-    "helm.sh/hook-delete-policy": hook-failed
 spec:
   targetNamespace: {{ $.Values.global.targetNamespace }}
   rbac:
