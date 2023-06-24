@@ -134,7 +134,8 @@ func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	ldmCSIController.Namespace = clusterInstance.Spec.TargetNamespace
 	ldmCSIController.OwnerReferences = append(ldmCSIController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	// ldmCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalDiskManager.CSI.Controller.Common.PriorityClassName
-	ldmCSIController.Spec.Replicas = &clusterInstance.Spec.LocalDiskManager.CSI.Controller.Replicas
+	replicas := getReplicasFromClusterInstance(clusterInstance)
+	ldmCSIController.Spec.Replicas = &replicas
 	ldmCSIController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setLDMCSIControllerVolumes(clusterInstance)
 	setLDMCSIControllerContainers(clusterInstance)
@@ -179,6 +180,10 @@ func getAttacherContainerImageStringFromClusterInstance(clusterInstance *hwameis
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.LocalDiskManager.CSI.Controller.Replicas
+}
+
 func needOrNotToUpdateLDMCSIController (cluster *hwameistoriov1alpha1.Cluster, gottenLDMCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
 	ldmCSIControllerToUpdate := gottenLDMCSIController.DeepCopy()
 	var needToUpdate bool
@@ -200,6 +205,12 @@ func needOrNotToUpdateLDMCSIController (cluster *hwameistoriov1alpha1.Cluster, g
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getReplicasFromClusterInstance(cluster)
+	if *ldmCSIControllerToUpdate.Spec.Replicas != wantedReplicas {
+		ldmCSIControllerToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, ldmCSIControllerToUpdate

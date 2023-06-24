@@ -244,7 +244,7 @@ var lsCSIController = appsv1.Deployment{
 func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	lsCSIController.Namespace = clusterInstance.Spec.TargetNamespace
 	lsCSIController.OwnerReferences = append(lsCSIController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	replicas := clusterInstance.Spec.LocalStorage.CSI.Controller.Replicas
+	replicas := getReplicasFromClusterInstance(clusterInstance)
 	lsCSIController.Spec.Replicas = &replicas
 	lsCSIController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	// lsCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalStorage.Common.PriorityClassName
@@ -302,6 +302,10 @@ func getMonitorContainerImageStringFromClusterInstance(clusterInstance *hwameist
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.LocalStorage.CSI.Controller.Replicas
+}
+
 func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
 	lsCSIControllerToUpdate := gottenCSIController.DeepCopy()
 	var needToUpdate bool
@@ -339,6 +343,12 @@ func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenCSI
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getReplicasFromClusterInstance(cluster)
+	if *lsCSIControllerToUpdate.Spec.Replicas != wantedReplicas {
+		lsCSIControllerToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, lsCSIControllerToUpdate

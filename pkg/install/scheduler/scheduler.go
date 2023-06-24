@@ -152,7 +152,7 @@ func SetScheduler(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	schedulerDeploy.Namespace = clusterInstance.Spec.TargetNamespace
 	schedulerDeploy.OwnerReferences = append(schedulerDeploy.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	schedulerDeploy.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	replicas := clusterInstance.Spec.Scheduler.Replicas
+	replicas := getSchedulerReplicasFromClusterInstance(clusterInstance)
 	schedulerDeploy.Spec.Replicas = &replicas
 	setSchedulerContainers(clusterInstance)
 }
@@ -172,6 +172,10 @@ func getSchedulerContainerImageStringFromClusterInstance(clusterInstance *hwamei
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getSchedulerReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.Scheduler.Replicas
+}
+
 func needOrNotToUpdateScheduler (cluster *hwameistoriov1alpha1.Cluster, gottenScheduler appsv1.Deployment) (bool, *appsv1.Deployment) {
 	schedulerToUpdate := gottenScheduler.DeepCopy()
 	var needToUpdate bool
@@ -185,6 +189,12 @@ func needOrNotToUpdateScheduler (cluster *hwameistoriov1alpha1.Cluster, gottenSc
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getSchedulerReplicasFromClusterInstance(cluster)
+	if *schedulerToUpdate.Spec.Replicas != wantedReplicas {
+		schedulerToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, schedulerToUpdate
