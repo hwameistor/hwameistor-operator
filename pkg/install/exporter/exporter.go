@@ -89,7 +89,8 @@ var exporter = appsv1.Deployment{
 func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	exporter.Namespace = clusterInstance.Spec.TargetNamespace
 	exporter.OwnerReferences = append(exporter.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	exporter.Spec.Replicas = &clusterInstance.Spec.Exporter.Replicas
+	replicas := getExporterReplicasFromClusterInstance(clusterInstance)
+	exporter.Spec.Replicas = &replicas
 	exporter.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range exporter.Spec.Template.Spec.Containers {
 		if container.Name == exporterContainerName {
@@ -102,6 +103,10 @@ func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 func getExporterContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	imageSpec := clusterInstance.Spec.Exporter.Collector.Image
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getExporterReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.Exporter.Replicas
 }
 
 func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenExporter appsv1.Deployment) (bool, *appsv1.Deployment) {
@@ -117,6 +122,12 @@ func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenExp
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getExporterReplicasFromClusterInstance(cluster)
+	if *exporterToUpdate.Spec.Replicas != wantedReplicas {
+		exporterToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, exporterToUpdate

@@ -98,7 +98,8 @@ var apiServer = appsv1.Deployment{
 func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	apiServer.Namespace = clusterInstance.Spec.TargetNamespace
 	apiServer.OwnerReferences = append(apiServer.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	apiServer.Spec.Replicas = &clusterInstance.Spec.ApiServer.Replicas
+	replicas := getApiserverReplicasFromClusterInstance(clusterInstance)
+	apiServer.Spec.Replicas = &replicas
 	apiServer.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range apiServer.Spec.Template.Spec.Containers {
 		if container.Name == apiserverContainerName {
@@ -127,6 +128,10 @@ func getApiserverContainerImageStringFromClusterInstance(clusterInstance *hwamei
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getApiserverReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.ApiServer.Replicas
+}
+
 func needOrNotToUpdateApiserver (cluster *hwameistoriov1alpha1.Cluster, gottenApiserver appsv1.Deployment) (bool, *appsv1.Deployment) {
 	apiserverToUpdate := gottenApiserver.DeepCopy()
 	var needToUpdate bool
@@ -140,6 +145,12 @@ func needOrNotToUpdateApiserver (cluster *hwameistoriov1alpha1.Cluster, gottenAp
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getApiserverReplicasFromClusterInstance(cluster)
+	if *apiserverToUpdate.Spec.Replicas != wantedReplicas {
+		apiserverToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, apiserverToUpdate

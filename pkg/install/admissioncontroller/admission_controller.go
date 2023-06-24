@@ -113,7 +113,8 @@ var admissionController = appsv1.Deployment{
 func SetAdmissionController(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	admissionController.Namespace = clusterInstance.Spec.TargetNamespace
 	admissionController.OwnerReferences = append(admissionController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	admissionController.Spec.Replicas = &clusterInstance.Spec.AdmissionController.Replicas
+	replicas := getAdmissionControllerReplicasFromClusterInstance(clusterInstance)
+	admissionController.Spec.Replicas = &replicas
 	admissionController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setAdmissionControllerContainers(clusterInstance)
 }
@@ -144,22 +145,32 @@ func getAdmissionControllerContainerImageStringFromClusterInstance(clusterInstan
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getAdmissionControllerReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.AdmissionController.Replicas
+}
+
 func needOrNotToUpdateAdmissionController (cluster *hwameistoriov1alpha1.Cluster, gottenAdmissionController appsv1.Deployment) (bool, *appsv1.Deployment) {
-	admissionController := gottenAdmissionController.DeepCopy()
+	admissionControllerToUpdate := gottenAdmissionController.DeepCopy()
 	var needToUpdate bool
 
-	for i, container := range admissionController.Spec.Template.Spec.Containers {
+	for i, container := range admissionControllerToUpdate.Spec.Template.Spec.Containers {
 		if container.Name == admissionControllerContainerName {
 			wantedImage := getAdmissionControllerContainerImageStringFromClusterInstance(cluster)
 			if container.Image != wantedImage {
 				container.Image = wantedImage
-				admissionController.Spec.Template.Spec.Containers[i] = container
+				admissionControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}
 		}
 	}
 
-	return needToUpdate, admissionController
+	wantedReplicas := getAdmissionControllerReplicasFromClusterInstance(cluster)
+	if *admissionControllerToUpdate.Spec.Replicas != wantedReplicas {
+		admissionControllerToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
+	}
+
+	return needToUpdate, admissionControllerToUpdate
 }
 
 func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {

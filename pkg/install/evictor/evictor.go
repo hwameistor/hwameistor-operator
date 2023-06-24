@@ -74,7 +74,8 @@ var evictorDeployment = appsv1.Deployment{
 func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	evictorDeployment.Namespace = clusterInstance.Spec.TargetNamespace
 	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	evictorDeployment.Spec.Replicas = &clusterInstance.Spec.Evictor.Replicas
+	replicas := getEvictorReplicasFromClusterInstance(clusterInstance)
+	evictorDeployment.Spec.Replicas = &replicas
 	evictorDeployment.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	setEvictorContainers(clusterInstance)
 }
@@ -94,6 +95,10 @@ func getEvictorContainerImageStringFromClusterInstance(clusterInstance *hwameist
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getEvictorReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.Evictor.Replicas
+}
+
 func needOrNotToUpdateEvictor (cluster *hwameistoriov1alpha1.Cluster, gottenEvictor appsv1.Deployment) (bool, *appsv1.Deployment) {
 	evictorToUpdate := gottenEvictor.DeepCopy()
 	var needToUpdate bool
@@ -107,6 +112,12 @@ func needOrNotToUpdateEvictor (cluster *hwameistoriov1alpha1.Cluster, gottenEvic
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getEvictorReplicasFromClusterInstance(cluster)
+	if *evictorToUpdate.Spec.Replicas != wantedReplicas {
+		evictorToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, evictorToUpdate

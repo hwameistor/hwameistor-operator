@@ -74,7 +74,8 @@ var ui = appsv1.Deployment{
 
 func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	ui.Namespace = clusterInstance.Spec.TargetNamespace
-	ui.Spec.Replicas = &clusterInstance.Spec.UI.Replicas
+	replicas := getUIReplicasFromClusterInstance(clusterInstance)
+	ui.Spec.Replicas = &replicas
 	ui.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range ui.Spec.Template.Spec.Containers {
 		if container.Name == uiContainerName {
@@ -87,6 +88,10 @@ func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 func getUIContainerImageStringFromClusterInstance(clusterInstance *operatorv1alpha1.Cluster) string {
 	imageSpec := clusterInstance.Spec.UI.UI.Image
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getUIReplicasFromClusterInstance(clusterInstance *operatorv1alpha1.Cluster) int32 {
+	return clusterInstance.Spec.UI.Replicas
 }
 
 func needOrNotToUpdateUI (cluster *operatorv1alpha1.Cluster, gottenUI appsv1.Deployment) (bool, *appsv1.Deployment) {
@@ -102,6 +107,12 @@ func needOrNotToUpdateUI (cluster *operatorv1alpha1.Cluster, gottenUI appsv1.Dep
 				needToUpdate = true
 			}
 		}
+	}
+
+	wantedReplicas := getUIReplicasFromClusterInstance(cluster)
+	if *uiToUpdate.Spec.Replicas != wantedReplicas {
+		uiToUpdate.Spec.Replicas = &wantedReplicas
+		needToUpdate = true
 	}
 
 	return needToUpdate, uiToUpdate
