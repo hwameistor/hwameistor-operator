@@ -1,3 +1,12 @@
+v0.10.5 / 2023-7-3
+========================
+
+* fix image of rclone in helm chart template #149(@Vacant2333)
+* support modifying cluster cr to update components container image #151(@buffalo1024)
+* remove hook annotations of cluster cr in helm chart templates #152(@buffalo1024)
+* support modifying cluster cr to update components deployment replicas #153(@buffalo1024)
+* support update hwameistor crds after installing first time #154(@buffalo1024)
+
 v0.10.4 / 2023-6-8
 ========================
 
