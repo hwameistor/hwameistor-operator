@@ -99,3 +99,7 @@ ha:
   deployOnMaster: "yes"
   imageRepoOwner: hwameistor
   drbdVersion: v9.0.32-1
+
+preHookJob:
+  imageRepository: dtzar/helm-kubectl
+  tag: 3.9
