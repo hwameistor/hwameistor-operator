@@ -3,6 +3,14 @@ kind: Cluster
 metadata:
   name: hwameistor-cluster
 spec:
+  diskReserveConfigurations:
+  {{- range $.Values.diskReserve }}
+  - nodeName: {{ .nodeName }}
+    devices:
+    {{- range .devices }}
+    - {{ . }}
+    {{- end }}
+  {{- end }}
   targetNamespace: {{ $.Values.global.targetNamespace }}
   rbac:
     serviceAccountName: "hwameistor-admin"

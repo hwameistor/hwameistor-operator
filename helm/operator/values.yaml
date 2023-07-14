@@ -100,6 +100,23 @@ ha:
   imageRepoOwner: hwameistor
   drbdVersion: v9.0.32-1
 
+# diskReserve example
+# diskReserve: 
+# - nodeName: node1
+#   devices:
+#   - /dev/sdc
+#   - /dev/sdd
+# - nodeName: node2
+#   devices:
+#   - /dev/sdc
+#   - /dev/sde
+
+# diskReserve example by json string
+# diskReserve: [{"nodeName":"node1","devices":["/dev/sdc","/dev/sdc"]},{"nodeName":"node2","devices":["/dev/sdc","/dev/sde"]}]
+
+# diskReserve example for helm install --set
+# --set diskReserve\[0\].nodeName=node1 --set diskReserve\[0\].devices={/dev/sdc\,/dev/sdd} --set diskReserve\[1\].nodeName=node2 --set diskReserve\[1\].devices={/dev/sdc\,/dev/sde}
+
 preHookJob:
   imageRepository: dtzar/helm-kubectl
   tag: 3.9
