@@ -28,7 +28,7 @@ date=$(date +%Y%m%d%H%M)
 IMAGE_TAG=v${date}
 export IMAGE_TAG=${IMAGE_TAG}
 OPERATOR_MODULE_NAME=operator
-IMAGE_REGISTRY=172.30.45.210/hwameistor
+IMAGE_REGISTRY=10.6.112.210/hwameistor
 export IMAGE_NAME=${IMAGE_REGISTRY}/${OPERATOR_MODULE_NAME}
 MODULES=(operator)
 
