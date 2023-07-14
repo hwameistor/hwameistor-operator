@@ -206,7 +206,8 @@ type ClusterStatus struct {
 	InstalledCRDS bool `json:"installedCRDS"`
 	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
 	DRBDAdapterCreatedJobNum int `json:"drbdAdapterCreatedJobNum"`
-	DiskReserveState string `json:"diskReserveState"`
+	DiskReserveState string `json:"diskReserveState,omitempty"`
+	Phase string `json:"phase,omitempty"`
 	ComponentStatus ComponentStatus `json:"componentStatus"`
 }
 
