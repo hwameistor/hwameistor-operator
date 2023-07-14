@@ -1,3 +1,10 @@
+v0.10.7 / 2023-7-14
+========================
+
+* add preHookJob to Update operator crds #159(@buffalo1024)
+* support setting disk reserve configurations by helm values #160(@buffalo1024)
+* use phase to represent phase of hwameistor cluster cr #161(@buffalo1024)
+
 v0.10.6 / 2023-7-3
 ========================
 
