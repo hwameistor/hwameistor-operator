@@ -7437,9 +7437,10 @@ spec:
                 type: integer
               installedCRDS:
                 type: boolean
+              phase:
+                type: string
             required:
             - componentStatus
-            - diskReserveState
             - drbdAdapterCreated
             - drbdAdapterCreatedJobNum
             - installedCRDS

@@ -333,10 +333,15 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	switch newInstance.Status.DiskReserveState {
+	// Use Phase to adopt DiskReserveState, notice that don't lose the value of DiskReserveState
+	if newInstance.Status.DiskReserveState != "" && newInstance.Status.Phase == "" {
+		newInstance.Status.Phase = newInstance.Status.DiskReserveState
+	}
+
+	switch newInstance.Status.Phase {
 	case "":
 		if utils.CheckComponentsInstalledSuccessfully(r.Client, newInstance) {
-			newInstance.Status.DiskReserveState = "ToReserve"
+			newInstance.Status.Phase = "ToReserve"
 		}
 	case "ToReserve":
 		log.Infof("sleep 2 minutes to wait for localdiskmanager created localdisks")
@@ -346,7 +351,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Errorf("Reserve Disk err: %v", err)
 			return ctrl.Result{}, err
 		}
-		newInstance.Status.DiskReserveState = "Reserved"
+		newInstance.Status.Phase = "Reserved"
 	case "Reserved":
 		log.Infof("Disk Reserved")
 		localDisks, err := utils.ListLocalDisks(r.Client)
@@ -363,7 +368,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			log.Errorf("Create LocalDiskClaims err: %v", err)
 			return ctrl.Result{}, err
 		}
-		newInstance.Status.DiskReserveState = "CreatedLDC"
+		newInstance.Status.Phase = "CreatedLDC"
 	case "CreatedLDC":
 		if !newInstance.Spec.StorageClass.Disable {
 			// if err := storageclass.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
