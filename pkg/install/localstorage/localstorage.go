@@ -42,7 +42,7 @@ var defaultRCloneImageTag = "1.53.2"
 var memberContainerName = "member"
 var registrarContainerName = "registrar"
 
-var lsDaemonSet = appsv1.DaemonSet{
+var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "hwameistor-local-storage",
 	},
@@ -276,16 +276,18 @@ var lsDaemonSet = appsv1.DaemonSet{
 	},
 }
 
-func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	lsDaemonSet.OwnerReferences = append(lsDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	lsDaemonSet.Namespace = clusterInstance.Spec.TargetNamespace
+func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
+	lsDaemonSetToCreate := lsDaemonSetTemplate.DeepCopy()
+
+	lsDaemonSetToCreate.OwnerReferences = append(lsDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	lsDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 	// lsDaemonSet.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalStorage.Common.PriorityClassName
-	lsDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setLSDaemonSetVolumes(clusterInstance)
-	setLSDaemonSetContainers(clusterInstance)
+	lsDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	lsDaemonSetToCreate = setLSDaemonSetVolumes(clusterInstance, lsDaemonSetToCreate)
+	lsDaemonSetToCreate = setLSDaemonSetContainers(clusterInstance, lsDaemonSetToCreate)
 
 	if clusterInstance.Spec.LocalStorage.TolerationOnMaster {
-		lsDaemonSet.Spec.Template.Spec.Tolerations = []corev1.Toleration{
+		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
 			{
 				Key: "CriticalAddonsOnly",
 				Operator: corev1.TolerationOpExists,
@@ -312,9 +314,11 @@ func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		}
 	}
+
+	return lsDaemonSetToCreate
 }
 
-func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
+func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
 	sockerDirVolume := corev1.Volume{
 		Name: "socket-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -324,7 +328,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	lsDaemonSet.Spec.Template.Spec.Volumes = append(lsDaemonSet.Spec.Template.Spec.Volumes, sockerDirVolume)
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, sockerDirVolume)
 	pluginDirVolume := corev1.Volume{
 		Name: "plugin-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -334,7 +338,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	lsDaemonSet.Spec.Template.Spec.Volumes = append(lsDaemonSet.Spec.Template.Spec.Volumes, pluginDirVolume)
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, pluginDirVolume)
 	registrationDirVolume := corev1.Volume{
 		Name: "registration-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -344,7 +348,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	lsDaemonSet.Spec.Template.Spec.Volumes = append(lsDaemonSet.Spec.Template.Spec.Volumes, registrationDirVolume)
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, registrationDirVolume)
 	podsMountDirVolume := corev1.Volume{
 		Name: "pods-mount-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -354,11 +358,13 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	lsDaemonSet.Spec.Template.Spec.Volumes = append(lsDaemonSet.Spec.Template.Spec.Volumes, podsMountDirVolume)
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, podsMountDirVolume)
+
+	return lsDaemonSetToCreate
 }
 
-func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	for i, container := range lsDaemonSet.Spec.Template.Spec.Containers {
+func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
+	for i, container := range lsDaemonSetToCreate.Spec.Template.Spec.Containers {
 		if container.Name == registrarContainerName {
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock")
 			container.Image = getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance)
@@ -401,8 +407,10 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			}
 			container.VolumeMounts = append(container.VolumeMounts, podsMountDirVolumeMount)
 		}
-		lsDaemonSet.Spec.Template.Spec.Containers[i] = container
+		lsDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
 	}
+
+	return lsDaemonSetToCreate
 }
 
 func getLSContainerMemberImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -443,15 +451,15 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 
 func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetLSDaemonSet(newClusterInstance)
+	lsDaemonSetToCreate := SetLSDaemonSet(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: lsDaemonSet.Namespace,
-		Name: lsDaemonSet.Name,
+		Namespace: lsDaemonSetToCreate.Namespace,
+		Name: lsDaemonSetToCreate.Name,
 	}
 	var gottenDS appsv1.DaemonSet
 	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &lsDaemonSet); errCreate != nil {
+			if errCreate := m.Client.Create(context.TODO(), lsDaemonSetToCreate); errCreate != nil {
 				log.Errorf("Create LocalStorage DaemonSet err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
@@ -472,7 +480,7 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: lsDaemonSet.Namespace}); err != nil {
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: lsDaemonSetToCreate.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
