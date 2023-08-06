@@ -41,6 +41,7 @@ var defaultRCloneImageRepository = "rclone/rclone"
 var defaultRCloneImageTag = "1.53.2"
 var memberContainerName = "member"
 var registrarContainerName = "registrar"
+var rcloneEnvName = "MIGRAGE_RCLONE_IMAGE"
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -381,11 +382,12 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 				Name: "CSI_ENDPOINT",
 				Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
 			})
-			rcloneImageSpec := clusterInstance.Spec.LocalStorage.Member.RcloneImage
+			// rcloneImageSpec := clusterInstance.Spec.LocalStorage.Member.RcloneImage
 			container.Env = append(container.Env, corev1.EnvVar{
-				Name: "MIGRAGE_RCLONE_IMAGE",
+				Name: rcloneEnvName,
 				// Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
-				Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
+				// Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
+				Value: getRcloneEnvFromClusterInstance(clusterInstance),
 			})
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
@@ -423,18 +425,41 @@ func getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwam
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
+func getRcloneEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	rcloneImage := clusterInstance.Spec.LocalStorage.Member.RcloneImage
+	return rcloneImage.Repository + ":" + rcloneImage.Tag
+}
+
 func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
 	ds := gotten.DeepCopy()
 	var needToUpdate bool
 
 	for i, container := range ds.Spec.Template.Spec.Containers {
 		if container.Name == memberContainerName {
+			var containerModified bool
+
+			wantedRcloneEnv := getRcloneEnvFromClusterInstance(cluster)
+			for i, env := range container.Env {
+				if env.Name == rcloneEnvName {
+					if env.Value != wantedRcloneEnv {
+						env.Value = wantedRcloneEnv
+						container.Env[i] = env
+						containerModified = true
+					}
+				}
+			}
+
 			wantedImage := getLSContainerMemberImageStringFromClusterInstance(cluster)
 			if container.Image != wantedImage {
 				container.Image = wantedImage
+				containerModified = true
+			}
+			
+			if containerModified {
 				ds.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}
+
 		}
 		if container.Name == registrarContainerName {
 			wantedImage := getLSContainerRegistrarImageStringFromClusterInstance(cluster)
