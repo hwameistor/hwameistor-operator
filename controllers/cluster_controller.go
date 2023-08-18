@@ -354,6 +354,11 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		newInstance.Status.Phase = "Reserved"
 	case "Reserved":
 		log.Infof("Disk Reserved")
+		if newInstance.Spec.NotClaimDisk {
+			newInstance.Status.Phase = "CreatedLDC"
+			log.Infof("Not ClaimDisk")
+			break
+		}
 		localDisks, err := utils.ListLocalDisks(r.Client)
 		if err != nil {
 			log.Errorf("List Disks err: %v", err)

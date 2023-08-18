@@ -11,6 +11,7 @@ spec:
     - {{ . }}
     {{- end }}
   {{- end }}
+  notClaimDisk: {{ $.Values.global.notClaimDisk }}
   targetNamespace: {{ $.Values.global.targetNamespace }}
   rbac:
     serviceAccountName: "hwameistor-admin"
@@ -94,7 +95,7 @@ spec:
         repository: {{ $.Values.admission.imageRepository }}
         tag: {{ template "hwameistor.admissionImageTag" . }}
   evictor:
-    replicas: {{ $.Values.admission.replicas }}
+    replicas: {{ $.Values.evictor.replicas }}
     evictor:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}

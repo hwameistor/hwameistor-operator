@@ -31,6 +31,8 @@ type ClusterSpec struct {
 
 	TargetNamespace string `json:"targetNamespace,omitempty"`
 
+	NotClaimDisk bool `json:"notClaimDisk,omitempty"`
+
 	DiskReserveConfigurations []DiskReserveConfiguration `json:"diskReserveConfigurations,omitempty"`
 
 	// LocalDiskManager represents settings about LocalDiskManager

@@ -1,5 +1,6 @@
 global:
   targetNamespace: hwameistor
+  notClaimDisk: false
   hwameistorImageRegistry: ghcr.io
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
