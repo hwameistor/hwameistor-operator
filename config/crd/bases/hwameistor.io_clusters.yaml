@@ -5803,6 +5803,8 @@ spec:
                   tolerationOnMaster:
                     type: boolean
                 type: object
+              notClaimDisk:
+                type: boolean
               rbac:
                 properties:
                   serviceAccountName:
