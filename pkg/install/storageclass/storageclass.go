@@ -134,7 +134,7 @@ func generateStorageClassNameToCreateAccordingToLocalStorageNodes(localStorageNo
 	for _, localStorageNode := range localStorageNodes {
 		for _, pool := range localStorageNode.Status.Pools {
 			storageClassName := "hwameistor-storage-lvm-" + strings.ToLower(pool.Class)
-			m[storageClassName] = strings.ToUpper(pool.Class)
+			m[storageClassName] = pool.Class
 		}
 	}
 
@@ -154,7 +154,7 @@ func generateStorageClass(storageClassNameToCreate map[string]string, needConver
 	for name, poolClass := range storageClassNameToCreate {
 		storageClass := scTemplate.DeepCopy()
 		storageClass.Name = name
-		storageClass.Parameters["poolClass"] = strings.ToUpper(poolClass)
+		storageClass.Parameters["poolClass"] = poolClass
 		storageClasses = append(storageClasses, *storageClass)
 
 		if needConvertibleStorageClass {
