@@ -42,6 +42,7 @@ spec:
         tag: {{ template "hwameistor.localDiskManagerImageTag" . }}
     tolerationOnMaster: {{ $.Values.localDiskManager.tolerationOnMaster }}
   localStorage:
+    disable: {{ $.Values.localStorage.disable }}
     kubeletRootDir: {{ $.Values.localStorage.kubeletRootDir | quote }}
     csi:
       registrar:
@@ -81,6 +82,7 @@ spec:
         tag: {{ $.Values.localStorage.migrate.rclone.tag }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
   scheduler:
+    disable: {{ $.Values.scheduler.disable }}
     replicas: {{ $.Values.scheduler.replicas }}
     scheduler:
       image:
@@ -88,6 +90,7 @@ spec:
         repository: {{ $.Values.scheduler.imageRepository }}
         tag: {{ template "hwameistor.schedulerImageTag" . }}
   admissionController:
+    disable: {{ $.Values.admission.disable }}
     replicas: {{ $.Values.admission.replicas }}
     controller:
       image:
@@ -95,6 +98,7 @@ spec:
         repository: {{ $.Values.admission.imageRepository }}
         tag: {{ template "hwameistor.admissionImageTag" . }}
   evictor:
+    disable: {{ $.Values.evictor.disable }}
     replicas: {{ $.Values.evictor.replicas }}
     evictor:
       image:
@@ -102,6 +106,7 @@ spec:
         repository: {{ $.Values.evictor.imageRepository }}
         tag: {{ template "hwameistor.evictorImageTag" . }}
   apiServer:
+    disable: {{ $.Values.apiserver.disable }}
     replicas: {{ $.Values.apiserver.replicas }}
     server:
       image:
@@ -113,6 +118,7 @@ spec:
       accessId: {{ $.Values.apiserver.authentication.accessId }}
       secretKey: {{ $.Values.apiserver.authentication.secretKey }}
   exporter:
+    disable: {{ $.Values.exporter.disable }}
     replicas: {{ $.Values.exporter.replicas }}
     collector:
       image:
@@ -120,6 +126,7 @@ spec:
         repository: {{ $.Values.exporter.imageRepository }}
         tag: {{ template "hwameistor.exporterImageTag" . }}
   ui:
+    disable: {{ $.Values.ui.disable }}
     replicas: {{ $.Values.ui.replicas }}
     ui:
       image:

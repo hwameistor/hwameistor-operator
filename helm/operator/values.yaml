@@ -32,6 +32,7 @@ localDiskManager:
       tag: v3.0.1
 
 localStorage:
+  disable: false
   tolerationOnMaster: true
   kubeletRootDir: /var/lib/kubelet
   member:
@@ -61,21 +62,25 @@ localStorage:
       tag: 1.53.2
 
 scheduler:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/scheduler
   tag: v0.10.3
 
 admission:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/admission
   tag: v0.10.3
 
 evictor:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/evictor
   tag: v0.10.3
 
 apiserver:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/apiserver
   tag: v0.10.3
@@ -85,11 +90,13 @@ apiserver:
     secretKey: admin
 
 exporter:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/exporter
   tag: v0.10.3
 
 ui:
+  disable: false
   replicas: 1
   imageRepository: hwameistor/hwameistor-ui
   tag: v0.10.0
