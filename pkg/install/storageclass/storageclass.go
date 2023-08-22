@@ -160,7 +160,7 @@ func generateStorageClass(storageClassNameToCreate map[string]string, needConver
 		if needConvertibleStorageClass {
 			convertibleStorageClass := scTemplate.DeepCopy()
 			convertibleStorageClass.Name = name + "-convertible"
-			convertibleStorageClass.Parameters["poolClass"] = strings.ToUpper(poolClass)
+			convertibleStorageClass.Parameters["poolClass"] = poolClass
 			convertibleStorageClass.Parameters["convertible"] = "true"
 			convertibleStorageClass.Parameters["replicaNumber"] = "1"
 			storageClasses = append(storageClasses, *convertibleStorageClass)
@@ -169,7 +169,7 @@ func generateStorageClass(storageClassNameToCreate map[string]string, needConver
 		if needHAStorageClass {
 			haStorageClass := scTemplate.DeepCopy()
 			haStorageClass.Name = name + "-ha"
-			haStorageClass.Parameters["poolClass"] = strings.ToUpper(poolClass)
+			haStorageClass.Parameters["poolClass"] = poolClass
 			haStorageClass.Parameters["convertible"] = "true"
 			haStorageClass.Parameters["replicaNumber"] = "2"
 			storageClasses = append(storageClasses, *haStorageClass)
