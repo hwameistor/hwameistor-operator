@@ -1,0 +1,8 @@
+v0.10.8 / 2023-8-23
+========================
+
+* optimize handling of localstorage #165(@hellokg21)
+* set localstorage rclone env while cluster changed #166(@hellokg21)
+* support option not to claim disk #167(@buffalo1024)
+* fix wrong poolClass ins storageclass parameters #168(@buffalo1024)
+* add option to disable component in helm chart #169(@buffalo1024)
