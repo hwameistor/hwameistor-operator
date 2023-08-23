@@ -382,6 +382,8 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			// }
 			storageclass.EnsureWatcherStarted(r.Client, req.NamespacedName)
 			log.Infof("LocalStorageNodeWatcher started")
+			storageclass.EnsureLDNWatcherStarted(r.Client, req.NamespacedName)
+			log.Infof("LocalDiskNodeWatcher started")
 		}
 	}
 
