@@ -5,7 +5,7 @@ global:
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
   # k8sImageRegistry: m.daocloud.io/registry.k8s.io
-  hwameistorVersion: v0.10.3
+  hwameistorVersion: v0.12.1
 
 operator:
   replicas: 1
@@ -17,7 +17,7 @@ localDiskManager:
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: v0.10.3
+    tag: v0.12.1
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -37,7 +37,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: v0.10.3
+    tag: v0.12.1
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -65,25 +65,25 @@ scheduler:
   disable: false
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: v0.10.3
+  tag: v0.12.1
 
 admission:
   disable: false
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: v0.10.3
+  tag: v0.12.1
 
 evictor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: v0.10.3
+  tag: v0.12.1
 
 apiserver:
   disable: false
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: v0.10.3
+  tag: v0.12.1
   authentication:
     enable: false
     accessId: admin
@@ -93,13 +93,13 @@ exporter:
   disable: false
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: v0.10.3
+  tag: v0.12.1
 
 ui:
   disable: false
   replicas: 1
   imageRepository: hwameistor/hwameistor-ui
-  tag: v0.10.0
+  tag: v0.12.1
 
 ha:
   disable: false

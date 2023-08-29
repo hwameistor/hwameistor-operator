@@ -61,8 +61,9 @@ var ui = appsv1.Deployment{
 						Name: uiContainerName,
 						Ports: []corev1.ContainerPort{
 							{
-								ContainerPort: 80,
+								ContainerPort: 8080,
 								Protocol: corev1.ProtocolTCP,
+								Name: "http",
 							},
 						},
 					},

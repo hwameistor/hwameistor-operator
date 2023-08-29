@@ -38,8 +38,8 @@ var uiService = corev1.Service{
 				Port: 80,
 				Protocol: corev1.ProtocolTCP,
 				TargetPort: intstr.IntOrString{
-					Type: intstr.Int,
-					IntVal: 80,
+					Type: intstr.String,
+					StrVal: "http",
 				},
 			},
 		},
