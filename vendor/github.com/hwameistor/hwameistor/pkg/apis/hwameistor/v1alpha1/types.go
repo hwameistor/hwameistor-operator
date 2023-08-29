@@ -112,6 +112,25 @@ const (
 	VolumeParameterReplicaNumberKey = "replicaNumber"
 	VolumeParameterFSTypeKey        = "csi.storage.k8s.io/fstype"
 	VolumeParameterConvertible      = "convertible"
+	VolumeParameterThroughput       = "provision-throughput-on-creation"
+	VolumeParameterIOPS             = "provision-iops-on-creation"
+)
+
+// consts for snapshot class
+
+const (
+	SnapshotParameterSizeKey = "snapsize"
+)
+
+type RecoverType string
+
+// consts for snapshot restore
+
+const (
+	// RecoverTypeRollback is used to merge snapshot to existing volume
+	RecoverTypeRollback RecoverType = "rollback"
+	// RecoverTypeRestore is used to create a new volume from existing snapshot
+	RecoverTypeRestore RecoverType = "restore"
 )
 
 // misc
@@ -128,7 +147,7 @@ const (
 
 // localstorage local storage dev paths
 const (
-	DiskDevRootPath     = "/dev"
+	DiskDevRootPath     = "/etc/hwameistor"
 	AssigedDiskPool     = DiskDevRootPath + "/LocalStorage_DiskPool"
 	AssigedDiskPoolHDD  = AssigedDiskPool + DiskClassNameHDD
 	AssigedDiskPoolSSD  = AssigedDiskPool + DiskClassNameSSD

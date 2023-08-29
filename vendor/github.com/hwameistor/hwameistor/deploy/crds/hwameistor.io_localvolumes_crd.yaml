@@ -37,6 +37,7 @@ spec:
     - description: Allocated resource ID for the volume
       jsonPath: .spec.config.resourceID
       name: resource
+      priority: 1
       type: integer
     - description: Name of the node where the volume is in-use
       jsonPath: .status.publishedNode
@@ -45,6 +46,12 @@ spec:
     - description: Filesystem type of this volume
       jsonPath: .status.fsType
       name: fstype
+      priority: 1
+      type: string
+    - description: Name of volume group
+      jsonPath: .spec.volumegroup
+      name: group
+      priority: 1
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: age
@@ -185,6 +192,16 @@ spec:
                 format: int64
                 minimum: 4194304
                 type: integer
+              volumeQoS:
+                description: VolumeQoS is the QoS of the volume
+                properties:
+                  iops:
+                    description: IOPS defines the IOPS of the volume
+                    type: string
+                  throughput:
+                    description: Throughput defines the throughput of the volume
+                    type: string
+                type: object
               volumegroup:
                 description: VolumeGroup is the group name of the local volumes. It
                   is designed for the scheduling and allocating.
@@ -226,7 +243,7 @@ spec:
                 type: integer
               usedCapacityBytes:
                 description: UsedCapacityBytes is the used capacity in bytes of the
-                  volume, which is avaiable only for filesystem
+                  volume, which is available only for filesystem
                 format: int64
                 type: integer
               usedInode:
