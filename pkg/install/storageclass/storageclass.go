@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
@@ -235,4 +236,98 @@ func WatchLocalStorageNodes(cli client.Client, clusterKey types.NamespacedName, 
 
 	// return nil
 	// return
+}
+
+var diskProvisioner = "disk.hwameistor.io"
+
+func WatchLocalDiskNodes(cli client.Client, clusterKey types.NamespacedName, stopCh <-chan struct{}) {
+	fcs := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			log.Infof("localdisknode added")
+			clusterInstance := &hwameistoroperatorv1alpha1.Cluster{}
+			err := cli.Get(context.TODO(), clusterKey, clusterInstance)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.WithError(err).Error("Cluster instance not found")
+					return
+				}
+				log.Errorf("Get instance err: %v", err)
+				return
+			}
+			ensureDiskStorageClass(cli, clusterInstance)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			log.Infof("localdisknode updated")
+			clusterInstance := &hwameistoroperatorv1alpha1.Cluster{}
+			err := cli.Get(context.TODO(), clusterKey, clusterInstance)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					log.WithError(err).Error("Cluster instance not found")
+					return
+				}
+				log.Errorf("Get instance err: %v", err)
+				return
+			}
+			ensureDiskStorageClass(cli, clusterInstance)
+		},
+	}
+	config, err := rest.InClusterConfig()
+	// config, err := clientcmd.BuildConfigFromFlags("", "/Users/home/.kube/config")
+	if err != nil {
+		log.WithError(err).Error("Failed to build kubernetes config")
+		return
+	}
+	clientset, err := hwameistorclient.NewForConfig(config)
+	if err != nil {
+		log.WithError(err).Error("Failed to build clientset")
+		return
+	}
+	lsnInformer := hwameistorinformer.NewLocalDiskNodeInformer(clientset, 0, cache.Indexers{})
+	lsnInformer.AddEventHandler(fcs)
+	log.Infof("going to run localdisknode informer")
+	lsnInformer.Run(stopCh)
+	log.Infof("localdiknode informer run over")
+}
+
+func ensureDiskStorageClass(cli client.Client, clusterInstance *hwameistoroperatorv1alpha1.Cluster) {
+	var ldnList hwameistorv1alpha1.LocalDiskNodeList
+	if err := cli.List(context.TODO(), &ldnList); err != nil {
+		log.Errorf("list localdisknode err: %v", err)
+		return
+	}
+
+	nodes := ldnList.Items
+
+	storageClassNameToCreate := generateStorageClassNameToCreateAccordingToLocalDiskNodes(nodes)
+
+	for name, poolClass := range storageClassNameToCreate {
+		sc := storagev1.StorageClass{
+			ObjectMeta: v1.ObjectMeta{
+				Name: name,
+			},
+			Provisioner: diskProvisioner,
+			ReclaimPolicy: &clusterInstance.Spec.StorageClass.ReclaimPolicy,
+			VolumeBindingMode: &volumeBindingWaitForFirstConsumer,
+			Parameters: map[string]string{
+				"diskType": poolClass,
+				"fstype": clusterInstance.Spec.StorageClass.FSType,
+			},
+		}
+		if err := cli.Create(context.TODO(), &sc); err != nil {
+			log.Errorf("create disk storageclass err: %v", err)
+			continue
+		}
+	}
+}
+
+func generateStorageClassNameToCreateAccordingToLocalDiskNodes(localDiskNodes []hwameistorv1alpha1.LocalDiskNode) map[string]string {
+	m := make(map[string]string)
+	for _, localDiskNode := range localDiskNodes {
+		for _, pool := range localDiskNode.Status.Pools {
+			storageClassName := "hwameistor-storage-disk-" + strings.ToLower(pool.Class)
+			m[storageClassName] = pool.Class
+		}
+	}
+
+	return m
 }
