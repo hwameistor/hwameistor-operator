@@ -54,6 +54,12 @@ type ClusterSpec struct {
 
 	Exporter *ExporterSpec `json:"exporter,omitempty"`
 
+	Auditor *AuditorSpec `json:"auditor,omitempty"`
+
+	FailoverAssistant *FailoverAssistantSpec `json:"failoverAssistant,omitempty"`
+
+	PVCAutoResizer *PVCAutoResizerSpec `json:"pvcAutoResizer,omitempty"`
+
 	UI *UISpec `json:"ui,omitempty"`
 
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
@@ -139,6 +145,27 @@ type EvictorSpec struct {
 	Evictor *ContainerCommonSpec `json:"evictor,omitempty"`
 }
 
+type AuditorSpec struct {
+	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	Auditor *ContainerCommonSpec `json:"auditor,omitempty"`
+}
+
+type FailoverAssistantSpec struct {
+	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	Assistant *ContainerCommonSpec `json:"assistant,omitempty"`
+}
+
+type PVCAutoResizerSpec struct {
+	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	AutoResizer *ContainerCommonSpec `json:"autoresizer,omitempty"`
+}
+
 type AdmissionControllerSpec struct {
 	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
@@ -220,6 +247,9 @@ type ComponentStatus struct {
 	Evictor *EvictorStatus `json:"evictor,omitempty"`
 	AdmissionController *AdmissionControllerStatus `json:"admissionController,omitempty"`
 	ApiServer *ApiServerStatus `json:"apiServer,omitempty"`
+	Auditor *AuditorStatus `json:"auditor,omitempty"`
+	FailoverAssistant *FailoverAssistantStatus `json:"failoverAssistant,omitempty"`
+	PVCAutoResizer *PVCAutoResizerStatus `json:"pvcAutoResizer,omitempty"`
 	Exporter *ExporterStatus 	`json:"exporter,omitempty"`
 }
 
@@ -265,6 +295,21 @@ type AdmissionControllerStatus struct {
 }
 
 type ApiServerStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
+}
+
+type AuditorStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
+}
+
+type FailoverAssistantStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
+}
+
+type PVCAutoResizerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
 	Health string `json:"health,omitempty"`
 }

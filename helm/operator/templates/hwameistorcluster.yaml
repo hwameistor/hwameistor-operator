@@ -125,6 +125,30 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.exporter.imageRepository }}
         tag: {{ template "hwameistor.exporterImageTag" . }}
+  auditor:
+    disable: {{ $.Values.auditor.disable }}
+    replicas: {{ $.Values.auditor.replicas }}
+    auditor:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.auditor.imageRepository }}
+        tag: {{ template "hwameistor.exporterImageTag" . }}
+  failoverAssistant:
+    disable: {{ $.Values.failoverAssistant.disable }}
+    replicas: {{ $.Values.failoverAssistant.replicas }}
+    assistant:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.failoverAssistant.imageRepository }}
+        tag: {{ template "hwameistor.failoverAssistantImageTag" . }}
+  pvcAutoResizer:
+    disable: {{ $.Values.pvcAutoResizer.disable }}
+    replicas: {{ $.Values.pvcAutoResizer.replicas }}
+    autoresizer:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.pvcAutoResizer.imageRepository }}
+        tag: {{ template "hwameistor.pvcAutoResizerImageTag" . }}
   ui:
     disable: {{ $.Values.ui.disable }}
     replicas: {{ $.Values.ui.replicas }}

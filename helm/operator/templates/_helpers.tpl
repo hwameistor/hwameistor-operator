@@ -101,6 +101,21 @@ Create the name of the service account to use
   {{- default .Values.global.hwameistorVersion .Values.exporter.tag -}}
 {{- end -}}
 
+{{/* Allow Auditor image tag to be overridden. */}}
+{{- define "hwameistor.auditorImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.auditor.tag -}}
+{{- end -}}
+
+{{/* Allow FailoverAssistant image tag to be overridden. */}}
+{{- define "hwameistor.failoverAssistantImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.failoverAssistant.tag -}}
+{{- end -}}
+
+{{/* Allow PVCAutoResizer image tag to be overridden. */}}
+{{- define "hwameistor.pvcAutoResizerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.pvcAutoResizer.tag -}}
+{{- end -}}
+
 {{/* Allow UI image tag to be overridden. */}}
 {{- define "hwameistor.uiImageTag" -}}
   {{- default .Values.global.hwameistorVersion .Values.ui.tag -}}

@@ -95,6 +95,24 @@ exporter:
   imageRepository: hwameistor/exporter
   tag: v0.12.1
 
+auditor:
+  disable: false
+  replicas: 1
+  imageRepository: hwameistor/auditor
+  tag: v0.12.1
+
+failoverAssistant:
+  disable: false
+  replicas: 1
+  imageRepository: hwameistor/failover-assistant
+  tag: v0.12.1
+
+pvcAutoResizer:
+  disable: false
+  replicas: 1
+  imageRepository: hwameistor/pvc-autoresizer
+  tag: v0.12.1
+
 ui:
   disable: false
   replicas: 1
