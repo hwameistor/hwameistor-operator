@@ -1,3 +1,11 @@
+v0.12.0 / 2023-8-29
+========================
+
+* update hwameistor version to v0.12.1 #175(@buffalo1024)
+* add auditor,failover-assistant,pvc-autoresizer #176(@buffalo1024)
+* udpate helm prehook #177(@buffalo1024)
+* update .relok8s-images.yaml #178(@buffalo1024)
+
 v0.10.8 / 2023-8-23
 ========================
 
