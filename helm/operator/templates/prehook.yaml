@@ -19,7 +19,7 @@ metadata:
   name: "{{ .Release.Name }}-apply-crds"
   namespace: {{ .Release.Namespace }}
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook": pre-upgrade
     "helm.sh/hook-weight": "2"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
@@ -42,7 +42,7 @@ spec:
         - |
           bash <<'EOF'
           set -ex
-          kubectl apply --server-side -f /manifests/crds-configmaps.yaml --force-conflicts
+          kubectl replace -f /manifests/crds-configmaps.yaml
           EOF
         volumeMounts:
         - name: manifests
