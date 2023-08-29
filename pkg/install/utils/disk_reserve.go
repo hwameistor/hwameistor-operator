@@ -49,6 +49,24 @@ func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hw
 		}
 	}
 
+	if !clusterInstance.Spec.Auditor.Disable {
+		if clusterInstance.Status.ComponentStatus.Auditor.Health != "Normal" {
+			return false
+		}
+	}
+
+	if !clusterInstance.Spec.FailoverAssistant.Disable {
+		if clusterInstance.Status.ComponentStatus.FailoverAssistant.Health != "Normal" {
+			return false
+		}
+	}
+
+	if !clusterInstance.Spec.PVCAutoResizer.Disable {
+		if clusterInstance.Status.ComponentStatus.PVCAutoResizer.Health != "Normal" {
+			return false
+		}
+	}
+
 	if !localdiskmanager.CheckLDMReallyReady(cli) {
 		log.Errorf("localDiskManager is not really ready")
 		return false

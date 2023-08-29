@@ -33,13 +33,16 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/admissioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/apiserver"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/auditor"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/drbd"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/evictor"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/exporter"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/failoverassistant"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/pvcautoresizer"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
@@ -253,6 +256,63 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					newInstance.Status.ComponentStatus.Evictor.Health = "Normal"
 				} else {
 					newInstance.Status.ComponentStatus.Evictor.Health = "Abnormal"
+				}
+			}
+		}
+	}
+
+	if !newInstance.Spec.Auditor.Disable {
+		newInstance, err = auditor.NewAuditorMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("ensure auditor err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if auditor := newInstance.Status.ComponentStatus.Auditor; auditor != nil {
+			instances := auditor.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.ComponentStatus.Auditor.Health = "Normal"
+				} else {
+					newInstance.Status.ComponentStatus.Auditor.Health = "Abnormal"
+				}
+			}
+		}
+	}
+
+	if !newInstance.Spec.FailoverAssistant.Disable {
+		newInstance, err = failoverassistant.NewFailoverAssistantMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("ensure failover-assistant err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if assistant := newInstance.Status.ComponentStatus.FailoverAssistant; assistant != nil {
+			instances := assistant.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.ComponentStatus.FailoverAssistant.Health = "Normal"
+				} else {
+					newInstance.Status.ComponentStatus.FailoverAssistant.Health = "Abnormal"
+				}
+			}
+		}
+	}
+
+	if !newInstance.Spec.PVCAutoResizer.Disable {
+		newInstance, err = pvcautoresizer.NewPVCAutoResizerMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("ensure pvc-autoresizer err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if autoresizer := newInstance.Status.ComponentStatus.PVCAutoResizer; autoresizer != nil {
+			instances := autoresizer.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.ComponentStatus.PVCAutoResizer.Health = "Normal"
+				} else {
+					newInstance.Status.ComponentStatus.PVCAutoResizer.Health = "Abnormal"
 				}
 			}
 		}
