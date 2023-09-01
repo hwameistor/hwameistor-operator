@@ -92,7 +92,11 @@ var ldmDaemonSet = appsv1.DaemonSet{
 								Name: "devmount",
 								MountPath: "/dev",
 							},
-
+							{
+								Name: "host-etc-hwameistor",
+								MountPath: "/etc/hwameistor",
+								MountPropagation: &install.MountPropagationBidirectional,
+							},
 						},
 						Env: []corev1.EnvVar{
 							{
@@ -198,6 +202,15 @@ var ldmDaemonSet = appsv1.DaemonSet{
 							HostPath: &corev1.HostPathVolumeSource{
 								Path: "/dev",
 								Type: &install.HostPathDirectory,
+							},
+						},
+					},
+					{
+						Name: "host-etc-hwameistor",
+						VolumeSource: corev1.VolumeSource{
+							HostPath: &corev1.HostPathVolumeSource{
+								Path: "/etc/hwameistor",
+								Type: &install.HostPathDirectoryOrCreate,
 							},
 						},
 					},
