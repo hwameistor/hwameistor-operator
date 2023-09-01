@@ -51,7 +51,7 @@ func ReadResourcesFromDir(dir string) ([][]byte, error) {
 		}
 	
 		for _, fileInfo := range fileInfos {
-			if !strings.HasSuffix(fileInfo.Name(), "crd.yaml") {
+			if !strings.HasSuffix(fileInfo.Name(), ".yaml") {
 				continue
 			}
 			content, err := GetFileBytes(dir + "/" + fileInfo.Name())
