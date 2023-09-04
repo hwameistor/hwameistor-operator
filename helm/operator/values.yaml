@@ -56,6 +56,12 @@ localStorage:
     monitor:
       imageRepository: sig-storage/csi-external-health-monitor-controller
       tag: v0.8.0
+    snapshotController:
+      imageRepository: sig-storage/snapshot-controller
+      tag: v6.0.0
+    snapshotter:
+      imageRepository: sig-storage/csi-snapshotter
+      tag: v6.0.0
   migrate:
     rclone:
       imageRepository: rclone/rclone
