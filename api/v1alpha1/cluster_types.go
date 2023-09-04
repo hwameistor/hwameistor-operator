@@ -99,6 +99,8 @@ type CSIControllerSpec struct {
 	Attacher *ContainerCommonSpec `json:"attacher,omitempty"`
 	Monitor *ContainerCommonSpec `json:"monitor,omitempty"`
 	Resizer *ContainerCommonSpec `json:"resizer,omitempty"`
+	SnapshotController *ContainerCommonSpec `json:"snapshotController,omitempty"`
+	Snapshotter *ContainerCommonSpec `json:"snapshotter,omitempty"`
 }
 
 type CSISpec struct {

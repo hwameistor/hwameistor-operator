@@ -49,6 +49,8 @@ var provisionerContainerName = "provisioner"
 var attacherContainerName = "attacher"
 var monitorContainerName = "monitor"
 var resizerContainerName = "resizer"
+var snapshotControllerContainerName = "snapshot-controller"
+var snapshotterContainerName = "csi-snapshotter"
 
 var lsCSIController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -206,6 +208,40 @@ var lsCSIController = appsv1.Deployment{
 							},
 						},
 					},
+					{
+						Name: snapshotControllerContainerName,
+						Args: []string{
+							"--v=5",
+							"--leader-election=true",
+						},
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						TerminationMessagePath: "/dev/termination-log",
+						TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+					},
+					{
+						Name: snapshotterContainerName,
+						Args: []string{
+							"--v=5",
+							"--leader-election=true",
+							"--csi-address=$(CSI_ADDRESS)",
+							"--leader-election",
+						},
+						Env: []corev1.EnvVar{
+							{
+								Name: "CSI_ADDRESS",
+								Value: "/csi/csi.sock",
+							},
+						},
+						VolumeMounts: []corev1.VolumeMount{
+							{
+								MountPath: "/csi",
+								Name: "socket-dir",
+							},
+						},
+						ImagePullPolicy: corev1.PullIfNotPresent,
+						TerminationMessagePath: "/dev/termination-log",
+						TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+					},
 				},
 				DNSPolicy: corev1.DNSClusterFirst,
 				RestartPolicy: corev1.RestartPolicyAlways,
@@ -278,6 +314,12 @@ func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster)
 		if container.Name == monitorContainerName {
 			container.Image = getMonitorContainerImageStringFromClusterInstance(clusterInstance)
 		}
+		if container.Name == snapshotControllerContainerName {
+			container.Image = getSnapshotControllerImageStringFromClusterInstance(clusterInstance)
+		}
+		if container.Name == snapshotterContainerName {
+			container.Image = getSnapshotterImageStringFromClusterInstance(clusterInstance)
+		}
 		lsCSIController.Spec.Template.Spec.Containers[i] = container
 	}
 }
@@ -300,6 +342,16 @@ func getResizerContainerImageStringFromClusterInstance(clusterInstance *hwameist
 func getMonitorContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Image
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getSnapshotControllerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.SnapshotController.Image
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+}
+
+func getSnapshotterImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Snapshotter.Image
+	return imageSpec.Registry + "/" +imageSpec.Repository + ":" + imageSpec.Tag
 }
 
 func getReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
@@ -339,6 +391,21 @@ func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenCSI
 			wantedImage := getMonitorContainerImageStringFromClusterInstance(cluster)
 			if container.Image != wantedImage {
 				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == snapshotControllerContainerName {
+			wantedImage := getSnapshotControllerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
+				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
+				needToUpdate = true
+			}
+		}
+		if container.Name == snapshotterContainerName {
+			wantedImage := getSnapshotterImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
 				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}

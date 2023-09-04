@@ -72,6 +72,16 @@ spec:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.monitor.imageRepository }}
             tag: {{ $.Values.localStorage.csi.monitor.tag }}
+        snapshotController:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.snapshotController.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.snapshotController.tag }}
+        snapshotter:
+          image:
+            registry: {{ $.Values.global.k8sImageRegistry }}
+            repository: {{ $.Values.localStorage.csi.snapshotter.imageRepository }}
+            tag: {{ $.Values.localStorage.csi.snapshotter.tag }}
     member:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
