@@ -90,6 +90,8 @@ spec:
       rcloneImage:
         repository: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
         tag: {{ $.Values.localStorage.migrate.rclone.tag }}
+      hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
+      hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
   scheduler:
     disable: {{ $.Values.scheduler.disable }}

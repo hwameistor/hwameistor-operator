@@ -38,6 +38,8 @@ localStorage:
   member:
     imageRepository: hwameistor/local-storage
     tag: v0.12.1
+    hostPathSSHDir: /root/.ssh
+    hostPathDRBDDir: /etc/drbd.d
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar

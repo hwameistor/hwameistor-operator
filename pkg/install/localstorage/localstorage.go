@@ -236,24 +236,6 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 						},
 					},
 					{
-						Name: "host-etc-drbd",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/etc/drbd.d",
-								Type: &install.HostPathDirectoryOrCreate,
-							},
-						},
-					},
-					{
-						Name: "ssh-dir",
-						VolumeSource: corev1.VolumeSource{
-							HostPath: &corev1.HostPathVolumeSource{
-								Path: "/root/.ssh",
-								Type: &install.HostPathDirectoryOrCreate,
-							},
-						},
-					},
-					{
 						Name: "host-mnt",
 						VolumeSource: corev1.VolumeSource{
 							HostPath: &corev1.HostPathVolumeSource{
@@ -360,6 +342,26 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaem
 		},
 	}
 	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, podsMountDirVolume)
+	hostetcDRBDVolume := corev1.Volume{
+		Name: "host-etc-drbd",
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: clusterInstance.Spec.LocalStorage.Member.HostPathDRBDDir,
+				Type: &install.HostPathDirectoryOrCreate,
+			},
+		},
+	}
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, hostetcDRBDVolume)
+	hostetcSSHVolume := corev1.Volume{
+		Name: "ssh-dir",
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: clusterInstance.Spec.LocalStorage.Member.HostPathSSHDir,
+				Type: &install.HostPathDirectoryOrCreate,
+			},
+		},
+	}
+	lsDaemonSetToCreate.Spec.Template.Spec.Volumes = append(lsDaemonSetToCreate.Spec.Template.Spec.Volumes, hostetcSSHVolume)
 
 	return lsDaemonSetToCreate
 }
