@@ -17,7 +17,7 @@ localDiskManager:
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: v0.12.1
+    tag: v0.12.2
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -37,7 +37,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: v0.12.1
+    tag: v0.12.2
     hostPathSSHDir: /root/.ssh
     hostPathDRBDDir: /etc/drbd.d
   csi:
@@ -73,25 +73,25 @@ scheduler:
   disable: false
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: v0.12.1
+  tag: v0.12.2
 
 admission:
   disable: false
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: v0.12.1
+  tag: v0.12.2
 
 evictor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: v0.12.1
+  tag: v0.12.2
 
 apiserver:
   disable: false
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: v0.12.1
+  tag: v0.12.2
   authentication:
     enable: false
     accessId: admin
@@ -101,25 +101,25 @@ exporter:
   disable: false
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: v0.12.1
+  tag: v0.12.2
 
 auditor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/auditor
-  tag: v0.12.1
+  tag: v0.12.2
 
 failoverAssistant:
   disable: false
   replicas: 1
   imageRepository: hwameistor/failover-assistant
-  tag: v0.12.1
+  tag: v0.12.2
 
 pvcAutoResizer:
   disable: false
   replicas: 1
   imageRepository: hwameistor/pvc-autoresizer
-  tag: v0.12.1
+  tag: v0.12.2
 
 ui:
   disable: false
