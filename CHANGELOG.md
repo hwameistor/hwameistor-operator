@@ -1,3 +1,12 @@
+v0.12.1 / 2023-9-5
+========================
+
+* fix read crds files err #181(@buffalo1024)
+* add new volume for localdiskmanager #182(@buffalo1024)
+* add snapshot-controller and snapshotter containers #183(@buffalo1024)
+* config two hostpath volumes of localstorage #184(@buffalo1024)
+* modify scheduler-config.yaml #185(@buffalo1024)
+
 v0.12.0 / 2023-8-29
 ========================
 
