@@ -7179,6 +7179,10 @@ spec:
                     properties:
                       drbdStartPort:
                         type: integer
+                      hostPathDRBDDir:
+                        type: string
+                      hostPathSSHDir:
+                        type: string
                       image:
                         properties:
                           registry:
