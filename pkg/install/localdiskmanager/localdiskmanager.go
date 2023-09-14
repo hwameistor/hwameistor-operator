@@ -220,9 +220,11 @@ var ldmDaemonSet = appsv1.DaemonSet{
 	},
 }
 
-func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	ldmDaemonSet.OwnerReferences = append(ldmDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
-	ldmDaemonSet.Namespace = clusterInstance.Spec.TargetNamespace
+func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet{
+	ldmDaemonSetToCreate := ldmDaemonSet.DeepCopy()
+
+	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	ldmDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 
 	newClusterInstance := clusterInstance.DeepCopy()
 	if newClusterInstance.Spec.LocalDiskManager == nil {
@@ -230,9 +232,9 @@ func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	}
 
 	if newClusterInstance.Spec.RBAC.ServiceAccountName == "" {
-		ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = "hwameistor-admin"
+		ldmDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = "hwameistor-admin"
 	} else {
-		ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+		ldmDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	}
 
 	// ldmDaemonSet.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
@@ -240,12 +242,12 @@ func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	// if newClusterInstance.Spec.LocalDiskManager.KubeletRootDir == "" {
 	// 	newClusterInstance.Spec.LocalDiskManager.KubeletRootDir = defaultKubeletRootDir
 	// }
-	setLDMDaemonSetVolumes(newClusterInstance)
+	ldmDaemonSetToCreate = setLDMDaemonSetVolumes(newClusterInstance, ldmDaemonSetToCreate)
 	// setLDMDaemonSetContainers(clusterInstance)
-	setLDMDaemonSetContainers(newClusterInstance)
+	ldmDaemonSetToCreate = setLDMDaemonSetContainers(newClusterInstance, ldmDaemonSetToCreate)
 
 	if newClusterInstance.Spec.LocalDiskManager.TolerationOnMaster {
-		ldmDaemonSet.Spec.Template.Spec.Tolerations = []corev1.Toleration{
+		ldmDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
 			{
 				Key: "CriticalAddonsOnly",
 				Operator: corev1.TolerationOpExists,
@@ -272,9 +274,11 @@ func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		}
 	}
+
+	return ldmDaemonSetToCreate
 }
 
-func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
+func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, ldmDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
 	sockeDirVolume := corev1.Volume{
 		Name: "socket-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -284,7 +288,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	ldmDaemonSet.Spec.Template.Spec.Volumes = append(ldmDaemonSet.Spec.Template.Spec.Volumes, sockeDirVolume)
+	ldmDaemonSetToCreate.Spec.Template.Spec.Volumes = append(ldmDaemonSetToCreate.Spec.Template.Spec.Volumes, sockeDirVolume)
 	registrationDirVolume := corev1.Volume{
 		Name: "registration-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -294,7 +298,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	ldmDaemonSet.Spec.Template.Spec.Volumes = append(ldmDaemonSet.Spec.Template.Spec.Volumes, registrationDirVolume)
+	ldmDaemonSetToCreate.Spec.Template.Spec.Volumes = append(ldmDaemonSetToCreate.Spec.Template.Spec.Volumes, registrationDirVolume)
 	pluginDirVolume := corev1.Volume{
 		Name: "plugin-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -304,7 +308,7 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	ldmDaemonSet.Spec.Template.Spec.Volumes = append(ldmDaemonSet.Spec.Template.Spec.Volumes, pluginDirVolume)
+	ldmDaemonSetToCreate.Spec.Template.Spec.Volumes = append(ldmDaemonSetToCreate.Spec.Template.Spec.Volumes, pluginDirVolume)
 	podsMountDir := corev1.Volume{
 		Name: "pods-mount-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -314,10 +318,12 @@ func setLDMDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			},
 		},
 	}
-	ldmDaemonSet.Spec.Template.Spec.Volumes = append(ldmDaemonSet.Spec.Template.Spec.Volumes, podsMountDir)
+	ldmDaemonSetToCreate.Spec.Template.Spec.Volumes = append(ldmDaemonSetToCreate.Spec.Template.Spec.Volumes, podsMountDir)
+
+	return ldmDaemonSetToCreate
 }
 
-func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
+func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ldmDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
 	// if clusterInstance.Spec.LocalDiskManager.Manager == nil {
 	// 	clusterInstance.Spec.LocalDiskManager.Manager = &hwameistoriov1alpha1.ContainerCommonSpec{}
 	// }
@@ -325,7 +331,7 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	// 	clusterInstance.Spec.LocalDiskManager.CSI = &hwameistoriov1alpha1.CSISpec{}
 	// }
 
-	for i, container := range ldmDaemonSet.Spec.Template.Spec.Containers {
+	for i, container := range ldmDaemonSetToCreate.Spec.Template.Spec.Containers {
 		if container.Name == managerContainerName {
 			if resources := clusterInstance.Spec.LocalDiskManager.Manager.Resources; resources != nil {
 				container.Resources = *resources
@@ -366,15 +372,17 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 				Name: "CSI_ENDPOINT",
 				Value: "unix:/" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock",
 			})
-			ldmDaemonSet.Spec.Template.Spec.Containers[i] = container
+			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
 		}
 
 		if container.Name == registrarContainerName {
 			container.Image = getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock")
-			ldmDaemonSet.Spec.Template.Spec.Containers[i] = container
+			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
 		}
 	}
+
+	return ldmDaemonSetToCreate
 }
 
 func getLDMContainerManagerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -415,15 +423,15 @@ func needOrNotToUpdateLDMDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten
 
 func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetLDMDaemonSet(newClusterInstance)
+	ldmDaemonSetToCreate := SetLDMDaemonSet(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: ldmDaemonSet.Namespace,
-		Name: ldmDaemonSet.Name,
+		Namespace: ldmDaemonSetToCreate.Namespace,
+		Name: ldmDaemonSetToCreate.Name,
 	}
 	var gottenDS appsv1.DaemonSet
 	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &ldmDaemonSet); errCreate != nil {
+			if errCreate := m.Client.Create(context.TODO(), ldmDaemonSetToCreate); errCreate != nil {
 				log.Errorf("Create LocalDiskManager DaemonSet err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
