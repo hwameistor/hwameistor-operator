@@ -223,7 +223,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet{
 	ldmDaemonSetToCreate := ldmDaemonSet.DeepCopy()
 
-	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSet.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	ldmDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 
 	newClusterInstance := clusterInstance.DeepCopy()
@@ -505,9 +505,9 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	return newClusterInstance, nil
 }
 
-func CheckLDMReallyReady(cli client.Client) bool {
+func CheckLDMReallyReady(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) bool {
 	key := types.NamespacedName{
-		Namespace: ldmDaemonSet.Namespace,
+		Namespace: clusterInstance.Spec.TargetNamespace,
 		Name: ldmDaemonSet.Name,
 	}
 	var gottenDS appsv1.DaemonSet
@@ -529,7 +529,7 @@ func CheckLDMReallyReady(cli client.Client) bool {
 	}
 
 	var podList corev1.PodList
-	if err := cli.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmDaemonSet.Namespace}); err != nil {
+	if err := cli.List(context.TODO(), &podList, &client.ListOptions{Namespace: key.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return false
 	}
