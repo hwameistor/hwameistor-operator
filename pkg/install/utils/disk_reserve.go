@@ -67,7 +67,7 @@ func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hw
 		}
 	}
 
-	if !localdiskmanager.CheckLDMReallyReady(cli) {
+	if !localdiskmanager.CheckLDMReallyReady(cli, clusterInstance) {
 		log.Errorf("localDiskManager is not really ready")
 		return false
 	}
