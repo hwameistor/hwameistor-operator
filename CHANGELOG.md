@@ -1,3 +1,9 @@
+v0.12.2 / 2023-9-19
+========================
+
+* modify localdiskmanager #190(@hellokg21)
+* use hwameistor v0.12.3 and add localdiskactioncontroller #191(@buffalo1024)
+
 v0.12.1 / 2023-9-5
 ========================
 
