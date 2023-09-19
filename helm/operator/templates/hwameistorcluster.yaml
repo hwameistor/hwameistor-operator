@@ -161,6 +161,14 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.pvcAutoResizer.imageRepository }}
         tag: {{ template "hwameistor.pvcAutoResizerImageTag" . }}
+  localDiskActionController:
+    disable: {{ $.Values.localDiskActionController.disable }}
+    replicas: {{ $.Values.localDiskActionController.replicas }}
+    controller:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.localDiskActionController.imageRepository }}
+        tag: {{ template "hwameistor.localDiskActionControllerImageTag" . }}
   ui:
     disable: {{ $.Values.ui.disable }}
     replicas: {{ $.Values.ui.replicas }}

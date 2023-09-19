@@ -5,7 +5,7 @@ global:
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
   # k8sImageRegistry: m.daocloud.io/registry.k8s.io
-  hwameistorVersion: v0.12.1
+  hwameistorVersion: v0.12.3
 
 operator:
   replicas: 1
@@ -17,7 +17,7 @@ localDiskManager:
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: v0.12.2
+    tag: v0.12.3
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -37,7 +37,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: v0.12.2
+    tag: v0.12.3
     hostPathSSHDir: /root/.ssh
     hostPathDRBDDir: /etc/drbd.d
   csi:
@@ -73,25 +73,25 @@ scheduler:
   disable: false
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: v0.12.2
+  tag: v0.12.3
 
 admission:
   disable: false
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: v0.12.2
+  tag: v0.12.3
 
 evictor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: v0.12.2
+  tag: v0.12.3
 
 apiserver:
   disable: false
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: v0.12.2
+  tag: v0.12.3
   authentication:
     enable: false
     accessId: admin
@@ -101,25 +101,31 @@ exporter:
   disable: false
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: v0.12.2
+  tag: v0.12.3
 
 auditor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/auditor
-  tag: v0.12.2
+  tag: v0.12.3
 
 failoverAssistant:
   disable: false
   replicas: 1
   imageRepository: hwameistor/failover-assistant
-  tag: v0.12.2
+  tag: v0.12.3
 
 pvcAutoResizer:
   disable: false
   replicas: 1
   imageRepository: hwameistor/pvc-autoresizer
-  tag: v0.12.2
+  tag: v0.12.3
+
+localDiskActionController:
+  disable: false
+  replicas: 1
+  imageRepository: hwameistor/local-disk-action-controller
+  tag: v0.12.3
 
 ui:
   disable: false
