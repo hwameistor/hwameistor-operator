@@ -28,6 +28,11 @@ func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hw
 			return false
 		}
 	}
+	if !clusterInstance.Spec.LocalDiskActionController.Disable {
+		if clusterInstance.Status.ComponentStatus.LocalDiskActionController.Health != "Normal" {
+			return false
+		}
+	}
 	if !clusterInstance.Spec.Scheduler.Disable {
 		if clusterInstance.Status.ComponentStatus.Scheduler.Health != "Normal" {
 			return false

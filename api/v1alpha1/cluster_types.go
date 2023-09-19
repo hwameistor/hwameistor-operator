@@ -60,6 +60,8 @@ type ClusterSpec struct {
 
 	PVCAutoResizer *PVCAutoResizerSpec `json:"pvcAutoResizer,omitempty"`
 
+	LocalDiskActionController *LocalDiskActionControllerSpec `json:"localDiskActionController,omitempty"`
+
 	UI *UISpec `json:"ui,omitempty"`
 
 	DRBD *DRBDSpec `json:"drbd,omitempty"`
@@ -170,6 +172,13 @@ type PVCAutoResizerSpec struct {
 	AutoResizer *ContainerCommonSpec `json:"autoresizer,omitempty"`
 }
 
+type LocalDiskActionControllerSpec struct {
+	Disable bool `json:"disable,omitempty"`
+	Replicas int32 `json:"replicas"`
+	Common *PodCommonSpec `json:"common,omitempty"`
+	Controller *ContainerCommonSpec `json:"controller,omitempty"`
+}
+
 type AdmissionControllerSpec struct {
 	Disable bool `json:"disable,omitempty"`
 	Replicas int32 `json:"replicas,omitempty"`
@@ -254,6 +263,7 @@ type ComponentStatus struct {
 	Auditor *AuditorStatus `json:"auditor,omitempty"`
 	FailoverAssistant *FailoverAssistantStatus `json:"failoverAssistant,omitempty"`
 	PVCAutoResizer *PVCAutoResizerStatus `json:"pvcAutoResizer,omitempty"`
+	LocalDiskActionController *LocalDiskActionControllerStatus `json:"localDiskActionController,omitempty"`
 	Exporter *ExporterStatus 	`json:"exporter,omitempty"`
 }
 
@@ -314,6 +324,11 @@ type FailoverAssistantStatus struct {
 }
 
 type PVCAutoResizerStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health string `json:"health,omitempty"`
+}
+
+type LocalDiskActionControllerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
 	Health string `json:"health,omitempty"`
 }

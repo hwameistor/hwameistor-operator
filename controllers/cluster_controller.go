@@ -43,6 +43,7 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/pvcautoresizer"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskactioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
@@ -313,6 +314,25 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					newInstance.Status.ComponentStatus.PVCAutoResizer.Health = "Normal"
 				} else {
 					newInstance.Status.ComponentStatus.PVCAutoResizer.Health = "Abnormal"
+				}
+			}
+		}
+	}
+
+	if !newInstance.Spec.LocalDiskActionController.Disable {
+		newInstance, err = localdiskactioncontroller.NewActionControllerMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("ensure localdiskactioncontroller err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		if controller := newInstance.Status.ComponentStatus.LocalDiskActionController; controller != nil {
+			instances := controller.Instances
+			if instances != nil {
+				if instances.AvailablePodCount == instances.DesiredPodCount {
+					newInstance.Status.ComponentStatus.LocalDiskActionController.Health = "Normal"
+				} else {
+					newInstance.Status.ComponentStatus.LocalDiskActionController.Health = "Abnormal"
 				}
 			}
 		}

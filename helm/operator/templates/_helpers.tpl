@@ -116,6 +116,11 @@ Create the name of the service account to use
   {{- default .Values.global.hwameistorVersion .Values.pvcAutoResizer.tag -}}
 {{- end -}}
 
+{{/* Allow LocalDiskActionController image tag to be overridden. */}}
+{{- define "hwameistor.localDiskActionControllerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.localDiskActionController.tag -}}
+{{- end -}}
+
 {{/* Allow UI image tag to be overridden. */}}
 {{- define "hwameistor.uiImageTag" -}}
   {{- default .Values.global.hwameistorVersion .Values.ui.tag -}}
