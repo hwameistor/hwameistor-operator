@@ -18,6 +18,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	// "k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"github.com/hwameistor/hwameistor-operator/pkg/kubeconfig"
 )
 
 type StorageClassMaintainer struct {
@@ -215,14 +216,8 @@ func WatchLocalStorageNodes(cli client.Client, clusterKey types.NamespacedName, 
 			log.Infof("OnDelete: %+v", obj)
 		},
 	}
-	config, err := rest.InClusterConfig()
-	// config, err := clientcmd.BuildConfigFromFlags("", "/Users/home/.kube/config")
-	if err != nil {
-		log.WithError(err).Error("Failed to build kubernetes config")
-		return
-		// return err
-	}
-	clientset, err := hwameistorclient.NewForConfig(config)
+	
+	clientset, err := hwameistorclient.NewForConfig(kubeconfig.Get())
 	if err != nil {
 		log.WithError(err).Error("Failed to build clientset")
 		return

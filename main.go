@@ -38,6 +38,7 @@ import (
 
 	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/controllers"
+	"github.com/hwameistor/hwameistor-operator/pkg/kubeconfig"
 	hwameistorv1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
 	//+kubebuilder:scaffold:imports
 )
@@ -72,7 +73,9 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	kubeconfig.Set(ctrl.GetConfigOrDie())
+	
+	mgr, err := ctrl.NewManager(kubeconfig.Get(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
