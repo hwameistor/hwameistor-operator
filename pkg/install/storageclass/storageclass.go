@@ -95,6 +95,9 @@ func (m *StorageClassMaintainer) Ensure() error {
 
 	for _, storageClassToCreate := range storageClassesToCreate {
 		if err := m.Client.Create(context.TODO(), &storageClassToCreate); err != nil {
+			if errors.IsAlreadyExists(err) {
+				continue
+			}
 			log.Errorf("Create StorageClass err: %v", err)
 			// return err
 			continue
