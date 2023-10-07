@@ -72,7 +72,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						Args: []string{
 							"--endpoint=$(CSI_ENDPOINT)",
 							"--nodeid=$(NODENAME)",
-
+							"--v=5",
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						SecurityContext: &corev1.SecurityContext{
