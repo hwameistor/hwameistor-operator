@@ -83,6 +83,22 @@ localStorage:
         requests:
           cpu: 1m
           memory: 20Mi
+    snapshotController:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    snapshotter:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
 
 scheduler:
   resources:
@@ -152,6 +168,24 @@ failoverAssistant:
       memory: 20Mi
 
 ui:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+pvcAutoResizer:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+localDiskActionController:
   resources:
     limits:
       cpu: 300m
