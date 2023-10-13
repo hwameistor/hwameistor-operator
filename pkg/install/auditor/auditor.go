@@ -109,6 +109,9 @@ func SetAuditor(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deploymen
 	for i, container := range auditorToCreate.Spec.Template.Spec.Containers {
 		if container.Name == auditorContainerName {
 			container.Image = getAuditorContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.Auditor.Auditor.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		auditorToCreate.Spec.Template.Spec.Containers[i] = container
 	}

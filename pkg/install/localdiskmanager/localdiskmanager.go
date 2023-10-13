@@ -376,6 +376,9 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ld
 		}
 
 		if container.Name == registrarContainerName {
+			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock")
 			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container

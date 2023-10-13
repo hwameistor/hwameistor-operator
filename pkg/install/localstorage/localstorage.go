@@ -372,8 +372,14 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock")
 			container.Image = getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == memberContainerName {
+			if resources := clusterInstance.Spec.LocalStorage.Member.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			// if clusterInstance.Spec.LocalStorage.Member.DRBDStartPort != 0 {
 			// 	container.Args = append(container.Args, "--drbd-start-port=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.DRBDStartPort))
 			// }

@@ -95,6 +95,9 @@ func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range exporter.Spec.Template.Spec.Containers {
 		if container.Name == exporterContainerName {
 			container.Image = getExporterContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.Exporter.Collector.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		exporter.Spec.Template.Spec.Containers[i] = container
 	}

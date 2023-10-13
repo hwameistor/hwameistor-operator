@@ -109,6 +109,9 @@ func SetPVCAutoResizer(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.De
 	for i, container := range deployToCreate.Spec.Template.Spec.Containers {
 		if container.Name == pvcAutoResizerContainerName {
 			container.Image = getPVCAutoResizerContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.PVCAutoResizer.AutoResizer.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		deployToCreate.Spec.Template.Spec.Containers[i] = container
 	}

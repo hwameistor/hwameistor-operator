@@ -161,6 +161,9 @@ func setSchedulerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range schedulerDeploy.Spec.Template.Spec.Containers {
 		if container.Name == schedulerContainerName {
 			// container.Resources = *clusterInstance.Spec.Scheduler.Scheduler.Resources
+			if resources := clusterInstance.Spec.Scheduler.Scheduler.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getSchedulerContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		schedulerDeploy.Spec.Template.Spec.Containers[i] = container

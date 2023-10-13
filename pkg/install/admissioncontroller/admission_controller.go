@@ -123,6 +123,9 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 	for i, container := range admissionController.Spec.Template.Spec.Containers {
 		if container.Name == admissionControllerContainerName {
 			// container.Resources = *clusterInstance.Spec.AdmissionController.Controller.Resources
+			if resources := clusterInstance.Spec.AdmissionController.Controller.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			imageSpec := clusterInstance.Spec.AdmissionController.Controller.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 			container.Env = append(container.Env, []corev1.EnvVar{
