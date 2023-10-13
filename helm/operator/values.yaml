@@ -48,7 +48,7 @@ localStorage:
       replicas: 1
     provisioner:
       imageRepository: sig-storage/csi-provisioner
-      tag: v2.0.3
+      tag: v3.5.0
     attacher:
       imageRepository: sig-storage/csi-attacher
       tag: v3.0.1
