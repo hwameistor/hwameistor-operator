@@ -137,6 +137,7 @@ spec:
         tag: {{ template "hwameistor.admissionImageTag" . }}
       resources:
         {{- toYaml .Values.admission.resources | nindent 8 }}
+    failurePolicy: {{ $.Values.admission.failurePolicy }}
   evictor:
     disable: {{ $.Values.evictor.disable }}
     replicas: {{ $.Values.evictor.replicas }}
