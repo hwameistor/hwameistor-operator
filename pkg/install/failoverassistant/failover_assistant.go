@@ -109,6 +109,9 @@ func SetFailoverAssistant(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1
 	for i, container := range deployToCreate.Spec.Template.Spec.Containers {
 		if container.Name == failoverAssistantContainerName {
 			container.Image = getFailoverAssistantContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.FailoverAssistant.Assistant.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		deployToCreate.Spec.Template.Spec.Containers[i] = container
 	}

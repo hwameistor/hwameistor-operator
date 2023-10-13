@@ -81,6 +81,9 @@ func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	for i, container := range ui.Spec.Template.Spec.Containers {
 		if container.Name == uiContainerName {
 			container.Image = getUIContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.UI.UI.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		ui.Spec.Template.Spec.Containers[i] = container
 	}

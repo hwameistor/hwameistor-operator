@@ -107,6 +107,9 @@ func SetActionController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.
 	for i, container := range deployToCreate.Spec.Template.Spec.Containers {
 		if container.Name == ldaContainerName {
 			container.Image = getActionControllerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.LocalDiskActionController.Controller.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		deployToCreate.Spec.Template.Spec.Containers[i] = container
 	}
