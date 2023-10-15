@@ -68,6 +68,9 @@ localStorage:
     rclone:
       imageRepository: rclone/rclone
       tag: 1.53.2
+    juicesync:
+      imageRepository: hwameistor/hwameistor-juicesync
+      tag: v1.0.4-01
 
 scheduler:
   disable: false

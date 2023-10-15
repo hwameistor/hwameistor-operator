@@ -8,6 +8,7 @@
 - "{{ .global.k8sImageRegistry }}/{{ .localStorage.csi.registrar.imageRepository }}:{{ .localStorage.csi.registrar.tag }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .localStorage.member.imageRepository }}:{{ .localStorage.member.tag }}"
 - "{{ .localStorage.migrate.rclone.imageRepository }}:{{ .localStorage.migrate.rclone.tag }}"
+- "{{ .global.hwameistorImageRegistry }}/{{ .localStorage.migrate.juicesync.imageRepository }}:{{ .localStorage.migrate.juicesync.tag }}"
 - "{{ .global.k8sImageRegistry }}/{{ .localStorage.csi.provisioner.imageRepository }}:{{ .localStorage.csi.provisioner.tag }}"
 - "{{ .global.k8sImageRegistry }}/{{ .localStorage.csi.attacher.imageRepository }}:{{ .localStorage.csi.attacher.tag }}"
 - "{{ .global.k8sImageRegistry }}/{{ .localStorage.csi.resizer.imageRepository }}:{{ .localStorage.csi.resizer.tag }}"

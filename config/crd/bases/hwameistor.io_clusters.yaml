@@ -7824,6 +7824,15 @@ spec:
                           tag:
                             type: string
                         type: object
+                      juicesyncImage:
+                        properties:
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        type: object
                       maxHAVolumeCount:
                         type: integer
                       rcloneImage:
