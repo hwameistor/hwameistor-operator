@@ -896,6 +896,11 @@ func (in *MemberSpec) DeepCopyInto(out *MemberSpec) {
 		*out = new(ImageSpec)
 		**out = **in
 	}
+	if in.JuicesyncImage != nil {
+		in, out := &in.JuicesyncImage, &out.JuicesyncImage
+		*out = new(ImageSpec)
+		**out = **in
+	}
 	if in.Resources != nil {
 		in, out := &in.Resources, &out.Resources
 		*out = new(v1.ResourceRequirements)

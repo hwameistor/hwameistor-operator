@@ -42,6 +42,7 @@ var defaultRCloneImageTag = "1.53.2"
 var memberContainerName = "member"
 var registrarContainerName = "registrar"
 var rcloneEnvName = "MIGRAGE_RCLONE_IMAGE"
+var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -397,6 +398,10 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 				// Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 				Value: getRcloneEnvFromClusterInstance(clusterInstance),
 			})
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name: juicesyncEnvName,
+				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
+			})
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
@@ -436,6 +441,11 @@ func getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwam
 func getRcloneEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	rcloneImage := clusterInstance.Spec.LocalStorage.Member.RcloneImage
 	return rcloneImage.Repository + ":" + rcloneImage.Tag
+}
+
+func getJuicesyncEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	juicesyncImage := clusterInstance.Spec.LocalStorage.Member.JuicesyncImage
+	return juicesyncImage.Registry + "/" + juicesyncImage.Repository + ":" + juicesyncImage.Tag
 }
 
 func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
