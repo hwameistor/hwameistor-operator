@@ -5,7 +5,7 @@ global:
   #hwameistorImageRegistry: ghcr.m.daocloud.io
   k8sImageRegistry: registry.k8s.io
   # k8sImageRegistry: m.daocloud.io/registry.k8s.io
-  hwameistorVersion: v0.12.4
+  hwameistorVersion: v0.13.0
 
 operator:
   replicas: 1
@@ -17,7 +17,7 @@ localDiskManager:
   kubeletRootDir: /var/lib/kubelet
   manager:
     imageRepository: hwameistor/local-disk-manager
-    tag: v0.12.4
+    tag: v0.13.0
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
@@ -37,7 +37,7 @@ localStorage:
   kubeletRootDir: /var/lib/kubelet
   member:
     imageRepository: hwameistor/local-storage
-    tag: v0.12.4
+    tag: v0.13.0
     hostPathSSHDir: /root/.ssh
     hostPathDRBDDir: /etc/drbd.d
   csi:
@@ -76,13 +76,13 @@ scheduler:
   disable: false
   replicas: 1
   imageRepository: hwameistor/scheduler
-  tag: v0.12.4
+  tag: v0.13.0
 
 admission:
   disable: false
   replicas: 1
   imageRepository: hwameistor/admission
-  tag: v0.12.4
+  tag: v0.13.0
   # failurePolicy defines how unrecognized errors from the admission endpoint
   # are handled - allowed values are Ignore or Fail. Defaults to Fail.
   failurePolicy: "Ignore"
@@ -91,13 +91,13 @@ evictor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/evictor
-  tag: v0.12.4
+  tag: v0.13.0
 
 apiserver:
   disable: false
   replicas: 1
   imageRepository: hwameistor/apiserver
-  tag: v0.12.4
+  tag: v0.13.0
   authentication:
     enable: false
     accessId: admin
@@ -107,37 +107,37 @@ exporter:
   disable: false
   replicas: 1
   imageRepository: hwameistor/exporter
-  tag: v0.12.4
+  tag: v0.13.0
 
 auditor:
   disable: false
   replicas: 1
   imageRepository: hwameistor/auditor
-  tag: v0.12.4
+  tag: v0.13.0
 
 failoverAssistant:
   disable: false
   replicas: 1
   imageRepository: hwameistor/failover-assistant
-  tag: v0.12.4
+  tag: v0.13.0
 
 pvcAutoResizer:
   disable: false
   replicas: 1
   imageRepository: hwameistor/pvc-autoresizer
-  tag: v0.12.4
+  tag: v0.13.0
 
 localDiskActionController:
   disable: false
   replicas: 1
   imageRepository: hwameistor/local-disk-action-controller
-  tag: v0.12.4
+  tag: v0.13.0
 
 ui:
   disable: false
   replicas: 1
   imageRepository: hwameistor/hwameistor-ui
-  tag: v0.12.1
+  tag: v0.13.0
 
 ha:
   disable: false

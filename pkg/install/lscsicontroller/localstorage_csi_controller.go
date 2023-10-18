@@ -171,7 +171,7 @@ var lsCSIController = appsv1.Deployment{
 						},
 						LivenessProbe: &corev1.Probe{
 							FailureThreshold: 1,
-							Handler: corev1.Handler{
+							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/healthz/leader-election",
 									Port: intstr.IntOrString{
