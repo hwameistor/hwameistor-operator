@@ -1,3 +1,19 @@
+v0.13.0 / 2023-10-18
+========================
+
+* add new components in .relok8s-images.yaml #194 (@buffalo1024 )
+* reuse kubeconfig #201 (@hellokg21 )
+* reuse kubeconfig in setting up LDN informer #202 (@hellokg21 )
+* do not print error when storageclass already exists #203 (@hellokg21 )
+* upper default logger level(debug) for ldm #204 (@SSmallMonster )
+* support set resources of component while installing #206 (@buffalo1024 )
+* update csi-provisioner image tag of localstorage to v3.5.0 #207 (@buffalo1024 )
+* add failurePolicy of admission controller in helm chart #208 (@buffalo1024 )
+* add resources value in values.extra.prod.yaml for new components #209 (@buffalo1024 )
+* use hwameistor v0.12.4 #210 (@buffalo1024 )
+* add tool juicesync #211 (@buffalo1024 )
+* use hwameistor v0.13.0 #212 (@buffalo1024 )
+
 v0.12.2 / 2023-9-19
 ========================
 
