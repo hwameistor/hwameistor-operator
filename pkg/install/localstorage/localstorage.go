@@ -47,6 +47,9 @@ var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "hwameistor-local-storage",
+		Annotations: map[string]string{
+			"kubectl.kubernetes.io/default-container": memberContainerName,
+		},
 	},
 	Spec: appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
