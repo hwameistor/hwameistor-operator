@@ -96,13 +96,33 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if errors.IsNotFound(err) {
 			if errCreate := m.Client.Create(context.TODO(), cmUnstructured); errCreate != nil {
-				log.Errorf("Create Scheduler ConfigMap err: %v", err)
+				log.Errorf("Create Scheduler ConfigMap err: %v", errCreate)
 				return errCreate
 			}
 		} else {
 			log.Errorf("Get Scheduler ConfigMap err: %v", err)
 			return err
 		}
+	} else {
+		wantedData, exist, err := unstructured.NestedMap(cmUnstructured.Object, "data")
+		if err != nil {
+			log.Errorf("get nested map from unstructured configmap err: ", err)
+			return err
+		}
+		if !exist {
+			log.Infof("not found data map in unstructured configmap")
+			return nil
+		}
+		for k, v := range wantedData {
+			s := v.(string)
+			if gotten.Data[k] != s {
+				log.Infof("scheduler configmap not the same as expected, update it")
+				if errUpdate := m.Client.Update(context.TODO(), cmUnstructured); errUpdate != nil {
+					log.Errorf("update scheduler configmap err: %v", errUpdate)
+					return errUpdate
+				}
+			}
+		} 
 	}
 
 	return nil
