@@ -1,3 +1,8 @@
+v0.13.1 / 2023-10-20
+========================
+
+* update scheduler configmap when source yaml file updated #219 (@buffalo1024 )
+
 v0.13.0 / 2023-10-18
 ========================
 
