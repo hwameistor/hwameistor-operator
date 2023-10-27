@@ -121,6 +121,8 @@ spec:
       hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
       hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
+    snapshot: 
+      disable: {{ $.Values.localStorage.snapshot.disable }}
   scheduler:
     disable: {{ $.Values.scheduler.disable }}
     replicas: {{ $.Values.scheduler.replicas }}

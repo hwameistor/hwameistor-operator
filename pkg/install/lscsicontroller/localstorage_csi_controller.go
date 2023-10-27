@@ -340,6 +340,17 @@ func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster)
 		}
 		lsCSIController.Spec.Template.Spec.Containers[i] = container
 	}
+
+	if clusterInstance.Spec.LocalStorage.Snapshot.Disable {
+		containers := make([]corev1.Container, 0)
+		for _, container := range lsCSIController.Spec.Template.Spec.Containers {
+			if container.Name == snapshotControllerContainerName || container.Name == snapshotterContainerName {
+				continue
+			}
+			containers = append(containers, container)
+		}
+		lsCSIController.Spec.Template.Spec.Containers = containers
+	}
 }
 
 func getProvisionerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
