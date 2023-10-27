@@ -125,6 +125,7 @@ type LocalStorageSpec struct {
 	Member *MemberSpec `json:"member,omitempty"`
 	Common *PodCommonSpec `json:"common,omitempty"`
 	TolerationOnMaster bool `json:"tolerationOnMaster,omitempty"`
+	Snapshot *SnapshotSpec `json:"snapshot,omitempty"`
 }
 
 type MemberSpec struct {
@@ -136,6 +137,10 @@ type MemberSpec struct {
 	HostPathDRBDDir string 	`json:"hostPathDRBDDir,omitempty"`
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 	Image *ImageSpec `json:"image,omitempty"`
+}
+
+type SnapshotSpec struct {
+	Disable bool `json:"disable,omitempty"`
 }
 
 type SchedulerSpec struct {

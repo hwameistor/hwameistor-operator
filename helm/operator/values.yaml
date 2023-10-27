@@ -71,6 +71,8 @@ localStorage:
     juicesync:
       imageRepository: hwameistor/hwameistor-juicesync
       tag: v1.0.4-01
+  snapshot:
+    disable: false
 
 scheduler:
   disable: false
