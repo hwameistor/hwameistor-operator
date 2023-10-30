@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	// "k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -96,6 +95,9 @@ func (m *StorageClassMaintainer) Ensure() error {
 
 	for _, storageClassToCreate := range storageClassesToCreate {
 		if err := m.Client.Create(context.TODO(), &storageClassToCreate); err != nil {
+			if errors.IsAlreadyExists(err) {
+				continue
+			}
 			log.Errorf("Create StorageClass err: %v", err)
 			// return err
 			continue
@@ -266,13 +268,8 @@ func WatchLocalDiskNodes(cli client.Client, clusterKey types.NamespacedName, sto
 			ensureDiskStorageClass(cli, clusterInstance)
 		},
 	}
-	config, err := rest.InClusterConfig()
-	// config, err := clientcmd.BuildConfigFromFlags("", "/Users/home/.kube/config")
-	if err != nil {
-		log.WithError(err).Error("Failed to build kubernetes config")
-		return
-	}
-	clientset, err := hwameistorclient.NewForConfig(config)
+	
+	clientset, err := hwameistorclient.NewForConfig(kubeconfig.Get())
 	if err != nil {
 		log.WithError(err).Error("Failed to build clientset")
 		return

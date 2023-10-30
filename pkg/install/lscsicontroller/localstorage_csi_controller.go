@@ -171,7 +171,7 @@ var lsCSIController = appsv1.Deployment{
 						},
 						LivenessProbe: &corev1.Probe{
 							FailureThreshold: 1,
-							Handler: corev1.Handler{
+							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/healthz/leader-election",
 									Port: intstr.IntOrString{
@@ -302,25 +302,54 @@ func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster)
 		if container.Name == provisionerContainerName {
 			container.Image = getProvisionerContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Resources
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Provisioner.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == attacherContainerName {
 			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Resources
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == resizerContainerName {
 			container.Image = getResizerContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Resources
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == monitorContainerName {
 			container.Image = getMonitorContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Monitor.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == snapshotControllerContainerName {
 			container.Image = getSnapshotControllerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.SnapshotController.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == snapshotterContainerName {
 			container.Image = getSnapshotterImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Snapshotter.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		lsCSIController.Spec.Template.Spec.Containers[i] = container
+	}
+
+	if clusterInstance.Spec.LocalStorage.Snapshot.Disable {
+		containers := make([]corev1.Container, 0)
+		for _, container := range lsCSIController.Spec.Template.Spec.Containers {
+			if container.Name == snapshotControllerContainerName || container.Name == snapshotterContainerName {
+				continue
+			}
+			containers = append(containers, container)
+		}
+		lsCSIController.Spec.Template.Spec.Containers = containers
 	}
 }
 

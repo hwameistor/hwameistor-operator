@@ -42,10 +42,14 @@ var defaultRCloneImageTag = "1.53.2"
 var memberContainerName = "member"
 var registrarContainerName = "registrar"
 var rcloneEnvName = "MIGRAGE_RCLONE_IMAGE"
+var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "hwameistor-local-storage",
+		Annotations: map[string]string{
+			"kubectl.kubernetes.io/default-container": memberContainerName,
+		},
 	},
 	Spec: appsv1.DaemonSetSpec{
 		Selector: &metav1.LabelSelector{
@@ -97,7 +101,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 						},
 						ImagePullPolicy: "IfNotPresent",
 						Lifecycle: &corev1.Lifecycle{
-							PreStop: &corev1.Handler{
+							PreStop: &corev1.LifecycleHandler{
 								Exec: &corev1.ExecAction{
 									Command: []string{
 										"/bin/sh",
@@ -172,7 +176,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 						},
 						ReadinessProbe: &corev1.Probe{
 							FailureThreshold: 5,
-							Handler: corev1.Handler{
+							ProbeHandler: corev1.ProbeHandler{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/healthz",
 									Port: intstr.IntOrString{
@@ -372,8 +376,14 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock")
 			container.Image = getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources
+			if resources := clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources; resources != nil {
+				container.Resources = *resources
+			}
 		}
 		if container.Name == memberContainerName {
+			if resources := clusterInstance.Spec.LocalStorage.Member.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			// if clusterInstance.Spec.LocalStorage.Member.DRBDStartPort != 0 {
 			// 	container.Args = append(container.Args, "--drbd-start-port=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.DRBDStartPort))
 			// }
@@ -390,6 +400,10 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 				// Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 				// Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
 				Value: getRcloneEnvFromClusterInstance(clusterInstance),
+			})
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name: juicesyncEnvName,
+				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
 			})
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
@@ -430,6 +444,11 @@ func getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwam
 func getRcloneEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	rcloneImage := clusterInstance.Spec.LocalStorage.Member.RcloneImage
 	return rcloneImage.Repository + ":" + rcloneImage.Tag
+}
+
+func getJuicesyncEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
+	juicesyncImage := clusterInstance.Spec.LocalStorage.Member.JuicesyncImage
+	return juicesyncImage.Registry + "/" + juicesyncImage.Repository + ":" + juicesyncImage.Tag
 }
 
 func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {

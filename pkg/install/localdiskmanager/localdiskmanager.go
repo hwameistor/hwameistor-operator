@@ -72,7 +72,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						Args: []string{
 							"--endpoint=$(CSI_ENDPOINT)",
 							"--nodeid=$(NODENAME)",
-
+							"--v=5",
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						SecurityContext: &corev1.SecurityContext{
@@ -145,7 +145,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 							"--csi-address=/csi/csi.sock",
 						},
 						Lifecycle: &corev1.Lifecycle{
-							PreStop: &corev1.Handler{
+							PreStop: &corev1.LifecycleHandler{
 								Exec: &corev1.ExecAction{
 									Command: []string{
 										"/bin/sh",
@@ -376,6 +376,9 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ld
 		}
 
 		if container.Name == registrarContainerName {
+			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock")
 			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container

@@ -23,6 +23,8 @@ spec:
           registry: {{ $.Values.global.k8sImageRegistry }}
           repository: {{ $.Values.localDiskManager.csi.registrar.imageRepository }}
           tag: {{ $.Values.localDiskManager.csi.registrar.tag }}
+        resources:
+          {{- toYaml .Values.localDiskManager.csi.registrar.resources | nindent 10 }}
       controller:
         replicas: {{ $.Values.localDiskManager.csi.controller.replicas }}
         provisioner:
@@ -30,16 +32,22 @@ spec:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localDiskManager.csi.provisioner.imageRepository }}
             tag: {{ $.Values.localDiskManager.csi.provisioner.tag }}
+          resources:
+            {{- toYaml .Values.localDiskManager.csi.provisioner.resources | nindent 12 }}
         attacher:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localDiskManager.csi.attacher.imageRepository }}
             tag: {{ $.Values.localDiskManager.csi.attacher.tag }}
+          resources:
+            {{- toYaml .Values.localDiskManager.csi.attacher.resources | nindent 12 }}
     manager:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.localDiskManager.manager.imageRepository }}
         tag: {{ template "hwameistor.localDiskManagerImageTag" . }}
+      resources:
+        {{- toYaml .Values.localDiskManager.manager.resources | nindent 8 }}
     tolerationOnMaster: {{ $.Values.localDiskManager.tolerationOnMaster }}
   localStorage:
     disable: {{ $.Values.localStorage.disable }}
@@ -50,6 +58,8 @@ spec:
           registry: {{ $.Values.global.k8sImageRegistry }}
           repository: {{ $.Values.localStorage.csi.registrar.imageRepository }}
           tag: {{ $.Values.localStorage.csi.registrar.tag }}
+        resources:
+          {{- toYaml .Values.localStorage.csi.registrar.resources | nindent 10 }}
       controller:
         replicas: {{ $.Values.localStorage.csi.controller.replicas }}
         provisioner:
@@ -57,42 +67,62 @@ spec:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.provisioner.imageRepository }}
             tag: {{ $.Values.localStorage.csi.provisioner.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.provisioner.resources | nindent 12 }}
         attacher:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.attacher.imageRepository }}
             tag: {{ $.Values.localStorage.csi.attacher.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.attacher.resources | nindent 12 }}
         resizer:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.resizer.imageRepository }}
             tag: {{ $.Values.localStorage.csi.resizer.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.resizer.resources | nindent 12 }}
         monitor:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.monitor.imageRepository }}
             tag: {{ $.Values.localStorage.csi.monitor.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.monitor.resources | nindent 12 }}
         snapshotController:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.snapshotController.imageRepository }}
             tag: {{ $.Values.localStorage.csi.snapshotController.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.snapshotController.resources | nindent 12 }}
         snapshotter:
           image:
             registry: {{ $.Values.global.k8sImageRegistry }}
             repository: {{ $.Values.localStorage.csi.snapshotter.imageRepository }}
             tag: {{ $.Values.localStorage.csi.snapshotter.tag }}
+          resources:
+            {{- toYaml .Values.localStorage.csi.snapshotter.resources | nindent 12 }}
     member:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.localStorage.member.imageRepository }}
         tag: {{ template "hwameistor.localStorageImageTag" . }}
+      resources:
+        {{- toYaml .Values.localStorage.member.resources | nindent 8 }}
       rcloneImage:
         repository: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
         tag: {{ $.Values.localStorage.migrate.rclone.tag }}
+      juicesyncImage:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.localStorage.migrate.juicesync.imageRepository }}
+        tag: {{ $.Values.localStorage.migrate.juicesync.tag }}
       hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
       hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
+    snapshot: 
+      disable: {{ $.Values.localStorage.snapshot.disable }}
   scheduler:
     disable: {{ $.Values.scheduler.disable }}
     replicas: {{ $.Values.scheduler.replicas }}
@@ -101,6 +131,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.scheduler.imageRepository }}
         tag: {{ template "hwameistor.schedulerImageTag" . }}
+      resources:
+        {{- toYaml .Values.scheduler.resources | nindent 8 }}
   admissionController:
     disable: {{ $.Values.admission.disable }}
     replicas: {{ $.Values.admission.replicas }}
@@ -109,6 +141,9 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.admission.imageRepository }}
         tag: {{ template "hwameistor.admissionImageTag" . }}
+      resources:
+        {{- toYaml .Values.admission.resources | nindent 8 }}
+    failurePolicy: {{ $.Values.admission.failurePolicy }}
   evictor:
     disable: {{ $.Values.evictor.disable }}
     replicas: {{ $.Values.evictor.replicas }}
@@ -117,6 +152,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.evictor.imageRepository }}
         tag: {{ template "hwameistor.evictorImageTag" . }}
+      resources:
+        {{- toYaml .Values.evictor.resources | nindent 8 }}
   apiServer:
     disable: {{ $.Values.apiserver.disable }}
     replicas: {{ $.Values.apiserver.replicas }}
@@ -125,6 +162,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.apiserver.imageRepository }}
         tag: {{ template "hwameistor.apiserverImageTag" . }}
+      resources:
+        {{- toYaml .Values.apiserver.resources | nindent 8 }}
     authentication:
       enable: {{ $.Values.apiserver.authentication.enable }}
       accessId: {{ $.Values.apiserver.authentication.accessId }}
@@ -137,6 +176,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.exporter.imageRepository }}
         tag: {{ template "hwameistor.exporterImageTag" . }}
+      resources:
+        {{- toYaml .Values.exporter.resources | nindent 8 }}
   auditor:
     disable: {{ $.Values.auditor.disable }}
     replicas: {{ $.Values.auditor.replicas }}
@@ -144,7 +185,9 @@ spec:
       image:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.auditor.imageRepository }}
-        tag: {{ template "hwameistor.exporterImageTag" . }}
+        tag: {{ template "hwameistor.auditorImageTag" . }}
+      resources:
+        {{- toYaml .Values.auditor.resources | nindent 8 }}
   failoverAssistant:
     disable: {{ $.Values.failoverAssistant.disable }}
     replicas: {{ $.Values.failoverAssistant.replicas }}
@@ -153,6 +196,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.failoverAssistant.imageRepository }}
         tag: {{ template "hwameistor.failoverAssistantImageTag" . }}
+      resources:
+        {{- toYaml .Values.failoverAssistant.resources | nindent 8 }}
   pvcAutoResizer:
     disable: {{ $.Values.pvcAutoResizer.disable }}
     replicas: {{ $.Values.pvcAutoResizer.replicas }}
@@ -161,6 +206,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.pvcAutoResizer.imageRepository }}
         tag: {{ template "hwameistor.pvcAutoResizerImageTag" . }}
+      resources:
+        {{- toYaml .Values.pvcAutoResizer.resources | nindent 8 }}
   localDiskActionController:
     disable: {{ $.Values.localDiskActionController.disable }}
     replicas: {{ $.Values.localDiskActionController.replicas }}
@@ -169,6 +216,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.localDiskActionController.imageRepository }}
         tag: {{ template "hwameistor.localDiskActionControllerImageTag" . }}
+      resources:
+        {{- toYaml .Values.localDiskActionController.resources | nindent 8 }}
   ui:
     disable: {{ $.Values.ui.disable }}
     replicas: {{ $.Values.ui.replicas }}
@@ -177,6 +226,8 @@ spec:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.ui.imageRepository }}
         tag: {{ template "hwameistor.uiImageTag" . }}
+      resources:
+        {{- toYaml .Values.ui.resources | nindent 8 }}
   drbd:
     {{- if .Values.ha.disable }}
     disable: true

@@ -159,10 +159,16 @@ func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster
 	for i, container := range ldmCSIController.Spec.Template.Spec.Containers {
 		if container.Name == provisionerContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources
+			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getProvisionerContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		if container.Name == attacherContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Resources
+			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 		}
 

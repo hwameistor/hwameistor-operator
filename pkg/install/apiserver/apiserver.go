@@ -104,6 +104,9 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range apiServer.Spec.Template.Spec.Containers {
 		if container.Name == apiserverContainerName {
 			container.Image = getApiserverContainerImageStringFromClusterInstance(clusterInstance)
+			if resources := clusterInstance.Spec.ApiServer.Server.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Env = append(container.Env, []corev1.EnvVar{
 				{
 					Name: "EnableAuth",

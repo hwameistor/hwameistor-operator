@@ -1,0 +1,195 @@
+localDiskManager:
+  manager:
+    resources:
+      limits:
+        cpu: 300m
+        memory: 300Mi
+      requests:
+        cpu: 1m
+        memory: 20Mi
+  csi:
+    registrar:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    provisioner:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    attacher:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+
+localStorage:
+  member:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 1m
+        memory: 20Mi
+  csi:
+    registrar:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    provisioner:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    attacher:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    resizer:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    monitor:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    snapshotController:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+    snapshotter:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 500Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+
+scheduler:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+admission:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+evictor:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+apiserver:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+  authentication:
+    enable: false
+    accessId: admin
+    secretKey: admin
+
+exporter:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+auditor:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+failoverAssistant:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+ui:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+pvcAutoResizer:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+localDiskActionController:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi

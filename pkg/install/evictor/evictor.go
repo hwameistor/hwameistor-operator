@@ -84,6 +84,9 @@ func setEvictorContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	for i, container := range evictorDeployment.Spec.Template.Spec.Containers {
 		if container.Name == evictorContainerName {
 			// container.Resources = *clusterInstance.Spec.Evictor.Evictor.Resources
+			if resources := clusterInstance.Spec.Evictor.Evictor.Resources; resources != nil {
+				container.Resources = *resources
+			}
 			container.Image = getEvictorContainerImageStringFromClusterInstance(clusterInstance)
 		}
 		evictorDeployment.Spec.Template.Spec.Containers[i] = container
