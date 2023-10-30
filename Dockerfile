@@ -1,5 +1,7 @@
 FROM centos:7
 
+RUN yum upgrade nss -y
+
 COPY ./vendor/github.com/hwameistor/hwameistor/deploy/crds /hwameistorcrds
 COPY ./scheduler-config.yaml /scheduler-config.yaml
 
