@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/hwameistor/hwameistor-operator/pkg/kubeconfig"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	ctrl "sigs.k8s.io/controller-runtime"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,7 +39,7 @@ func InstallCRDs(cli client.Client, targetNamespace string) error {
 }
 
 func createOrUpdateCRD(cli client.Client, resourceBytes []byte) error {
-	extensionCli, err := clientset.NewForConfig(ctrl.GetConfigOrDie())
+	extensionCli, err := clientset.NewForConfig(kubeconfig.Get())
 	if err != nil {
 		log.Errorf("Generate Clientset err: %v", err)
 		return err
