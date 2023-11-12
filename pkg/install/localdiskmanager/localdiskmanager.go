@@ -455,7 +455,7 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmDaemonSet.Namespace}); err != nil {
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmDaemonSetToCreate.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
