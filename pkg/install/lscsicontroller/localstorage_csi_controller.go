@@ -612,6 +612,9 @@ func FulfillLSCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameisto
 	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag == "" {
 		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag = defaultLSCSIResizerTag
 	}
+	if clusterInstance.Spec.LocalStorage.Snapshot == nil {
+		clusterInstance.Spec.LocalStorage.Snapshot = &hwameistoriov1alpha1.SnapshotSpec{}
+	}
 
 	return clusterInstance
 }
