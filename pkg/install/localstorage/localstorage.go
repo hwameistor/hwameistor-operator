@@ -470,6 +470,26 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 				}
 			}
 
+			wantedJuicesyncEnv := getJuicesyncEnvFromClusterInstance(cluster)
+			juicesyncEnvNotFound := true
+			for i, env := range container.Env {
+				if env.Name == juicesyncEnvName {
+					juicesyncEnvNotFound = false
+					if env.Value != wantedJuicesyncEnv {
+						env.Value = wantedJuicesyncEnv
+						container.Env[i] = env
+						containerModified = true
+					}
+				}
+			}
+			if juicesyncEnvNotFound {
+				container.Env = append(container.Env, corev1.EnvVar{
+					Name: juicesyncEnvName,
+					Value: wantedJuicesyncEnv,
+				})
+				containerModified = true
+			}
+
 			wantedImage := getLSContainerMemberImageStringFromClusterInstance(cluster)
 			if container.Image != wantedImage {
 				container.Image = wantedImage
