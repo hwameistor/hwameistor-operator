@@ -1,0 +1,10 @@
+v0.13.2 / 2023-11-16
+========================
+
+* add option to disable containers about snapshot #222 (@buffalo1024 )
+* fix CVE-2021-43527 #223 (@buffalo1024 )
+* reuse kubeconfig in installing CRDs #225 (@hellokg21 )
+* set namespace when listing ldm pods #226 (@hellokg21 )
+* fulfill snapshot spec in localstorage spec #228 (@buffalo1024 )
+* comment fulfilling cluster spec #230 (@buffalo1024 )
+* update juicesync env for local-storage #231 (@buffalo1024 )
