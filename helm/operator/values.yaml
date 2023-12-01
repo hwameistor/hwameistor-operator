@@ -139,7 +139,7 @@ ui:
   disable: false
   replicas: 1
   imageRepository: hwameistor/hwameistor-ui
-  tag: v0.14.0
+  tag: v0.14.1
 
 ha:
   disable: false
