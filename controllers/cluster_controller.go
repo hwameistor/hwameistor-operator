@@ -243,24 +243,24 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	if !newInstance.Spec.Evictor.Disable {
-		newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
-		if err != nil {
-			log.Errorf("Ensure Evictor err: %v", err)
-			return ctrl.Result{}, err
-		}
+	
+	newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
+	if err != nil {
+		log.Errorf("Ensure Evictor err: %v", err)
+		return ctrl.Result{}, err
+	}
 
-		if evictor := newInstance.Status.ComponentStatus.Evictor; evictor != nil {
-			instances := evictor.Instances
-			if instances != nil {
-				if instances.AvailablePodCount == instances.DesiredPodCount {
-					newInstance.Status.ComponentStatus.Evictor.Health = "Normal"
-				} else {
-					newInstance.Status.ComponentStatus.Evictor.Health = "Abnormal"
-				}
+	if evictor := newInstance.Status.ComponentStatus.Evictor; evictor != nil {
+		instances := evictor.Instances
+		if instances != nil {
+			if instances.AvailablePodCount == instances.DesiredPodCount {
+				newInstance.Status.ComponentStatus.Evictor.Health = "Normal"
+			} else {
+				newInstance.Status.ComponentStatus.Evictor.Health = "Abnormal"
 			}
 		}
 	}
+	
 
 	if !newInstance.Spec.Auditor.Disable {
 		newInstance, err = auditor.NewAuditorMaintainer(r.Client, newInstance).Ensure()
