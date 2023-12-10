@@ -130,18 +130,21 @@ var ldmCSIController = appsv1.Deployment{
 	},
 }
 
-func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	ldmCSIController.Namespace = clusterInstance.Spec.TargetNamespace
-	ldmCSIController.OwnerReferences = append(ldmCSIController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1.Deployment) {
+	ldmCSIControllerToCreate := ldmCSIController.DeepCopy()
+	ldmCSIControllerToCreate.Namespace = clusterInstance.Spec.TargetNamespace
+	ldmCSIControllerToCreate.OwnerReferences = append(ldmCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
 	// ldmCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalDiskManager.CSI.Controller.Common.PriorityClassName
 	replicas := getReplicasFromClusterInstance(clusterInstance)
-	ldmCSIController.Spec.Replicas = &replicas
-	ldmCSIController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setLDMCSIControllerVolumes(clusterInstance)
-	setLDMCSIControllerContainers(clusterInstance)
+	ldmCSIControllerToCreate.Spec.Replicas = &replicas
+	ldmCSIControllerToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	ldmCSIControllerToCreate = setLDMCSIControllerVolumes(clusterInstance, ldmCSIControllerToCreate)
+	ldmCSIControllerToCreate = setLDMCSIControllerContainers(clusterInstance, ldmCSIControllerToCreate)
+
+	return ldmCSIControllerToCreate
 }
 
-func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
+func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) (*appsv1.Deployment) {
 	volume := corev1.Volume{
 		Name: "socket-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -152,11 +155,13 @@ func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster) {
 		},
 	}
 
-	ldmCSIController.Spec.Template.Spec.Volumes = append(ldmCSIController.Spec.Template.Spec.Volumes, volume)
+	ldmCSIControllerToCreate.Spec.Template.Spec.Volumes = append(ldmCSIControllerToCreate.Spec.Template.Spec.Volumes, volume)
+
+	return ldmCSIControllerToCreate
 }
 
-func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	for i, container := range ldmCSIController.Spec.Template.Spec.Containers {
+func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) (*appsv1.Deployment) {
+	for i, container := range ldmCSIControllerToCreate.Spec.Template.Spec.Containers {
 		if container.Name == provisionerContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources
 			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources; resources != nil {
@@ -172,8 +177,9 @@ func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster
 			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 		}
 
-		ldmCSIController.Spec.Template.Spec.Containers[i] = container
+		ldmCSIControllerToCreate.Spec.Template.Spec.Containers[i] = container
 	}
+	return ldmCSIControllerToCreate
 }
 
 func getProvisionerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -224,15 +230,15 @@ func needOrNotToUpdateLDMCSIController (cluster *hwameistoriov1alpha1.Cluster, g
 
 func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetLDMCSIController(newClusterInstance)
+	ldmCSIControllerToCreate := SetLDMCSIController(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: ldmCSIController.Namespace,
-		Name: ldmCSIController.Name,
+		Namespace: ldmCSIControllerToCreate.Namespace,
+		Name: ldmCSIControllerToCreate.Name,
 	}
 	var gottenCSIController appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gottenCSIController); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &ldmCSIController); errCreate != nil {
+			if errCreate := m.Client.Create(context.TODO(), ldmCSIControllerToCreate); errCreate != nil {
 				log.Errorf("Create LDM CSIController err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
@@ -253,7 +259,7 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmCSIController.Namespace}); err != nil {
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: ldmCSIControllerToCreate.Namespace}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
