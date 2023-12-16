@@ -133,6 +133,23 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		Namespace: evictorDeployment.Namespace,
 		Name: evictorDeployment.Name,
 	}
+
+	
+	if newClusterInstance.Spec.Evictor.Disable {
+		d := &appsv1.Deployment{}
+		if err := m.Client.Get(context.TODO(), key, d); err != nil {
+			if apierrors.IsNotFound(err) {
+				return newClusterInstance, nil
+			}
+			log.Errorf("Get Evictor err:%v", err)
+			return newClusterInstance, err
+		}
+		if err := m.Client.Delete(context.TODO(), d); err != nil {
+			log.Errorf("Delete Evictor err:%v", err)
+			return newClusterInstance, err
+		} 
+	}
+
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
