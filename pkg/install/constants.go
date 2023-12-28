@@ -1,3 +1,3 @@
 package install
 
-const DefaultHwameistorVersion = "v0.13.1"
+const DefaultHwameistorVersion = "v0.14.0"
