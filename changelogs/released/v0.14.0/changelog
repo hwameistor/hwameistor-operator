@@ -1,0 +1,6 @@
+v0.14.0 / 2023-12-29
+========================
+
+* support set evictor.disable in day 2 #240 (@hellokg21 )
+* Ensure ldmcsicontroller when deleted #241 (@hellokg21 )
+* ensure lscsicontroller when deleted #242 (@hellokg21 )
