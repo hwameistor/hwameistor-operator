@@ -150,16 +150,18 @@ func (m *PVCAutoResizerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	}
 
 	var podList corev1.PodList
-	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{Namespace: deployToCreate.Namespace}); err != nil {
+	selector, err :=  metav1.LabelSelectorAsSelector(deployToCreate.Spec.Selector)
+	if err != nil {
+		log.Errorf("convert LabelSelector to Selector err: %v", err)
+	}
+	if err := m.Client.List(context.TODO(), &podList, &client.ListOptions{LabelSelector: selector}); err != nil {
 		log.Errorf("List pods err: %v", err)
 		return newClusterInstance, err
 	}
 
 	var podsManaged []corev1.Pod
 	for _, pod := range podList.Items {
-		if pod.Labels[pvcAutoResizerLabelSelectorKey] == pvcAutoResizerLabelSelectorValue {
-			podsManaged = append(podsManaged, pod)
-		}
+		podsManaged = append(podsManaged, pod)
 	}
 
 	if len(podsManaged) > int(gotten.Status.Replicas) {
