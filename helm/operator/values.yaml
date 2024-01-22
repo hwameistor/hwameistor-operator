@@ -90,8 +90,8 @@ admission:
   failurePolicy: "Ignore"
   
 evictor:
-  disable: false
-  replicas: 1
+  disable: true
+  replicas: 0
   imageRepository: hwameistor/evictor
   tag: v0.14.0
 
