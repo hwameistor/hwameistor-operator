@@ -5,13 +5,13 @@ import (
 	"regexp"
 	"strings"
 
+	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 )
 
 var defaultDeployOnMaster = "no"
@@ -26,17 +26,17 @@ var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
 	{
 		MatchExpressions: []corev1.NodeSelectorRequirement{
 			{
-				Key: "node-role.kubernetes.io/master",
+				Key:      "node-role.kubernetes.io/master",
 				Operator: corev1.NodeSelectorOpDoesNotExist,
 			},
 			{
-				Key: "node-role.kubernetes.io/control-plane",
+				Key:      "node-role.kubernetes.io/control-plane",
 				Operator: corev1.NodeSelectorOpDoesNotExist,
 			},
 		},
 	},
 }
-var defaultChartVersion = "v0.3.6"
+var defaultChartVersion = "v0.4.0"
 
 var distroRegexMap = map[string]string{
 	"(red hat enterprise|centos|almalinux|rocky linux) .*7": "rhel7",
@@ -126,22 +126,24 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 			continue
 		}
 
+		kernelVersion := node.Status.NodeInfo.KernelVersion
+
 		job := batchv1.Job{
 			ObjectMeta: v1.ObjectMeta{
-				Name: "drbd-adapter-" + node.Name + "-" + distro,
+				Name:      "drbd-adapter-" + node.Name + "-" + distro,
 				Namespace: namespace,
 				Labels: map[string]string{
-					"app": "drbd-adapter",
+					"app":          "drbd-adapter",
 					"drbd-version": drbdVersion,
 				},
 			},
 			Spec: batchv1.JobSpec{
 				TTLSecondsAfterFinished: &ttlSecondsAfterFinished3600,
-				BackoffLimit: &backoffLimit0,
+				BackoffLimit:            &backoffLimit0,
 				Template: corev1.PodTemplateSpec{
 					ObjectMeta: v1.ObjectMeta{
 						Labels: map[string]string{
-							"app": "drbd-adapter",
+							"app":          "drbd-adapter",
 							"drbd-version": drbdVersion,
 						},
 					},
@@ -150,45 +152,47 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 						NodeSelector: map[string]string{
 							"kubernetes.io/hostname": node.Name,
 						},
-						HostNetwork: true,
+						HostNetwork:                   true,
+						HostPID:                       true,
 						TerminationGracePeriodSeconds: &terminationGracePeriodSeconds0,
 						Containers: []corev1.Container{
 							{
-								Name: "shipper",
-								Image: imageRegistry + "/" + imageRepoOwner + "/" + "drbd9-shipper" + ":" + drbdVersion+"_"+chartVersion,
+								Name:            "shipper",
+								Image:           imageRegistry + "/" + imageRepoOwner + "/" + "drbd9-shipper" + ":" + drbdVersion + "_" + chartVersion,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								VolumeMounts: []corev1.VolumeMount{
 									{
-										Name: "pkgs",
+										Name:      "pkgs",
 										MountPath: "/pkgs",
 									},
 								},
 							},
 							{
-								Name: distro,
-								Image: imageRegistry + "/" + imageRepoOwner + "/" + "drbd9"+"-"+distro + ":" + tag,
+								Name:            distro,
+								Image:           imageRegistry + "/" + imageRepoOwner + "/" + "drbd9" + "-" + distro + ":" + tag,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								Command: []string{
 									"/pkgs/entrypoint.adapter.sh",
+									kernelVersion,
 								},
 								SecurityContext: &corev1.SecurityContext{
 									Privileged: &install.SecurityContextPrivilegedTrue,
 								},
 								Env: []corev1.EnvVar{
 									{
-										Name: "LB_SKIP",
+										Name:  "LB_SKIP",
 										Value: "no",
 									},
 									{
-										Name: "LB_DROP",
+										Name:  "LB_DROP",
 										Value: "yes",
 									},
 									{
-										Name: "LB_UPGRADE",
+										Name:  "LB_UPGRADE",
 										Value: upgrade,
 									},
 									{
-										Name: "LB_CHECK_HOSTNAME",
+										Name:  "LB_CHECK_HOSTNAME",
 										Value: checkHostName,
 									},
 									{
@@ -202,46 +206,50 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 								},
 								VolumeMounts: []corev1.VolumeMount{
 									{
-										Name: "pkgs",
+										Name:      "pkgs",
 										MountPath: "/pkgs",
 									},
 									{
-										Name: "os-release",
+										Name:      "pkgroot",
+										MountPath: "/pkgs_root",
+									},
+									{
+										Name:      "os-release",
 										MountPath: "/etc/host-release",
-										ReadOnly: true,
+										ReadOnly:  true,
 									},
 									{
-										Name: "usr-src",
+										Name:      "usr-src",
 										MountPath: "/usr/src",
-										ReadOnly: true,
+										ReadOnly:  true,
 									},
 									{
-										Name: "lib-modules",
+										Name:      "lib-modules",
 										MountPath: "/lib/modules",
 									},
 									{
-										Name: "usr-local-bin",
+										Name:      "usr-local-bin",
 										MountPath: "/usr-local-bin",
 									},
 									{
-										Name: "etc-drbd-conf",
+										Name:      "etc-drbd-conf",
 										MountPath: "/etc/drbd.conf",
 									},
 									{
-										Name: "etc-drbd-d",
+										Name:      "etc-drbd-d",
 										MountPath: "/etc/drbd.d",
 									},
 									{
-										Name: "var-lib-drbd",
+										Name:      "var-lib-drbd",
 										MountPath: "/var/lib/drbd",
-										ReadOnly: true,
+										ReadOnly:  true,
 									},
 									{
-										Name: "etc-modules-load",
+										Name:      "etc-modules-load",
 										MountPath: "/etc/modules-load.d",
 									},
 									{
-										Name: "etc-sysconfig-modules",
+										Name:      "etc-sysconfig-modules",
 										MountPath: "/etc/sysconfig/modules",
 									},
 								},
@@ -252,6 +260,14 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 								Name: "pkgs",
 								VolumeSource: corev1.VolumeSource{
 									EmptyDir: &corev1.EmptyDirVolumeSource{},
+								},
+							},
+							{
+								Name: "pkgroot",
+								VolumeSource: corev1.VolumeSource{
+									HostPath: &corev1.HostPathVolumeSource{
+										Path: "/root",
+									},
 								},
 							},
 							{
@@ -356,9 +372,9 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 			for i, container := range job.Spec.Template.Spec.Containers {
 				if container.Name == distro {
 					container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-						Name: "centos-release",
+						Name:      "centos-release",
 						MountPath: "/etc/centos-release",
-						ReadOnly: true,
+						ReadOnly:  true,
 					})
 					job.Spec.Template.Spec.Containers[i] = container
 				}
@@ -372,13 +388,13 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 		if deployOnMaster {
 			job.Spec.Template.Spec.Tolerations = []corev1.Toleration{
 				{
-					Effect: corev1.TaintEffectNoSchedule,
-					Key: "node-role.kubernetes.io/master",
+					Effect:   corev1.TaintEffectNoSchedule,
+					Key:      "node-role.kubernetes.io/master",
 					Operator: corev1.TolerationOpExists,
 				},
 				{
-					Effect: corev1.TaintEffectNoSchedule,
-					Key: "node-role.kubernetes.io/control-plane",
+					Effect:   corev1.TaintEffectNoSchedule,
+					Key:      "node-role.kubernetes.io/control-plane",
 					Operator: corev1.TolerationOpExists,
 				},
 			}
@@ -395,7 +411,7 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 	return adapterCreatedJobNum, nil
 }
 
-func FulfillDRBDSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillDRBDSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.DRBD == nil {
 		clusterInstance.Spec.DRBD = &hwameistoriov1alpha1.DRBDSpec{}
 	}
