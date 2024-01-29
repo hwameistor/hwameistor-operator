@@ -1,3 +1,11 @@
+v0.14.1 / 2023-1-29
+========================
+
+* list pvc_autoresizer pods with labelselector #246 (@hellokg21 )
+* disable evictor #247 (@buffalo1024 )
+* update drbd-adapter #248 (@peng9808 )
+* use hwameistor v0.14.1 #249 (@buffalo1024 )
+
 v0.14.0 / 2023-12-29
 ========================
 
