@@ -97,7 +97,7 @@ github.com/google/gofuzz
 # github.com/google/uuid v1.1.2
 ## explicit
 github.com/google/uuid
-# github.com/hwameistor/hwameistor v0.14.0
+# github.com/hwameistor/hwameistor v0.14.1
 ## explicit; go 1.18
 github.com/hwameistor/hwameistor/deploy/crds
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned
