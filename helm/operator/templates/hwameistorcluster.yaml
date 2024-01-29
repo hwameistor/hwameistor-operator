@@ -250,7 +250,7 @@ spec:
             operator: DoesNotExist
           - key: node-role.kubernetes.io/control-plane
             operator: DoesNotExist
-    chartVersion: "v0.3.6"
+    chartVersion: "v0.4.0"
   storageClass:
     allowVolumeExpansion: true
     reclaimPolicy: "Delete"
