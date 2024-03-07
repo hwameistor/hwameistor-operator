@@ -145,8 +145,27 @@ ha:
   disable: false
   module: drbd
   deployOnMaster: "yes"
-  imageRepoOwner: hwameistor
+  imageRepository: hwameistor/drbd9-shipper
   drbdVersion: v9.0.32-1
+  shipperChar: v0.4.0
+
+drbdRhel7:
+  imageRepository: hwameistor/drbd9-rhel7
+
+drbdRhel8:
+  imageRepository: hwameistor/drbd9-rhel8
+
+drbdRhel9:
+  imageRepository: hwameistor/drbd9-rhel9
+
+drbdKylin10:
+  imageRepository: hwameistor/drbd9-kylin10
+
+drbdBionic:
+  imageRepository: hwameistor/drbd9-bionic
+
+drbdFocal:
+  imageRepository: hwameistor/drbd9-focal
 
 # diskReserve example
 # diskReserve: 

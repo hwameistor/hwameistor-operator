@@ -233,9 +233,11 @@ spec:
     disable: true
     {{- end }}
     deployOnMaster: {{ $.Values.ha.deployOnMaster | quote }}
-    imageRegistry: {{ $.Values.global.hwameistorImageRegistry }}
-    # imageRepoOwner: "hwameistor"
-    imageRepoOwner: {{ $.Values.ha.imageRepoOwner }}
+    shipper:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{.Values.ha.imageRepository}}
+        tag: {{$.Values.ha.shipperChar}}
     imagePullPolicy: "IfNotPresent"
     # drbdVersion: "v9.0.32-1"
     drbdVersion: {{ $.Values.ha.drbdVersion }}
