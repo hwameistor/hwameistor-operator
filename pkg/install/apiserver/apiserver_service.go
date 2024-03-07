@@ -14,13 +14,13 @@ import (
 )
 
 type ApiServerServiceMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewApiServerServiceMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ApiServerServiceMaintainer {
 	return &ApiServerServiceMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -39,7 +39,7 @@ var apiServerService = corev1.Service{
 		Ports: []corev1.ServicePort{
 			{
 				TargetPort: intstr.IntOrString{
-					Type: intstr.String,
+					Type:   intstr.String,
 					StrVal: "http",
 				},
 				Port: 80,
@@ -56,7 +56,7 @@ func (m *ApiServerServiceMaintainer) Ensure() error {
 	SetApiServerService(m.ClusterInstance)
 	key := types.NamespacedName{
 		Namespace: apiServerService.Namespace,
-		Name: apiServerService.Name,
+		Name:      apiServerService.Name,
 	}
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {

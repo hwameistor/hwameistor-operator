@@ -18,19 +18,19 @@ import (
 )
 
 type LSCSIMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LSCSIMaintainer {
 	return &LSCSIMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
 
 var lsCSIControllerLabelSelectorKey = "app"
-var lsCSIControllerLabelSelectorValue =  "hwameistor-local-storage-csi-controller"
+var lsCSIControllerLabelSelectorValue = "hwameistor-local-storage-csi-controller"
 var defaultKubeletRootDir = "/var/lib/kubelet"
 var defaultLSCSIControllerReplicas = int32(1)
 var defaultLSCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
@@ -79,9 +79,9 @@ var lsCSIController = appsv1.Deployment{
 								LabelSelector: &metav1.LabelSelector{
 									MatchExpressions: []metav1.LabelSelectorRequirement{
 										{
-											Key: "app",
+											Key:      "app",
 											Operator: "In",
-											Values: []string{"hwameistor-local-storage"},
+											Values:   []string{"hwameistor-local-storage"},
 										},
 									},
 								},
@@ -103,16 +103,16 @@ var lsCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
-						ImagePullPolicy: "IfNotPresent",
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          "IfNotPresent",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
@@ -127,16 +127,16 @@ var lsCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
-						ImagePullPolicy: "IfNotPresent",
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          "IfNotPresent",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
@@ -151,22 +151,22 @@ var lsCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 8080,
-								Name: "http-endpoint",
-								Protocol: corev1.ProtocolTCP,
+								Name:          "http-endpoint",
+								Protocol:      corev1.ProtocolTCP,
 							},
 						},
 						LivenessProbe: &corev1.Probe{
@@ -175,14 +175,14 @@ var lsCSIController = appsv1.Deployment{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/healthz/leader-election",
 									Port: intstr.IntOrString{
-										Type: intstr.String,
+										Type:   intstr.String,
 										StrVal: "http-endpoint",
 									},
 								},
 							},
 							InitialDelaySeconds: 10,
-							TimeoutSeconds: 10,
-							PeriodSeconds: 20,
+							TimeoutSeconds:      10,
+							PeriodSeconds:       20,
 						},
 					},
 					{
@@ -194,16 +194,16 @@ var lsCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
-						ImagePullPolicy: "IfNotPresent",
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          "IfNotPresent",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
@@ -214,8 +214,8 @@ var lsCSIController = appsv1.Deployment{
 							"--v=5",
 							"--leader-election=true",
 						},
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          corev1.PullIfNotPresent,
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 					},
 					{
@@ -228,48 +228,48 @@ var lsCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
 								MountPath: "/csi",
-								Name: "socket-dir",
+								Name:      "socket-dir",
 							},
 						},
-						ImagePullPolicy: corev1.PullIfNotPresent,
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          corev1.PullIfNotPresent,
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 					},
 				},
-				DNSPolicy: corev1.DNSClusterFirst,
-				RestartPolicy: corev1.RestartPolicyAlways,
+				DNSPolicy:                     corev1.DNSClusterFirst,
+				RestartPolicy:                 corev1.RestartPolicyAlways,
 				TerminationGracePeriodSeconds: &install.TerminationGracePeriodSeconds30s,
 				Tolerations: []corev1.Toleration{
 					{
-						Key: "CriticalAddonsOnly",
+						Key:      "CriticalAddonsOnly",
 						Operator: corev1.TolerationOpExists,
 					},
 					{
-						Key: "node.kubernetes.io/not-ready",
+						Key:      "node.kubernetes.io/not-ready",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node-role.kubernetes.io/master",
+						Key:      "node-role.kubernetes.io/master",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node-role.kubernetes.io/control-plane",
+						Key:      "node-role.kubernetes.io/control-plane",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node.cloudprovider.kubernetes.io/uninitialized",
+						Key:      "node.cloudprovider.kubernetes.io/uninitialized",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 				},
 			},
@@ -277,7 +277,7 @@ var lsCSIController = appsv1.Deployment{
 	},
 }
 
-func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1.Deployment) {
+func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
 	lsCSIControllerToCreate := lsCSIController.DeepCopy()
 
 	lsCSIControllerToCreate.Namespace = clusterInstance.Spec.TargetNamespace
@@ -301,7 +301,7 @@ func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1.
 	return lsCSIControllerToCreate
 }
 
-func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsCSIControllerToCreate *appsv1.Deployment) (*appsv1.Deployment) {
+func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsCSIControllerToCreate *appsv1.Deployment) *appsv1.Deployment {
 	for i, container := range lsCSIControllerToCreate.Spec.Template.Spec.Containers {
 		if container.Name == provisionerContainerName {
 			container.Image = getProvisionerContainerImageStringFromClusterInstance(clusterInstance)
@@ -385,14 +385,14 @@ func getSnapshotControllerImageStringFromClusterInstance(clusterInstance *hwamei
 
 func getSnapshotterImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	imageSpec := clusterInstance.Spec.LocalStorage.CSI.Controller.Snapshotter.Image
-	return imageSpec.Registry + "/" +imageSpec.Repository + ":" + imageSpec.Tag
+	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
 func getReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) int32 {
 	return clusterInstance.Spec.LocalStorage.CSI.Controller.Replicas
 }
 
-func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateExporter(cluster *hwameistoriov1alpha1.Cluster, gottenCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
 	lsCSIControllerToUpdate := gottenCSIController.DeepCopy()
 	var needToUpdate bool
 
@@ -460,7 +460,7 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	lsCSIControllerToCreate := SetLSCSIController(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: lsCSIControllerToCreate.Namespace,
-		Name: lsCSIControllerToCreate.Name,
+		Name:      lsCSIControllerToCreate.Name,
 	}
 	var gottenCSIController appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gottenCSIController); err != nil {
@@ -507,19 +507,19 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	csiDeployStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gottenCSIController.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gottenCSIController.Status.Replicas,
 		AvailablePodCount: gottenCSIController.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gottenCSIController.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gottenCSIController.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.LocalStorage == nil {
@@ -541,7 +541,7 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillLSCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillLSCSISpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalStorage == nil {
 		clusterInstance.Spec.LocalStorage = &hwameistoriov1alpha1.LocalStorageSpec{}
 	}

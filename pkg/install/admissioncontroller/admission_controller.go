@@ -17,13 +17,13 @@ import (
 )
 
 type AdmissionControllerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewAdmissionControllerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AdmissionControllerMaintainer {
 	return &AdmissionControllerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -71,27 +71,27 @@ var admissionController = appsv1.Deployment{
 						ImagePullPolicy: "IfNotPresent",
 						Env: []corev1.EnvVar{
 							{
-								Name: "MUTATE_CONFIG",
+								Name:  "MUTATE_CONFIG",
 								Value: "hwameistor-admission-mutate",
 							},
 							{
-								Name: "WEBHOOK_SERVICE",
+								Name:  "WEBHOOK_SERVICE",
 								Value: "hwameistor-admission-controller",
 							},
 							{
-								Name: "MUTATE_PATH",
+								Name:  "MUTATE_PATH",
 								Value: "/mutate",
 							},
 						},
 						Ports: []corev1.ContainerPort{
 							{
-								Name: "admission-api",
+								Name:          "admission-api",
 								ContainerPort: 18443,
 							},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "admission-controller-tls-certs",
+								Name:      "admission-controller-tls-certs",
 								MountPath: "/etc/webhook/certs",
 							},
 						},
@@ -130,11 +130,11 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 			container.Env = append(container.Env, []corev1.EnvVar{
 				{
-					Name: "WEBHOOK_NAMESPACE",
+					Name:  "WEBHOOK_NAMESPACE",
 					Value: clusterInstance.Spec.TargetNamespace,
 				},
 				{
-					Name: "FAILURE_POLICY",
+					Name:  "FAILURE_POLICY",
 					Value: clusterInstance.Spec.AdmissionController.FailurePolicy,
 				},
 			}...)
@@ -152,7 +152,7 @@ func getAdmissionControllerReplicasFromClusterInstance(clusterInstance *hwameist
 	return clusterInstance.Spec.AdmissionController.Replicas
 }
 
-func needOrNotToUpdateAdmissionController (cluster *hwameistoriov1alpha1.Cluster, gottenAdmissionController appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateAdmissionController(cluster *hwameistoriov1alpha1.Cluster, gottenAdmissionController appsv1.Deployment) (bool, *appsv1.Deployment) {
 	admissionControllerToUpdate := gottenAdmissionController.DeepCopy()
 	var needToUpdate bool
 
@@ -181,7 +181,7 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 	SetAdmissionController(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: admissionController.Namespace,
-		Name: admissionController.Name,
+		Name:      admissionController.Name,
 	}
 	var gottenAdmissionController appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gottenAdmissionController); err != nil {
@@ -228,19 +228,19 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gottenAdmissionController.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gottenAdmissionController.Status.Replicas,
 		AvailablePodCount: gottenAdmissionController.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gottenAdmissionController.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gottenAdmissionController.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.AdmissionController == nil {
@@ -262,7 +262,7 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 	return newClusterInstance, nil
 }
 
-func FulfillAdmissionControllerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillAdmissionControllerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.AdmissionController == nil {
 		clusterInstance.Spec.AdmissionController = &hwameistoriov1alpha1.AdmissionControllerSpec{}
 	}

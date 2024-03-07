@@ -17,13 +17,13 @@ import (
 )
 
 type EvictorMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *EvictorMaintainer {
 	return &EvictorMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -62,7 +62,7 @@ var evictorDeployment = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: evictorContainerName,
+						Name:            evictorContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 					},
 				},
@@ -102,7 +102,7 @@ func getEvictorReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1
 	return clusterInstance.Spec.Evictor.Replicas
 }
 
-func needOrNotToUpdateEvictor (cluster *hwameistoriov1alpha1.Cluster, gottenEvictor appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateEvictor(cluster *hwameistoriov1alpha1.Cluster, gottenEvictor appsv1.Deployment) (bool, *appsv1.Deployment) {
 	evictorToUpdate := gottenEvictor.DeepCopy()
 	var needToUpdate bool
 
@@ -131,10 +131,9 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	SetEvictor(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: evictorDeployment.Namespace,
-		Name: evictorDeployment.Name,
+		Name:      evictorDeployment.Name,
 	}
 
-	
 	if newClusterInstance.Spec.Evictor.Disable {
 		d := &appsv1.Deployment{}
 		if err := m.Client.Get(context.TODO(), key, d); err != nil {
@@ -147,7 +146,7 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 		if err := m.Client.Delete(context.TODO(), d); err != nil {
 			log.Errorf("Delete Evictor err:%v", err)
 			return newClusterInstance, err
-		} 
+		}
 	}
 
 	var gotten appsv1.Deployment
@@ -195,19 +194,19 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.Evictor == nil {
@@ -229,7 +228,7 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillEvictorSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillEvictorSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.Evictor == nil {
 		clusterInstance.Spec.Evictor = &hwameistoriov1alpha1.EvictorSpec{}
 	}

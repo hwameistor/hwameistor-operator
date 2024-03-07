@@ -17,13 +17,13 @@ import (
 )
 
 type LDMCSIMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LDMCSIMaintainer {
 	return &LDMCSIMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -66,9 +66,9 @@ var ldmCSIController = appsv1.Deployment{
 								LabelSelector: &metav1.LabelSelector{
 									MatchExpressions: []metav1.LabelSelectorRequirement{
 										{
-											Key: "app",
+											Key:      "app",
 											Operator: "In",
-											Values: []string{"hwameistor-local-disk-manager"},
+											Values:   []string{"hwameistor-local-disk-manager"},
 										},
 									},
 								},
@@ -79,7 +79,7 @@ var ldmCSIController = appsv1.Deployment{
 				},
 				Containers: []corev1.Container{
 					{
-						Name: provisionerContainerName,
+						Name:            provisionerContainerName,
 						ImagePullPolicy: "IfNotPresent",
 						Args: []string{
 							"--v=5",
@@ -91,19 +91,19 @@ var ldmCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
 					},
 					{
-						Name: attacherContainerName,
+						Name:            attacherContainerName,
 						ImagePullPolicy: "IfNotPresent",
 						Args: []string{
 							"--v=5",
@@ -113,13 +113,13 @@ var ldmCSIController = appsv1.Deployment{
 						},
 						Env: []corev1.EnvVar{
 							{
-								Name: "CSI_ADDRESS",
+								Name:  "CSI_ADDRESS",
 								Value: "/csi/csi.sock",
 							},
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 						},
@@ -130,7 +130,7 @@ var ldmCSIController = appsv1.Deployment{
 	},
 }
 
-func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1.Deployment) {
+func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
 	ldmCSIControllerToCreate := ldmCSIController.DeepCopy()
 	ldmCSIControllerToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 	ldmCSIControllerToCreate.OwnerReferences = append(ldmCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
@@ -144,7 +144,7 @@ func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1
 	return ldmCSIControllerToCreate
 }
 
-func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) (*appsv1.Deployment) {
+func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) *appsv1.Deployment {
 	volume := corev1.Volume{
 		Name: "socket-dir",
 		VolumeSource: corev1.VolumeSource{
@@ -160,7 +160,7 @@ func setLDMCSIControllerVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, l
 	return ldmCSIControllerToCreate
 }
 
-func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) (*appsv1.Deployment) {
+func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ldmCSIControllerToCreate *appsv1.Deployment) *appsv1.Deployment {
 	for i, container := range ldmCSIControllerToCreate.Spec.Template.Spec.Containers {
 		if container.Name == provisionerContainerName {
 			// container.Resources = *clusterInstance.Spec.LocalDiskManager.CSI.Controller.Provisioner.Resources
@@ -196,7 +196,7 @@ func getReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluste
 	return clusterInstance.Spec.LocalDiskManager.CSI.Controller.Replicas
 }
 
-func needOrNotToUpdateLDMCSIController (cluster *hwameistoriov1alpha1.Cluster, gottenLDMCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateLDMCSIController(cluster *hwameistoriov1alpha1.Cluster, gottenLDMCSIController appsv1.Deployment) (bool, *appsv1.Deployment) {
 	ldmCSIControllerToUpdate := gottenLDMCSIController.DeepCopy()
 	var needToUpdate bool
 
@@ -233,7 +233,7 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	ldmCSIControllerToCreate := SetLDMCSIController(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: ldmCSIControllerToCreate.Namespace,
-		Name: ldmCSIControllerToCreate.Name,
+		Name:      ldmCSIControllerToCreate.Name,
 	}
 	var gottenCSIController appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gottenCSIController); err != nil {
@@ -280,19 +280,19 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	csiDeployStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gottenCSIController.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gottenCSIController.Status.Replicas,
 		AvailablePodCount: gottenCSIController.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gottenCSIController.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gottenCSIController.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.LocalDiskManager == nil {
@@ -314,7 +314,7 @@ func (m *LDMCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillLDMCSISpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillLDMCSISpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalDiskManager == nil {
 		clusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}
 	}

@@ -39,11 +39,11 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/exporter"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/failoverassistant"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/ldmcsicontroller"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskactioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localstorage"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/lscsicontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/pvcautoresizer"
-	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskactioncontroller"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/rbac"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/scheduler"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/storageclass"
@@ -54,7 +54,7 @@ import (
 // ClusterReconciler reconciles a Cluster object
 type ClusterReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme                *runtime.Scheme
 	ClusterSpecGeneration int64
 }
 
@@ -243,7 +243,6 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
-	
 	newInstance, err = evictor.NewMaintainer(r.Client, newInstance).Ensure()
 	if err != nil {
 		log.Errorf("Ensure Evictor err: %v", err)
@@ -260,7 +259,6 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 	}
-	
 
 	if !newInstance.Spec.Auditor.Disable {
 		newInstance, err = auditor.NewAuditorMaintainer(r.Client, newInstance).Ensure()
@@ -425,7 +423,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	case "ToReserve":
 		log.Infof("sleep 2 minutes to wait for localdiskmanager created localdisks")
-		time.Sleep(time.Minute*2)
+		time.Sleep(time.Minute * 2)
 		log.Infof("2 minutes waited, going to handle localdisks")
 		if err := utils.ReserveDisk(newInstance, r.Client); err != nil {
 			log.Errorf("Reserve Disk err: %v", err)

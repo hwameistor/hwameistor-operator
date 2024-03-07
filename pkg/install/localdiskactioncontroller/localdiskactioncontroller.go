@@ -16,10 +16,9 @@ import (
 )
 
 type ActionControllerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
-
 
 var actionControllerLabelSelectorKey = "app"
 var actionControllerLabelSelectorValue = "hwameistor-local-disk-action-controller"
@@ -28,7 +27,7 @@ var replicas = int32(1)
 
 func NewActionControllerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ActionControllerMaintainer {
 	return &ActionControllerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -60,7 +59,7 @@ var deployTemplate = appsv1.Deployment{
 				ServiceAccountName: "hwameistor-admin",
 				Containers: []corev1.Container{
 					{
-						Name: ldaContainerName,
+						Name:            ldaContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 					},
 				},
@@ -74,7 +73,7 @@ func getActionControllerImageStringFromClusterInstance(clusterInstance *hwameist
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
-func needOrNotToUpdateActionController (cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateActionController(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.Deployment) (bool, *appsv1.Deployment) {
 	toUpdate := gotten.DeepCopy()
 	var needToUpdate bool
 
@@ -122,7 +121,7 @@ func (m *ActionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	deployToCreate := SetActionController(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: deployToCreate.Namespace,
-		Name: deployToCreate.Name,
+		Name:      deployToCreate.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -169,19 +168,19 @@ func (m *ActionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.LocalDiskActionController == nil {

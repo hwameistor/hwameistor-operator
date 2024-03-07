@@ -13,13 +13,13 @@ import (
 )
 
 type AdmissionControllerMutatingWebhookConfigurationMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewAdmissionControllerMutatingWebhookConfigurationMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AdmissionControllerMutatingWebhookConfigurationMaintainer {
 	return &AdmissionControllerMutatingWebhookConfigurationMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -42,7 +42,7 @@ func InstallAdmissionControllerMutatingWebhookConfiguration(cli client.Client) e
 func (m *AdmissionControllerMutatingWebhookConfigurationMaintainer) Ensure() error {
 	key := types.NamespacedName{
 		Namespace: mutatingWebhookConfiguration.Namespace,
-		Name: mutatingWebhookConfiguration.Name,
+		Name:      mutatingWebhookConfiguration.Name,
 	}
 	var gotten v1.MutatingWebhookConfiguration
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {

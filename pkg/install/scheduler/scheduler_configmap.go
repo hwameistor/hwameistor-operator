@@ -19,13 +19,13 @@ import (
 )
 
 type SchedulerConfigMapMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewSchedulerConfigMapMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *SchedulerConfigMapMaintainer {
 	return &SchedulerConfigMapMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -72,7 +72,7 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 			if err == io.EOF {
 				break
 			} else {
-        log.Errorf("decode err: %v", err)
+				log.Errorf("decode err: %v", err)
 				return err
 			}
 		}
@@ -90,7 +90,7 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 
 	key := types.NamespacedName{
 		Namespace: cmUnstructured.GetNamespace(),
-		Name: cmUnstructured.GetName(),
+		Name:      cmUnstructured.GetName(),
 	}
 	var gotten corev1.ConfigMap
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -122,7 +122,7 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 					return errUpdate
 				}
 			}
-		} 
+		}
 	}
 
 	return nil

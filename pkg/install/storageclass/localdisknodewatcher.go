@@ -18,7 +18,7 @@ var ldnWatcher LocalDiskNodeWatcher
 
 var ldnWatcherStopCh chan struct{}
 
-func EnsureLDNWatcherStarted(cli client.Client, clusterKey types.NamespacedName)  {
+func EnsureLDNWatcherStarted(cli client.Client, clusterKey types.NamespacedName) {
 	ldnWatcherMutex.Lock()
 	if !ldnWatcher.GoroutineStarted {
 		go WatchLocalDiskNodes(cli, clusterKey, ldnWatcherStopCh)

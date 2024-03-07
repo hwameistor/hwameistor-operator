@@ -16,13 +16,13 @@ import (
 )
 
 type PVCAutoResizerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewPVCAutoResizerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *PVCAutoResizerMaintainer {
 	return &PVCAutoResizerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -33,7 +33,7 @@ var pvcAutoResizerContainerName = "pvc-autoresizer"
 
 var deployTemplate = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
-		Name: "hwameistor-pvc-autoresizer" ,
+		Name: "hwameistor-pvc-autoresizer",
 		Labels: map[string]string{
 			pvcAutoResizerLabelSelectorKey: pvcAutoResizerLabelSelectorValue,
 		},
@@ -56,7 +56,7 @@ var deployTemplate = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: pvcAutoResizerContainerName,
+						Name:            pvcAutoResizerContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 					},
 				},
@@ -74,7 +74,7 @@ func getPVCAutoResizerContainerImageStringFromClusterInstance(clusterInstance *h
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
-func needOrNotToUpdatePVCAutoResizer (cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdatePVCAutoResizer(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.Deployment) (bool, *appsv1.Deployment) {
 	toUpdate := gotten.DeepCopy()
 	var needToUpdate bool
 
@@ -124,7 +124,7 @@ func (m *PVCAutoResizerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	deployToCreate := SetPVCAutoResizer(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: deployToCreate.Namespace,
-		Name: deployToCreate.Name,
+		Name:      deployToCreate.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -150,7 +150,7 @@ func (m *PVCAutoResizerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	}
 
 	var podList corev1.PodList
-	selector, err :=  metav1.LabelSelectorAsSelector(deployToCreate.Spec.Selector)
+	selector, err := metav1.LabelSelectorAsSelector(deployToCreate.Spec.Selector)
 	if err != nil {
 		log.Errorf("convert LabelSelector to Selector err: %v", err)
 	}
@@ -173,19 +173,19 @@ func (m *PVCAutoResizerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.PVCAutoResizer == nil {

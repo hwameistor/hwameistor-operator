@@ -18,7 +18,7 @@ var lsnwatcher LocalStorageNodeWatcher
 
 var stopCh chan struct{}
 
-func EnsureWatcherStarted(cli client.Client, clusterKey types.NamespacedName)  {
+func EnsureWatcherStarted(cli client.Client, clusterKey types.NamespacedName) {
 	WatcherMutex.Lock()
 	if !lsnwatcher.GoroutineStarted {
 		go WatchLocalStorageNodes(cli, clusterKey, stopCh)

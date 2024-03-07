@@ -18,13 +18,13 @@ import (
 )
 
 type ApiServerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewApiServerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *ApiServerMaintainer {
 	return &ApiServerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -62,7 +62,7 @@ var apiServer = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: apiserverContainerName,
+						Name:            apiserverContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Env: []corev1.EnvVar{
 							{
@@ -84,7 +84,7 @@ var apiServer = appsv1.Deployment{
 						},
 						Ports: []corev1.ContainerPort{
 							{
-								Name: "http",
+								Name:          "http",
 								ContainerPort: 80,
 							},
 						},
@@ -109,15 +109,15 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 			}
 			container.Env = append(container.Env, []corev1.EnvVar{
 				{
-					Name: "EnableAuth",
+					Name:  "EnableAuth",
 					Value: strconv.FormatBool(clusterInstance.Spec.ApiServer.Authentication.Enable),
 				},
 				{
-					Name: "AuthAccessId",
+					Name:  "AuthAccessId",
 					Value: clusterInstance.Spec.ApiServer.Authentication.AccessId,
 				},
 				{
-					Name: "AuthSecretKey",
+					Name:  "AuthSecretKey",
 					Value: clusterInstance.Spec.ApiServer.Authentication.SecretKey,
 				},
 			}...)
@@ -135,7 +135,7 @@ func getApiserverReplicasFromClusterInstance(clusterInstance *hwameistoriov1alph
 	return clusterInstance.Spec.ApiServer.Replicas
 }
 
-func needOrNotToUpdateApiserver (cluster *hwameistoriov1alpha1.Cluster, gottenApiserver appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateApiserver(cluster *hwameistoriov1alpha1.Cluster, gottenApiserver appsv1.Deployment) (bool, *appsv1.Deployment) {
 	apiserverToUpdate := gottenApiserver.DeepCopy()
 	var needToUpdate bool
 
@@ -164,7 +164,7 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	SetApiServer(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: apiServer.Namespace,
-		Name: apiServer.Name,
+		Name:      apiServer.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -211,19 +211,19 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.ApiServer == nil {
@@ -245,7 +245,7 @@ func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillApiServerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillApiServerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.ApiServer == nil {
 		clusterInstance.Spec.ApiServer = &hwameistoriov1alpha1.ApiServerSpec{}
 	}

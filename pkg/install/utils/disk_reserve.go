@@ -6,8 +6,8 @@ import (
 	hwameistoroperatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/localdiskmanager"
 	hwameistorv1alpha1 "github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hwameistoroperatorv1alpha1.Cluster) bool {
@@ -80,7 +80,7 @@ func CheckComponentsInstalledSuccessfully(cli client.Client, clusterInstance *hw
 	return true
 }
 
-func ListLocalDisks (cli client.Client) ([]hwameistorv1alpha1.LocalDisk, error) {
+func ListLocalDisks(cli client.Client) ([]hwameistorv1alpha1.LocalDisk, error) {
 	ldList := hwameistorv1alpha1.LocalDiskList{}
 	if err := cli.List(context.TODO(), &ldList); err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func ListLocalDisks (cli client.Client) ([]hwameistorv1alpha1.LocalDisk, error) 
 	return ldList.Items, nil
 }
 
-func checkLocalDiskReserveCondition (ld *hwameistorv1alpha1.LocalDisk, diskReserveConfigurations []hwameistoroperatorv1alpha1.DiskReserveConfiguration) bool {
+func checkLocalDiskReserveCondition(ld *hwameistorv1alpha1.LocalDisk, diskReserveConfigurations []hwameistoroperatorv1alpha1.DiskReserveConfiguration) bool {
 	for _, diskReserveConfiguration := range diskReserveConfigurations {
 		if ld.Spec.NodeName != diskReserveConfiguration.NodeName {
 			continue
@@ -103,12 +103,12 @@ func checkLocalDiskReserveCondition (ld *hwameistorv1alpha1.LocalDisk, diskReser
 	return false
 }
 
-func ReserveDisk (clusterInstance *hwameistoroperatorv1alpha1.Cluster, cli client.Client) error {
+func ReserveDisk(clusterInstance *hwameistoroperatorv1alpha1.Cluster, cli client.Client) error {
 	localDisks, err := ListLocalDisks(cli)
 	if err != nil {
 		return err
 	}
-	
+
 	for _, localDisk := range localDisks {
 		if checkLocalDiskReserveCondition(&localDisk, clusterInstance.Spec.DiskReserveConfigurations) {
 			localDisk.Spec.Reserved = true
@@ -120,4 +120,3 @@ func ReserveDisk (clusterInstance *hwameistoroperatorv1alpha1.Cluster, cli clien
 
 	return nil
 }
-
