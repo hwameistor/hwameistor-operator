@@ -17,13 +17,13 @@ import (
 )
 
 type SchedulerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewSchedulerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *SchedulerMaintainer {
 	return &SchedulerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -64,11 +64,11 @@ var schedulerDeploy = appsv1.Deployment{
 								Preference: corev1.NodeSelectorTerm{
 									MatchExpressions: []corev1.NodeSelectorRequirement{
 										{
-											Key: "node-role.kubernetes.io/master",
+											Key:      "node-role.kubernetes.io/master",
 											Operator: corev1.NodeSelectorOpExists,
 										},
 										{
-											Key: "node-role.kubernetes.io/control-plane",
+											Key:      "node-role.kubernetes.io/control-plane",
 											Operator: corev1.NodeSelectorOpExists,
 										},
 									},
@@ -87,14 +87,14 @@ var schedulerDeploy = appsv1.Deployment{
 							"--leader-elect-resource-name=hwameistor-scheduler",
 							"--config=/etc/hwameistor/hwameistor-scheduler-config.yaml",
 						},
-						ImagePullPolicy: "IfNotPresent",
-						TerminationMessagePath: "/dev/termination-log",
+						ImagePullPolicy:          "IfNotPresent",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "hwameistor-scheduler-config",
+								Name:      "hwameistor-scheduler-config",
 								MountPath: "/etc/hwameistor/",
-								ReadOnly: true,
+								ReadOnly:  true,
 							},
 						},
 					},
@@ -106,7 +106,7 @@ var schedulerDeploy = appsv1.Deployment{
 							ConfigMap: &corev1.ConfigMapVolumeSource{
 								Items: []corev1.KeyToPath{
 									{
-										Key: "hwameistor-scheduler-config.yaml",
+										Key:  "hwameistor-scheduler-config.yaml",
 										Path: "hwameistor-scheduler-config.yaml",
 									},
 								},
@@ -119,28 +119,28 @@ var schedulerDeploy = appsv1.Deployment{
 				},
 				Tolerations: []corev1.Toleration{
 					{
-						Key: "CriticalAddonsOnly",
+						Key:      "CriticalAddonsOnly",
 						Operator: corev1.TolerationOpExists,
 					},
 					{
-						Key: "node.kubernetes.io/not-ready",
+						Key:      "node.kubernetes.io/not-ready",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node-role.kubernetes.io/master",
+						Key:      "node-role.kubernetes.io/master",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node-role.kubernetes.io/control-plane",
+						Key:      "node-role.kubernetes.io/control-plane",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 					{
-						Key: "node.cloudprovider.kubernetes.io/uninitialized",
+						Key:      "node.cloudprovider.kubernetes.io/uninitialized",
 						Operator: corev1.TolerationOpExists,
-						Effect: corev1.TaintEffectNoSchedule,
+						Effect:   corev1.TaintEffectNoSchedule,
 					},
 				},
 			},
@@ -179,7 +179,7 @@ func getSchedulerReplicasFromClusterInstance(clusterInstance *hwameistoriov1alph
 	return clusterInstance.Spec.Scheduler.Replicas
 }
 
-func needOrNotToUpdateScheduler (cluster *hwameistoriov1alpha1.Cluster, gottenScheduler appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateScheduler(cluster *hwameistoriov1alpha1.Cluster, gottenScheduler appsv1.Deployment) (bool, *appsv1.Deployment) {
 	schedulerToUpdate := gottenScheduler.DeepCopy()
 	var needToUpdate bool
 
@@ -208,7 +208,7 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	SetScheduler(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: schedulerDeploy.Namespace,
-		Name: schedulerDeploy.Name,
+		Name:      schedulerDeploy.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -255,19 +255,19 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.Scheduler == nil {
@@ -289,7 +289,7 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
-func FulfillSchedulerSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillSchedulerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.Scheduler == nil {
 		clusterInstance.Spec.Scheduler = &hwameistoriov1alpha1.SchedulerSpec{}
 	}

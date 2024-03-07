@@ -52,7 +52,7 @@ func createOrUpdateCRD(cli client.Client, resourceBytes []byte) error {
 			if err == io.EOF {
 				break
 			} else {
-        		log.Errorf("decode err: %v", err)
+				log.Errorf("decode err: %v", err)
 				return err
 			}
 		}

@@ -14,13 +14,13 @@ import (
 )
 
 type AdmissionControllerServiceMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewAdmissionControllerServiceMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AdmissionControllerServiceMaintainer {
 	return &AdmissionControllerServiceMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -37,7 +37,7 @@ var admissionControllerService = corev1.Service{
 			{
 				Port: 443,
 				TargetPort: intstr.IntOrString{
-					Type: intstr.String,
+					Type:   intstr.String,
 					StrVal: "admission-api",
 				},
 			},
@@ -53,7 +53,7 @@ func (m *AdmissionControllerServiceMaintainer) Ensure() error {
 	SetAdmissionControllerService(m.ClusterInstance)
 	key := types.NamespacedName{
 		Namespace: admissionControllerService.Namespace,
-		Name: admissionController.Name,
+		Name:      admissionController.Name,
 	}
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {

@@ -16,18 +16,18 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
 	// "k8s.io/client-go/tools/clientcmd"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"github.com/hwameistor/hwameistor-operator/pkg/kubeconfig"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type StorageClassMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoroperatorv1alpha1.Cluster
 }
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoroperatorv1alpha1.Cluster) *StorageClassMaintainer {
 	return &StorageClassMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -39,19 +39,19 @@ var defaultDiskType = "HDD"
 var defaultFSType = "xfs"
 
 var scTemplate = storagev1.StorageClass{
-	Provisioner: "lvm.hwameistor.io",
+	Provisioner:       "lvm.hwameistor.io",
 	VolumeBindingMode: &volumeBindingWaitForFirstConsumer,
 	Parameters: map[string]string{
 		"replicaNumber": "1",
-		"poolType": "REGULAR",
-		"volumeKind": "LVM",
-		"striped": "true",
-		"convertible": "false",
+		"poolType":      "REGULAR",
+		"volumeKind":    "LVM",
+		"striped":       "true",
+		"convertible":   "false",
 	},
 }
 
 func SetStorageClassTemplate(clusterInstance *hwameistoroperatorv1alpha1.Cluster) {
-	scTemplate.AllowVolumeExpansion =  &clusterInstance.Spec.StorageClass.AllowVolumeExpansion
+	scTemplate.AllowVolumeExpansion = &clusterInstance.Spec.StorageClass.AllowVolumeExpansion
 	scTemplate.ReclaimPolicy = &clusterInstance.Spec.StorageClass.ReclaimPolicy
 	scTemplate.Parameters["csi.storage.k8s.io/fstype"] = clusterInstance.Spec.StorageClass.FSType
 }
@@ -103,7 +103,7 @@ func (m *StorageClassMaintainer) Ensure() error {
 			continue
 		}
 	}
-	
+
 	return nil
 }
 
@@ -169,7 +169,7 @@ func generateStorageClass(storageClassNameToCreate map[string]string, needConver
 			convertibleStorageClass.Parameters["replicaNumber"] = "1"
 			storageClasses = append(storageClasses, *convertibleStorageClass)
 		}
-		
+
 		if needHAStorageClass {
 			haStorageClass := scTemplate.DeepCopy()
 			haStorageClass.Name = name + "-ha"
@@ -218,7 +218,7 @@ func WatchLocalStorageNodes(cli client.Client, clusterKey types.NamespacedName, 
 			log.Infof("OnDelete: %+v", obj)
 		},
 	}
-	
+
 	clientset, err := hwameistorclient.NewForConfig(kubeconfig.Get())
 	if err != nil {
 		log.WithError(err).Error("Failed to build clientset")
@@ -268,7 +268,7 @@ func WatchLocalDiskNodes(cli client.Client, clusterKey types.NamespacedName, sto
 			ensureDiskStorageClass(cli, clusterInstance)
 		},
 	}
-	
+
 	clientset, err := hwameistorclient.NewForConfig(kubeconfig.Get())
 	if err != nil {
 		log.WithError(err).Error("Failed to build clientset")
@@ -297,12 +297,12 @@ func ensureDiskStorageClass(cli client.Client, clusterInstance *hwameistoroperat
 			ObjectMeta: v1.ObjectMeta{
 				Name: name,
 			},
-			Provisioner: diskProvisioner,
-			ReclaimPolicy: &clusterInstance.Spec.StorageClass.ReclaimPolicy,
+			Provisioner:       diskProvisioner,
+			ReclaimPolicy:     &clusterInstance.Spec.StorageClass.ReclaimPolicy,
 			VolumeBindingMode: &volumeBindingWaitForFirstConsumer,
 			Parameters: map[string]string{
 				"diskType": poolClass,
-				"fstype": clusterInstance.Spec.StorageClass.FSType,
+				"fstype":   clusterInstance.Spec.StorageClass.FSType,
 			},
 		}
 		if err := cli.Create(context.TODO(), &sc); err != nil {

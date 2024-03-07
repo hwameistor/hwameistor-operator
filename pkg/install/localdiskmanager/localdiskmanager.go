@@ -16,7 +16,7 @@ import (
 )
 
 type LocalDiskManagerMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
@@ -29,7 +29,7 @@ type LocalDiskManagerMaintainer struct {
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalDiskManagerMaintainer {
 	return &LocalDiskManagerMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -64,10 +64,10 @@ var ldmDaemonSet = appsv1.DaemonSet{
 			},
 			Spec: corev1.PodSpec{
 				HostNetwork: true,
-				HostPID: true,
+				HostPID:     true,
 				Containers: []corev1.Container{
 					{
-						Name: managerContainerName,
+						Name:    managerContainerName,
 						Command: []string{"/local-disk-manager"},
 						Args: []string{
 							"--endpoint=$(CSI_ENDPOINT)",
@@ -80,21 +80,21 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "udev",
+								Name:      "udev",
 								MountPath: "/run/udev",
 							},
 							{
-								Name: "procmount",
+								Name:      "procmount",
 								MountPath: "/host/proc",
-								ReadOnly: true,
+								ReadOnly:  true,
 							},
 							{
-								Name: "devmount",
+								Name:      "devmount",
 								MountPath: "/dev",
 							},
 							{
-								Name: "host-etc-hwameistor",
-								MountPath: "/etc/hwameistor",
+								Name:             "host-etc-hwameistor",
+								MountPath:        "/etc/hwameistor",
 								MountPropagation: &install.MountPropagationBidirectional,
 							},
 						},
@@ -132,13 +132,13 @@ var ldmDaemonSet = appsv1.DaemonSet{
 								},
 							},
 							{
-								Name: "OPERATOR_NAME",
+								Name:  "OPERATOR_NAME",
 								Value: "local-disk-manager",
 							},
 						},
 					},
 					{
-						Name: registrarContainerName,
+						Name:            registrarContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Args: []string{
 							"--v=5",
@@ -167,11 +167,11 @@ var ldmDaemonSet = appsv1.DaemonSet{
 						},
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 							{
-								Name: "registration-dir",
+								Name:      "registration-dir",
 								MountPath: "/registration",
 							},
 						},
@@ -220,7 +220,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 	},
 }
 
-func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet{
+func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
 	ldmDaemonSetToCreate := ldmDaemonSet.DeepCopy()
 
 	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
@@ -249,27 +249,27 @@ func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Daem
 	if newClusterInstance.Spec.LocalDiskManager.TolerationOnMaster {
 		ldmDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
 			{
-				Key: "CriticalAddonsOnly",
+				Key:      "CriticalAddonsOnly",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node.kubernetes.io/not-ready",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node.kubernetes.io/not-ready",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node-role.kubernetes.io/master",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/master",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node-role.kubernetes.io/control-plane",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/control-plane",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node.cloudprovider.kubernetes.io/uninitialized",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node.cloudprovider.kubernetes.io/uninitialized",
 				Operator: corev1.TolerationOpExists,
 			},
 		}
@@ -350,26 +350,26 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ld
 			// }
 			container.Image = getLDMContainerManagerImageStringFromClusterInstance(clusterInstance)
 			// container.Args = append(container.Args, "--csi-enable=" + strconv.FormatBool(clusterInstance.Spec.LocalDiskManager.CSI.Enable))
-			container.Args = append(container.Args, "--csi-enable=true" )
+			container.Args = append(container.Args, "--csi-enable=true")
 			registrationDirVolumeMount := corev1.VolumeMount{
-				Name: "registration-dir",
+				Name:      "registration-dir",
 				MountPath: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins_registry",
 			}
 			container.VolumeMounts = append(container.VolumeMounts, registrationDirVolumeMount)
 			pluginDirVolumeMount := corev1.VolumeMount{
-				Name: "plugin-dir",
-				MountPath: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins",
+				Name:             "plugin-dir",
+				MountPath:        clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins",
 				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, pluginDirVolumeMount)
 			podsMountDirVolumeMount := corev1.VolumeMount{
-				Name: "pods-mount-dir",
-				MountPath: clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/pods",
+				Name:             "pods-mount-dir",
+				MountPath:        clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/pods",
 				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, podsMountDirVolumeMount)
 			container.Env = append(container.Env, corev1.EnvVar{
-				Name: "CSI_ENDPOINT",
+				Name:  "CSI_ENDPOINT",
 				Value: "unix:/" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock",
 			})
 			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
@@ -380,7 +380,7 @@ func setLDMDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, ld
 				container.Resources = *resources
 			}
 			container.Image = getLDMContainerRegistrarImageStringFromClusterInstance(clusterInstance)
-			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalDiskManager.KubeletRootDir + "/plugins/disk.hwameistor.io/csi.sock")
+			container.Args = append(container.Args, "--kubelet-registration-path="+clusterInstance.Spec.LocalDiskManager.KubeletRootDir+"/plugins/disk.hwameistor.io/csi.sock")
 			ldmDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
 		}
 	}
@@ -429,7 +429,7 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	ldmDaemonSetToCreate := SetLDMDaemonSet(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: ldmDaemonSetToCreate.Namespace,
-		Name: ldmDaemonSetToCreate.Name,
+		Name:      ldmDaemonSetToCreate.Name,
 	}
 	var gottenDS appsv1.DaemonSet
 	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
@@ -474,19 +474,19 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesDeployStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gottenDS.Status.DesiredNumberScheduled,
+		Pods:              podsStatus,
+		DesiredPodCount:   gottenDS.Status.DesiredNumberScheduled,
 		AvailablePodCount: gottenDS.Status.NumberAvailable,
-		WorkloadType: "DaemonSet",
-		WorkloadName: gottenDS.Name,
+		WorkloadType:      "DaemonSet",
+		WorkloadName:      gottenDS.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.LocalDiskManager == nil {
@@ -511,7 +511,7 @@ func (m *LocalDiskManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 func CheckLDMReallyReady(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) bool {
 	key := types.NamespacedName{
 		Namespace: clusterInstance.Spec.TargetNamespace,
-		Name: ldmDaemonSet.Name,
+		Name:      ldmDaemonSet.Name,
 	}
 	var gottenDS appsv1.DaemonSet
 	if err := cli.Get(context.TODO(), key, &gottenDS); err != nil {
@@ -559,7 +559,7 @@ func CheckLDMReallyReady(cli client.Client, clusterInstance *hwameistoriov1alpha
 	return true
 }
 
-func FulfillLDMDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillLDMDaemonsetSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalDiskManager == nil {
 		clusterInstance.Spec.LocalDiskManager = &hwameistoriov1alpha1.LocalDiskManagerSpec{}
 	}
@@ -599,7 +599,6 @@ func FulfillLDMDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hw
 	if clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Tag == "" {
 		clusterInstance.Spec.LocalDiskManager.CSI.Registrar.Image.Tag = defaultLDMDaemonsetCSIRegistrarImageTag
 	}
-
 
 	return clusterInstance
 }

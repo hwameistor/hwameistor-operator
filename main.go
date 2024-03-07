@@ -74,7 +74,7 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	kubeconfig.Set(ctrl.GetConfigOrDie())
-	
+
 	mgr, err := ctrl.NewManager(kubeconfig.Get(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,

@@ -17,13 +17,13 @@ import (
 )
 
 type LocalStorageMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *LocalStorageMaintainer {
 	return &LocalStorageMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -71,9 +71,9 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								{
 									MatchExpressions: []corev1.NodeSelectorRequirement{
 										{
-											Key: "lvm.hwameistor.io/enable",
+											Key:      "lvm.hwameistor.io/enable",
 											Operator: "NotIn",
-											Values: []string{"false"},
+											Values:   []string{"false"},
 										},
 									},
 								},
@@ -94,7 +94,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										APIVersion: "v1",
-										FieldPath: "spec.nodeName",
+										FieldPath:  "spec.nodeName",
 									},
 								},
 							},
@@ -111,15 +111,15 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								},
 							},
 						},
-						TerminationMessagePath: "/dev/termination-log",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "socket-dir",
+								Name:      "socket-dir",
 								MountPath: "/csi",
 							},
 							{
-								Name: "registration-dir",
+								Name:      "registration-dir",
 								MountPath: "/registration",
 							},
 						},
@@ -139,7 +139,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										APIVersion: "v1",
-										FieldPath: "metadata.name",
+										FieldPath:  "metadata.name",
 									},
 								},
 							},
@@ -148,7 +148,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										APIVersion: "v1",
-										FieldPath: "spec.nodeName",
+										FieldPath:  "spec.nodeName",
 									},
 								},
 							},
@@ -157,20 +157,20 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								ValueFrom: &corev1.EnvVarSource{
 									FieldRef: &corev1.ObjectFieldSelector{
 										APIVersion: "v1",
-										FieldPath: "metadata.namespace",
+										FieldPath:  "metadata.namespace",
 									},
 								},
 							},
 							{
-								Name: "NODE_ANNOTATION_KEY_STORAGE_IPV4",
+								Name:  "NODE_ANNOTATION_KEY_STORAGE_IPV4",
 								Value: "localstorage.hwameistor.io/storage-ipv4",
 							},
 						},
 						ImagePullPolicy: "IfNotPresent",
 						Ports: []corev1.ContainerPort{
 							{
-								Name: "healthz",
-								Protocol: "TCP",
+								Name:          "healthz",
+								Protocol:      "TCP",
 								ContainerPort: 80,
 							},
 						},
@@ -180,16 +180,16 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 								HTTPGet: &corev1.HTTPGetAction{
 									Path: "/healthz",
 									Port: intstr.IntOrString{
-										Type: intstr.String,
+										Type:   intstr.String,
 										StrVal: "healthz",
 									},
 									Scheme: corev1.URISchemeHTTP,
 								},
 							},
 							InitialDelaySeconds: 10,
-							PeriodSeconds: 2,
-							SuccessThreshold: 1,
-							TimeoutSeconds: 3,
+							PeriodSeconds:       2,
+							SuccessThreshold:    1,
+							TimeoutSeconds:      3,
 						},
 						SecurityContext: &corev1.SecurityContext{
 							Capabilities: &corev1.Capabilities{
@@ -199,35 +199,35 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 							},
 							Privileged: &install.SecurityContextPrivilegedTrue,
 						},
-						TerminationMessagePath: "/dev/termination-log",
+						TerminationMessagePath:   "/dev/termination-log",
 						TerminationMessagePolicy: "File",
 						VolumeMounts: []corev1.VolumeMount{
 							{
-								Name: "host-dev",
+								Name:      "host-dev",
 								MountPath: "/dev",
 							},
 							{
-								Name: "host-etc-drbd",
-								MountPath: "/etc/drbd.d",
+								Name:             "host-etc-drbd",
+								MountPath:        "/etc/drbd.d",
 								MountPropagation: &install.MountPropagationBidirectional,
 							},
 							{
-								Name: "ssh-dir",
-								MountPath: "/root/.ssh",
+								Name:             "ssh-dir",
+								MountPath:        "/root/.ssh",
 								MountPropagation: &install.MountPropagationBidirectional,
 							},
 							{
-								Name: "host-mnt",
-								MountPath: "/mnt",
+								Name:             "host-mnt",
+								MountPath:        "/mnt",
 								MountPropagation: &install.MountPropagationBidirectional,
 							},
 						},
 					},
 				},
-				DNSPolicy: corev1.DNSClusterFirstWithHostNet,
-				HostPID: true,
-				RestartPolicy: corev1.RestartPolicyAlways,
-				SchedulerName: "default-scheduler",
+				DNSPolicy:                     corev1.DNSClusterFirstWithHostNet,
+				HostPID:                       true,
+				RestartPolicy:                 corev1.RestartPolicyAlways,
+				SchedulerName:                 "default-scheduler",
 				TerminationGracePeriodSeconds: &install.TerminationGracePeriodSeconds30s,
 				Volumes: []corev1.Volume{
 					{
@@ -255,7 +255,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 			RollingUpdate: &appsv1.RollingUpdateDaemonSet{
 				MaxUnavailable: &intstr.IntOrString{
 					IntVal: 1,
-					Type: intstr.Int,
+					Type:   intstr.Int,
 				},
 			},
 			Type: appsv1.RollingUpdateDaemonSetStrategyType,
@@ -276,27 +276,27 @@ func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Daemo
 	if clusterInstance.Spec.LocalStorage.TolerationOnMaster {
 		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
 			{
-				Key: "CriticalAddonsOnly",
+				Key:      "CriticalAddonsOnly",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node.kubernetes.io/not-ready",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node.kubernetes.io/not-ready",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node-role.kubernetes.io/master",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/master",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node-role.kubernetes.io/control-plane",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/control-plane",
 				Operator: corev1.TolerationOpExists,
 			},
 			{
-				Effect: corev1.TaintEffectNoSchedule,
-				Key: "node.cloudprovider.kubernetes.io/uninitialized",
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node.cloudprovider.kubernetes.io/uninitialized",
 				Operator: corev1.TolerationOpExists,
 			},
 		}
@@ -373,7 +373,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaem
 func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
 	for i, container := range lsDaemonSetToCreate.Spec.Template.Spec.Containers {
 		if container.Name == registrarContainerName {
-			container.Args = append(container.Args, "--kubelet-registration-path=" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock")
+			container.Args = append(container.Args, "--kubelet-registration-path="+clusterInstance.Spec.LocalStorage.KubeletRootDir+"/plugins/lvm.hwameistor.io/csi.sock")
 			container.Image = getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources
 			if resources := clusterInstance.Spec.LocalStorage.CSI.Registrar.Resources; resources != nil {
@@ -390,8 +390,8 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			// if clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount != 0 {
 			// 	container.Args = append(container.Args, "--max-ha-volume-count=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount))
 			// }
-			container.Env = append(container.Env, corev1.EnvVar{	
-				Name: "CSI_ENDPOINT",
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name:  "CSI_ENDPOINT",
 				Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
 			})
 			// rcloneImageSpec := clusterInstance.Spec.LocalStorage.Member.RcloneImage
@@ -402,25 +402,25 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 				Value: getRcloneEnvFromClusterInstance(clusterInstance),
 			})
 			container.Env = append(container.Env, corev1.EnvVar{
-				Name: juicesyncEnvName,
+				Name:  juicesyncEnvName,
 				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
 			})
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
-				Name: "plugin-dir",
-				MountPath: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins",
+				Name:             "plugin-dir",
+				MountPath:        clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins",
 				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, pluginDirVolumeMount)
 			registrationDirVolumeMount := corev1.VolumeMount{
-				Name: "registration-dir",
+				Name:      "registration-dir",
 				MountPath: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins_registry",
 			}
 			container.VolumeMounts = append(container.VolumeMounts, registrationDirVolumeMount)
 			podsMountDirVolumeMount := corev1.VolumeMount{
-				Name: "pods-mount-dir",
-				MountPath: clusterInstance.Spec.LocalStorage.KubeletRootDir + "/pods",
+				Name:             "pods-mount-dir",
+				MountPath:        clusterInstance.Spec.LocalStorage.KubeletRootDir + "/pods",
 				MountPropagation: &install.MountPropagationBidirectional,
 			}
 			container.VolumeMounts = append(container.VolumeMounts, podsMountDirVolumeMount)
@@ -484,7 +484,7 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 			}
 			if juicesyncEnvNotFound {
 				container.Env = append(container.Env, corev1.EnvVar{
-					Name: juicesyncEnvName,
+					Name:  juicesyncEnvName,
 					Value: wantedJuicesyncEnv,
 				})
 				containerModified = true
@@ -495,7 +495,7 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 				container.Image = wantedImage
 				containerModified = true
 			}
-			
+
 			if containerModified {
 				ds.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
@@ -520,7 +520,7 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 	lsDaemonSetToCreate := SetLSDaemonSet(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: lsDaemonSetToCreate.Namespace,
-		Name: lsDaemonSetToCreate.Name,
+		Name:      lsDaemonSetToCreate.Name,
 	}
 	var gottenDS appsv1.DaemonSet
 	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
@@ -561,19 +561,19 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesDeployStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gottenDS.Status.DesiredNumberScheduled,
+		Pods:              podsStatus,
+		DesiredPodCount:   gottenDS.Status.DesiredNumberScheduled,
 		AvailablePodCount: gottenDS.Status.NumberAvailable,
-		WorkloadType: "DaemonSet",
-		WorkloadName: gottenDS.Name,
+		WorkloadType:      "DaemonSet",
+		WorkloadName:      gottenDS.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.LocalStorage == nil {
@@ -595,7 +595,7 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 	return newClusterInstance, nil
 }
 
-func FulfillLSDaemonsetSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillLSDaemonsetSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalStorage == nil {
 		clusterInstance.Spec.LocalStorage = &hwameistoriov1alpha1.LocalStorageSpec{}
 	}

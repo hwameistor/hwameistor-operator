@@ -15,13 +15,13 @@ import (
 )
 
 type UIMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *operatorv1alpha1.Cluster
 }
 
 func NewUIMaintainer(cli client.Client, clusterInstance *operatorv1alpha1.Cluster) *UIMaintainer {
 	return &UIMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -58,12 +58,12 @@ var ui = appsv1.Deployment{
 				Containers: []corev1.Container{
 					{
 						ImagePullPolicy: corev1.PullIfNotPresent,
-						Name: uiContainerName,
+						Name:            uiContainerName,
 						Ports: []corev1.ContainerPort{
 							{
 								ContainerPort: 8080,
-								Protocol: corev1.ProtocolTCP,
-								Name: "http",
+								Protocol:      corev1.ProtocolTCP,
+								Name:          "http",
 							},
 						},
 					},
@@ -98,7 +98,7 @@ func getUIReplicasFromClusterInstance(clusterInstance *operatorv1alpha1.Cluster)
 	return clusterInstance.Spec.UI.Replicas
 }
 
-func needOrNotToUpdateUI (cluster *operatorv1alpha1.Cluster, gottenUI appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateUI(cluster *operatorv1alpha1.Cluster, gottenUI appsv1.Deployment) (bool, *appsv1.Deployment) {
 	uiToUpdate := gottenUI.DeepCopy()
 	var needToUpdate bool
 
@@ -127,7 +127,7 @@ func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
 	SetUI(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: ui.Namespace,
-		Name: ui.Name,
+		Name:      ui.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {

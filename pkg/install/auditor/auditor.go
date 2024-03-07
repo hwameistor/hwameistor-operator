@@ -16,13 +16,13 @@ import (
 )
 
 type AuditorMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
 func NewAuditorMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AuditorMaintainer {
 	return &AuditorMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -56,7 +56,7 @@ var auditorTemplate = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: auditorContainerName,
+						Name:            auditorContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 					},
 				},
@@ -74,7 +74,7 @@ func getAuditorContainerImageStringFromClusterInstance(clusterInstance *hwameist
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
-func needOrNotToUpdateAuditor (cluster *hwameistoriov1alpha1.Cluster, gottenAuditor appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateAuditor(cluster *hwameistoriov1alpha1.Cluster, gottenAuditor appsv1.Deployment) (bool, *appsv1.Deployment) {
 	auditorToUpdate := gottenAuditor.DeepCopy()
 	var needToUpdate bool
 
@@ -124,7 +124,7 @@ func (m *AuditorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	auditorToCreate := SetAuditor(newClusterInstance)
 	key := types.NamespacedName{
 		Namespace: auditorToCreate.Namespace,
-		Name: auditorToCreate.Name,
+		Name:      auditorToCreate.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
@@ -171,19 +171,19 @@ func (m *AuditorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	podsStatus := make([]hwameistoriov1alpha1.PodStatus, 0)
 	for _, pod := range podsManaged {
 		podStatus := hwameistoriov1alpha1.PodStatus{
-			Name: pod.Name,
-			Node: pod.Spec.NodeName,
+			Name:   pod.Name,
+			Node:   pod.Spec.NodeName,
 			Status: string(pod.Status.Phase),
 		}
 		podsStatus = append(podsStatus, podStatus)
 	}
 
 	instancesStatus := hwameistoriov1alpha1.DeployStatus{
-		Pods: podsStatus,
-		DesiredPodCount: gotten.Status.Replicas,
+		Pods:              podsStatus,
+		DesiredPodCount:   gotten.Status.Replicas,
 		AvailablePodCount: gotten.Status.AvailableReplicas,
-		WorkloadType: "Deployment",
-		WorkloadName: gotten.Name,
+		WorkloadType:      "Deployment",
+		WorkloadName:      gotten.Name,
 	}
 
 	if newClusterInstance.Status.ComponentStatus.Auditor == nil {

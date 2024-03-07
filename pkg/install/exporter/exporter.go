@@ -61,7 +61,7 @@ var exporter = appsv1.Deployment{
 			Spec: corev1.PodSpec{
 				Containers: []corev1.Container{
 					{
-						Name: exporterContainerName,
+						Name:            exporterContainerName,
 						ImagePullPolicy: corev1.PullIfNotPresent,
 						Ports: []corev1.ContainerPort{
 							{
@@ -112,7 +112,7 @@ func getExporterReplicasFromClusterInstance(clusterInstance *hwameistoriov1alpha
 	return clusterInstance.Spec.Exporter.Replicas
 }
 
-func needOrNotToUpdateExporter (cluster *hwameistoriov1alpha1.Cluster, gottenExporter appsv1.Deployment) (bool, *appsv1.Deployment) {
+func needOrNotToUpdateExporter(cluster *hwameistoriov1alpha1.Cluster, gottenExporter appsv1.Deployment) (bool, *appsv1.Deployment) {
 	exporterToUpdate := gottenExporter.DeepCopy()
 	var needToUpdate bool
 

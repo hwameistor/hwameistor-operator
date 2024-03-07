@@ -14,7 +14,7 @@ import (
 )
 
 type RBACMaintainer struct {
-	Client client.Client
+	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
 }
 
@@ -22,7 +22,7 @@ var defaultServiceAccountName = "hwameistor-admin"
 
 func NewMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *RBACMaintainer {
 	return &RBACMaintainer{
-		Client: cli,
+		Client:          cli,
 		ClusterInstance: clusterInstance,
 	}
 }
@@ -35,11 +35,11 @@ var clusterRole = rbacv1.ClusterRole{
 		{
 			APIGroups: []string{"*"},
 			Resources: []string{"*"},
-			Verbs: []string{"*"},
+			Verbs:     []string{"*"},
 		},
 		{
 			NonResourceURLs: []string{"*"},
-			Verbs: []string{"*"},
+			Verbs:           []string{"*"},
 		},
 	},
 }
@@ -54,8 +54,8 @@ var clusterRoleBinding = rbacv1.ClusterRoleBinding{
 	},
 	RoleRef: rbacv1.RoleRef{
 		APIGroup: "rbac.authorization.k8s.io",
-		Kind: "ClusterRole",
-		Name: "hwameistor-role",
+		Kind:     "ClusterRole",
+		Name:     "hwameistor-role",
 	},
 	Subjects: []rbacv1.Subject{
 		{
@@ -113,14 +113,14 @@ func (m *RBACMaintainer) ensureClusterRole() error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
 func (m *RBACMaintainer) ensureServiceAccount() error {
 	key := types.NamespacedName{
 		Namespace: sa.Namespace,
-		Name: sa.Name,
+		Name:      sa.Name,
 	}
 	var gottenSA corev1.ServiceAccount
 	if err := m.Client.Get(context.TODO(), key, &gottenSA); err != nil {
@@ -158,7 +158,7 @@ func (m *RBACMaintainer) ensureClusterRoleBinding() error {
 	return nil
 }
 
-func FulfillRBACSpec (clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
+func FulfillRBACSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.RBAC == nil {
 		clusterInstance.Spec.RBAC = &hwameistoriov1alpha1.RBACSpec{}
 	}

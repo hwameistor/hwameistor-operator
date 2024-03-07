@@ -72,71 +72,71 @@ type ClusterSpec struct {
 }
 
 type DiskReserveConfiguration struct {
-	NodeName string `json:"nodeName"`
-	Devices []string `json:"devices"`
+	NodeName string   `json:"nodeName"`
+	Devices  []string `json:"devices"`
 }
 
 type ImageSpec struct {
-	Registry string `json:"registry,omitempty"`
+	Registry   string `json:"registry,omitempty"`
 	Repository string `json:"repository,omitempty"`
-	Tag string `json:"tag,omitempty"`
+	Tag        string `json:"tag,omitempty"`
 }
 
 type ContainerCommonSpec struct {
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
-	Image *ImageSpec `json:"image,omitempty"`
+	Image     *ImageSpec                   `json:"image,omitempty"`
 }
 
 type PodCommonSpec struct {
-	PriorityClassName string `json:"priorityClassName,omitempty"`
-	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
-	PodAffinty *corev1.PodAffinity `json:"podAffinity,omitempty"`
-	Tolerations *[]corev1.Toleration `json:"tolerations,omitempty"`
+	PriorityClassName string               `json:"priorityClassName,omitempty"`
+	NodeAffinity      *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	PodAffinty        *corev1.PodAffinity  `json:"podAffinity,omitempty"`
+	Tolerations       *[]corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 type CSIControllerSpec struct {
-	Replicas int32 `json:"replicas,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Provisioner *ContainerCommonSpec `json:"provisioner,omitempty"`
-	Attacher *ContainerCommonSpec `json:"attacher,omitempty"`
-	Monitor *ContainerCommonSpec `json:"monitor,omitempty"`
-	Resizer *ContainerCommonSpec `json:"resizer,omitempty"`
+	Replicas           int32                `json:"replicas,omitempty"`
+	Common             *PodCommonSpec       `json:"common,omitempty"`
+	Provisioner        *ContainerCommonSpec `json:"provisioner,omitempty"`
+	Attacher           *ContainerCommonSpec `json:"attacher,omitempty"`
+	Monitor            *ContainerCommonSpec `json:"monitor,omitempty"`
+	Resizer            *ContainerCommonSpec `json:"resizer,omitempty"`
 	SnapshotController *ContainerCommonSpec `json:"snapshotController,omitempty"`
-	Snapshotter *ContainerCommonSpec `json:"snapshotter,omitempty"`
+	Snapshotter        *ContainerCommonSpec `json:"snapshotter,omitempty"`
 }
 
 type CSISpec struct {
-	Registrar *ContainerCommonSpec `json:"registrar,omitempty"`
-	Controller *CSIControllerSpec `json:"controller,omitempty"`
+	Registrar  *ContainerCommonSpec `json:"registrar,omitempty"`
+	Controller *CSIControllerSpec   `json:"controller,omitempty"`
 }
 
 type LocalDiskManagerSpec struct {
-	KubeletRootDir string `json:"kubeletRootDir,omitempty"`
-	CSI *CSISpec `json:"csi,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Manager *ContainerCommonSpec `json:"manager,omitempty"`
-	TolerationOnMaster bool `json:"tolerationOnMaster,omitempty"`
+	KubeletRootDir     string               `json:"kubeletRootDir,omitempty"`
+	CSI                *CSISpec             `json:"csi,omitempty"`
+	Common             *PodCommonSpec       `json:"common,omitempty"`
+	Manager            *ContainerCommonSpec `json:"manager,omitempty"`
+	TolerationOnMaster bool                 `json:"tolerationOnMaster,omitempty"`
 }
 
 type LocalStorageSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	KubeletRootDir string `json:"kubeletRootDir,omitempty"`
-	CSI *CSISpec `json:"csi,omitempty"`
-	Member *MemberSpec `json:"member,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	TolerationOnMaster bool `json:"tolerationOnMaster,omitempty"`
-	Snapshot *SnapshotSpec `json:"snapshot,omitempty"`
+	Disable            bool           `json:"disable,omitempty"`
+	KubeletRootDir     string         `json:"kubeletRootDir,omitempty"`
+	CSI                *CSISpec       `json:"csi,omitempty"`
+	Member             *MemberSpec    `json:"member,omitempty"`
+	Common             *PodCommonSpec `json:"common,omitempty"`
+	TolerationOnMaster bool           `json:"tolerationOnMaster,omitempty"`
+	Snapshot           *SnapshotSpec  `json:"snapshot,omitempty"`
 }
 
 type MemberSpec struct {
-	DRBDStartPort int `json:"drbdStartPort,omitempty"`
-	MaxHAVolumeCount int `json:"maxHAVolumeCount,omitempty"`
-	RcloneImage *ImageSpec `json:"rcloneImage,omitempty"`
-	JuicesyncImage *ImageSpec `json:"juicesyncImage,omitempty"`
-	HostPathSSHDir string `json:"hostPathSSHDir,omitempty"`
-	HostPathDRBDDir string 	`json:"hostPathDRBDDir,omitempty"`
-	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
-	Image *ImageSpec `json:"image,omitempty"`
+	DRBDStartPort    int                          `json:"drbdStartPort,omitempty"`
+	MaxHAVolumeCount int                          `json:"maxHAVolumeCount,omitempty"`
+	RcloneImage      *ImageSpec                   `json:"rcloneImage,omitempty"`
+	JuicesyncImage   *ImageSpec                   `json:"juicesyncImage,omitempty"`
+	HostPathSSHDir   string                       `json:"hostPathSSHDir,omitempty"`
+	HostPathDRBDDir  string                       `json:"hostPathDRBDDir,omitempty"`
+	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
+	Image            *ImageSpec                   `json:"image,omitempty"`
 }
 
 type SnapshotSpec struct {
@@ -144,95 +144,95 @@ type SnapshotSpec struct {
 }
 
 type SchedulerSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
+	Disable   bool                 `json:"disable,omitempty"`
+	Replicas  int32                `json:"replicas"`
+	Common    *PodCommonSpec       `json:"common,omitempty"`
 	Scheduler *ContainerCommonSpec `json:"scheduler,omitempty"`
 }
 
 type EvictorSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Evictor *ContainerCommonSpec `json:"evictor,omitempty"`
+	Disable  bool                 `json:"disable,omitempty"`
+	Replicas int32                `json:"replicas"`
+	Common   *PodCommonSpec       `json:"common,omitempty"`
+	Evictor  *ContainerCommonSpec `json:"evictor,omitempty"`
 }
 
 type AuditorSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Auditor *ContainerCommonSpec `json:"auditor,omitempty"`
+	Disable  bool                 `json:"disable,omitempty"`
+	Replicas int32                `json:"replicas"`
+	Common   *PodCommonSpec       `json:"common,omitempty"`
+	Auditor  *ContainerCommonSpec `json:"auditor,omitempty"`
 }
 
 type FailoverAssistantSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
+	Disable   bool                 `json:"disable,omitempty"`
+	Replicas  int32                `json:"replicas"`
+	Common    *PodCommonSpec       `json:"common,omitempty"`
 	Assistant *ContainerCommonSpec `json:"assistant,omitempty"`
 }
 
 type PVCAutoResizerSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
+	Disable     bool                 `json:"disable,omitempty"`
+	Replicas    int32                `json:"replicas"`
+	Common      *PodCommonSpec       `json:"common,omitempty"`
 	AutoResizer *ContainerCommonSpec `json:"autoresizer,omitempty"`
 }
 
 type LocalDiskActionControllerSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
+	Disable    bool                 `json:"disable,omitempty"`
+	Replicas   int32                `json:"replicas"`
+	Common     *PodCommonSpec       `json:"common,omitempty"`
 	Controller *ContainerCommonSpec `json:"controller,omitempty"`
 }
 
 type AdmissionControllerSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas,omitempty"`
-	FailurePolicy string `json:"failurePolicy,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Controller *ContainerCommonSpec `json:"controller,omitempty"`
+	Disable       bool                 `json:"disable,omitempty"`
+	Replicas      int32                `json:"replicas,omitempty"`
+	FailurePolicy string               `json:"failurePolicy,omitempty"`
+	Common        *PodCommonSpec       `json:"common,omitempty"`
+	Controller    *ContainerCommonSpec `json:"controller,omitempty"`
 }
 
 type Authentication struct {
-	Enable bool `json:"enable,omitempty"`
-	AccessId string `json:"accessId,omitempty"`
+	Enable    bool   `json:"enable,omitempty"`
+	AccessId  string `json:"accessId,omitempty"`
 	SecretKey string `json:"secretKey,omitempty"`
 }
 
 type ApiServerSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	Server *ContainerCommonSpec `json:"server,omitempty"`
-	Authentication *Authentication `json:"authentication,omitempty"`
+	Disable        bool                 `json:"disable,omitempty"`
+	Replicas       int32                `json:"replicas,omitempty"`
+	Common         *PodCommonSpec       `json:"common,omitempty"`
+	Server         *ContainerCommonSpec `json:"server,omitempty"`
+	Authentication *Authentication      `json:"authentication,omitempty"`
 }
 
 type ExporterSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas,omitempty"`
-	Common *PodCommonSpec `json:"common,omitempty"`
+	Disable   bool                 `json:"disable,omitempty"`
+	Replicas  int32                `json:"replicas,omitempty"`
+	Common    *PodCommonSpec       `json:"common,omitempty"`
 	Collector *ContainerCommonSpec `json:"collector,omitempty"`
 }
 
 type UISpec struct {
-	Disable bool `json:"disable,omitempty"`
-	Replicas int32 `json:"replicas"`
-	Common *PodCommonSpec `json:"common,omitempty"`
-	UI *ContainerCommonSpec `json:"ui,omitempty"`
+	Disable  bool                 `json:"disable,omitempty"`
+	Replicas int32                `json:"replicas"`
+	Common   *PodCommonSpec       `json:"common,omitempty"`
+	UI       *ContainerCommonSpec `json:"ui,omitempty"`
 }
 
 type DRBDSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	DeployOnMaster string `json:"deployOnMaster,omitempty"`
-	ImageRegistry string `json:"imageRegistry,omitempty"`
-	ImageRepoOwner string `json:"imageRepoOwner,omitempty"`
-	ImagePullPolicy string `json:"imagePullPolicy,omitempty"`
-	DRBDVersion string `json:"drbdVersion,omitempty"`
-	Upgrade string `json:"upgrade,omitempty"`
-	CheckHostName string `json:"checkHostName,omitempty"`
-	UseAffinity string `json:"useAffinity,omitempty"`
-	NodeAffinity *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
-	ChartVersion string `json:"chartVersion,omitempty"`
+	Disable         bool                 `json:"disable,omitempty"`
+	DeployOnMaster  string               `json:"deployOnMaster,omitempty"`
+	ImageRegistry   string               `json:"imageRegistry,omitempty"`
+	ImageRepoOwner  string               `json:"imageRepoOwner,omitempty"`
+	ImagePullPolicy string               `json:"imagePullPolicy,omitempty"`
+	DRBDVersion     string               `json:"drbdVersion,omitempty"`
+	Upgrade         string               `json:"upgrade,omitempty"`
+	CheckHostName   string               `json:"checkHostName,omitempty"`
+	UseAffinity     string               `json:"useAffinity,omitempty"`
+	NodeAffinity    *corev1.NodeAffinity `json:"nodeAffinity,omitempty"`
+	ChartVersion    string               `json:"chartVersion,omitempty"`
 }
 
 type RBACSpec struct {
@@ -240,108 +240,108 @@ type RBACSpec struct {
 }
 
 type StorageClassSpec struct {
-	Disable bool `json:"disable,omitempty"`
-	AllowVolumeExpansion bool `json:"allowVolumeExpansion,omitempty"`
-	ReclaimPolicy corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
-	FSType string `json:"fsType,omitempty"`
+	Disable              bool                                 `json:"disable,omitempty"`
+	AllowVolumeExpansion bool                                 `json:"allowVolumeExpansion,omitempty"`
+	ReclaimPolicy        corev1.PersistentVolumeReclaimPolicy `json:"reclaimPolicy,omitempty"`
+	FSType               string                               `json:"fsType,omitempty"`
 }
 
 // ClusterStatus defines the observed state of Cluster
 type ClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-	
-	InstalledCRDS bool `json:"installedCRDS"`
-	DRBDAdapterCreated bool `json:"drbdAdapterCreated"`
-	DRBDAdapterCreatedJobNum int `json:"drbdAdapterCreatedJobNum"`
-	DiskReserveState string `json:"diskReserveState,omitempty"`
-	Phase string `json:"phase,omitempty"`
-	ComponentStatus ComponentStatus `json:"componentStatus"`
+
+	InstalledCRDS            bool            `json:"installedCRDS"`
+	DRBDAdapterCreated       bool            `json:"drbdAdapterCreated"`
+	DRBDAdapterCreatedJobNum int             `json:"drbdAdapterCreatedJobNum"`
+	DiskReserveState         string          `json:"diskReserveState,omitempty"`
+	Phase                    string          `json:"phase,omitempty"`
+	ComponentStatus          ComponentStatus `json:"componentStatus"`
 }
 
 type ComponentStatus struct {
-	LocalDiskManager *LocalDiskManagerStatus `json:"localDiskManager,omitempty"`
-	LocalStorage *LocalStorageStatus `json:"localStorage,omitempty"`
-	Scheduler *SchedulerStatus `json:"scheduler,omitempty"`
-	Evictor *EvictorStatus `json:"evictor,omitempty"`
-	AdmissionController *AdmissionControllerStatus `json:"admissionController,omitempty"`
-	ApiServer *ApiServerStatus `json:"apiServer,omitempty"`
-	Auditor *AuditorStatus `json:"auditor,omitempty"`
-	FailoverAssistant *FailoverAssistantStatus `json:"failoverAssistant,omitempty"`
-	PVCAutoResizer *PVCAutoResizerStatus `json:"pvcAutoResizer,omitempty"`
+	LocalDiskManager          *LocalDiskManagerStatus          `json:"localDiskManager,omitempty"`
+	LocalStorage              *LocalStorageStatus              `json:"localStorage,omitempty"`
+	Scheduler                 *SchedulerStatus                 `json:"scheduler,omitempty"`
+	Evictor                   *EvictorStatus                   `json:"evictor,omitempty"`
+	AdmissionController       *AdmissionControllerStatus       `json:"admissionController,omitempty"`
+	ApiServer                 *ApiServerStatus                 `json:"apiServer,omitempty"`
+	Auditor                   *AuditorStatus                   `json:"auditor,omitempty"`
+	FailoverAssistant         *FailoverAssistantStatus         `json:"failoverAssistant,omitempty"`
+	PVCAutoResizer            *PVCAutoResizerStatus            `json:"pvcAutoResizer,omitempty"`
 	LocalDiskActionController *LocalDiskActionControllerStatus `json:"localDiskActionController,omitempty"`
-	Exporter *ExporterStatus 	`json:"exporter,omitempty"`
+	Exporter                  *ExporterStatus                  `json:"exporter,omitempty"`
 }
 
 type DeployStatus struct {
-	Pods []PodStatus `json:"pods,omitempty"`
-	DesiredPodCount int32 `json:"desiredPodCount"`
-	AvailablePodCount int32 `json:"availablePodCount"`
-	WorkloadType string `json:"workloadType"`
-	WorkloadName string `json:"workloadName"`
+	Pods              []PodStatus `json:"pods,omitempty"`
+	DesiredPodCount   int32       `json:"desiredPodCount"`
+	AvailablePodCount int32       `json:"availablePodCount"`
+	WorkloadType      string      `json:"workloadType"`
+	WorkloadName      string      `json:"workloadName"`
 }
 
 type PodStatus struct {
-	Name string `json:"name"`
-	Node string `json:"node"`
+	Name   string `json:"name"`
+	Node   string `json:"node"`
 	Status string `json:"status"`
 }
 
 type LocalDiskManagerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	CSI *DeployStatus `json:"csi,omitempty"`
-	Health string `json:"health,omitempty"`
+	CSI       *DeployStatus `json:"csi,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type LocalStorageStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	CSI *DeployStatus `json:"csi,omitempty"`
-	Health string `json:"health,omitempty"`
+	CSI       *DeployStatus `json:"csi,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type SchedulerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type EvictorStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type AdmissionControllerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type ApiServerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type AuditorStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type FailoverAssistantStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type PVCAutoResizerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type LocalDiskActionControllerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 type ExporterStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
-	Health string `json:"health,omitempty"`
+	Health    string        `json:"health,omitempty"`
 }
 
 //+kubebuilder:object:root=true
