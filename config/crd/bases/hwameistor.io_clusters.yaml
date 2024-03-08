@@ -1946,6 +1946,18 @@ spec:
                 type: array
               drbd:
                 properties:
+                  shipper:
+                    properties:
+                      image:
+                        properties:
+                          registry:
+                            type: string
+                          repository:
+                            type: string
+                          tag:
+                            type: string
+                        type: object
+                    type: object
                   chartVersion:
                     type: string
                   checkHostName:

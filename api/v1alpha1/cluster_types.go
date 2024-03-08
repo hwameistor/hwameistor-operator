@@ -224,8 +224,7 @@ type UISpec struct {
 type DRBDSpec struct {
 	Disable         bool                 `json:"disable,omitempty"`
 	DeployOnMaster  string               `json:"deployOnMaster,omitempty"`
-	ImageRegistry   string               `json:"imageRegistry,omitempty"`
-	ImageRepoOwner  string               `json:"imageRepoOwner,omitempty"`
+	Shipper         *ImageSpec           `json:"shipper,omitempty"`
 	ImagePullPolicy string               `json:"imagePullPolicy,omitempty"`
 	DRBDVersion     string               `json:"drbdVersion,omitempty"`
 	Upgrade         string               `json:"upgrade,omitempty"`

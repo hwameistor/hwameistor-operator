@@ -2,6 +2,7 @@ package drbd
 
 import (
 	"context"
+	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"regexp"
 	"strings"
 
@@ -16,9 +17,10 @@ import (
 
 var defaultDeployOnMaster = "no"
 var defaultImageRegistry = "ghcr.io"
-var defaultImageRepoOwner = "hwameistor"
+var defaultShipperRepository = "hwameistor/drbd9-shipper"
 var defaultImagePullPolicy = "IfNotPresent"
 var defaultDRBDVersion = "v9.0.32-1"
+var defaultShipperChar = "v0.4.0"
 var defaultDRBDUpgrade = "no"
 var defaultCheckHostName = "no"
 var defaultUseAffinity = "no"
@@ -55,9 +57,13 @@ var terminationGracePeriodSeconds0 = int64(0)
 var deployOnMaster = false
 var drbdVersion string
 var tag string
+var shipperChar string
 var imagePullPolicy string
-var imageRegistry string
-var imageRepoOwner string
+var shapperImageRegistry string
+var shapperImageRepository string
+
+// var imageRepoOwner string
+var distroImageRepository string
 var chartVersion string
 var upgrade string
 var checkHostName string
@@ -81,8 +87,9 @@ func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 
 	drbdVersion = drbdConfigs.DRBDVersion
 	tag = drbdVersion
-	imageRegistry = drbdConfigs.ImageRegistry
-	imageRepoOwner = drbdConfigs.ImageRepoOwner
+	shapperImageRegistry = drbdConfigs.Shipper.Registry
+	shapperImageRepository = drbdConfigs.Shipper.Repository
+	shipperChar = drbdConfigs.Shipper.Tag
 	imagePullPolicy = drbdConfigs.ImagePullPolicy
 	chartVersion = drbdConfigs.ChartVersion
 	upgrade = drbdConfigs.Upgrade
@@ -124,6 +131,9 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 		}
 		if distro == "unsupported" {
 			continue
+		} else {
+			//hwameistor/drbd9-shipper
+			distroImageRepository = strings.Replace(shapperImageRepository, "shipper", distro, 1)
 		}
 
 		kernelVersion := node.Status.NodeInfo.KernelVersion
@@ -158,7 +168,7 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 						Containers: []corev1.Container{
 							{
 								Name:            "shipper",
-								Image:           imageRegistry + "/" + imageRepoOwner + "/" + "drbd9-shipper" + ":" + drbdVersion + "_" + chartVersion,
+								Image:           shapperImageRegistry + "/" + shapperImageRepository + ":" + drbdVersion + "_" + shipperChar,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								VolumeMounts: []corev1.VolumeMount{
 									{
@@ -169,7 +179,7 @@ func CreateDRBDAdapter(cli client.Client) (int, error) {
 							},
 							{
 								Name:            distro,
-								Image:           imageRegistry + "/" + imageRepoOwner + "/" + "drbd9" + "-" + distro + ":" + tag,
+								Image:           shapperImageRegistry + "/" + distroImageRepository + ":" + tag,
 								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 								Command: []string{
 									"/pkgs/entrypoint.adapter.sh",
@@ -418,15 +428,21 @@ func FulfillDRBDSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistori
 	if clusterInstance.Spec.DRBD.DeployOnMaster == "" {
 		clusterInstance.Spec.DRBD.DeployOnMaster = defaultDeployOnMaster
 	}
-	if clusterInstance.Spec.DRBD.ImageRegistry == "" {
-		clusterInstance.Spec.DRBD.ImageRegistry = defaultImageRegistry
+
+	if clusterInstance.Spec.DRBD.Shipper == nil {
+		clusterInstance.Spec.DRBD.Shipper = &operatorv1alpha1.ImageSpec{}
 	}
-	if clusterInstance.Spec.DRBD.ImageRepoOwner == "" {
-		clusterInstance.Spec.DRBD.ImageRepoOwner = defaultImageRepoOwner
+	if clusterInstance.Spec.DRBD.Shipper.Registry == "" {
+		clusterInstance.Spec.DRBD.Shipper.Registry = defaultImageRegistry
 	}
-	if clusterInstance.Spec.DRBD.ImagePullPolicy == "" {
-		clusterInstance.Spec.DRBD.ImagePullPolicy = defaultImagePullPolicy
+	if clusterInstance.Spec.DRBD.Shipper.Repository == "" {
+		clusterInstance.Spec.DRBD.Shipper.Repository = defaultShipperRepository
 	}
+
+	if clusterInstance.Spec.DRBD.Shipper.Tag == "" {
+		clusterInstance.Spec.DRBD.Shipper.Tag = defaultShipperChar
+	}
+
 	if clusterInstance.Spec.DRBD.DRBDVersion == "" {
 		clusterInstance.Spec.DRBD.DRBDVersion = defaultDRBDVersion
 	}
