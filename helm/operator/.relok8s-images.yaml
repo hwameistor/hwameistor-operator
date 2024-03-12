@@ -24,7 +24,7 @@
 - "{{ .global.hwameistorImageRegistry }}/{{ .ui.imageRepository }}:{{ .ui.tag }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .operator.imageRepository }}:{{ .operator.tag }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .preHookJob.imageRepository }}:{{ .preHookJob.tag }}"
-- "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepository }}:{{ .ha.drbdVersion }}_{{.ha.shipperChar}}"
+- "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepository }}:{{ .ha.drbdVersion }}_v0.4.0"
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdRhel7.imageRepository }}/drbd9-bionic:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdRhel8.imageRepository }}/drbd9-rhel7:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdRhel9.imageRepository }}/drbd9-rhel8:{{ .ha.drbdVersion }}"
