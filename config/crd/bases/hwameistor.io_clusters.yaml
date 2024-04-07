@@ -1948,15 +1948,12 @@ spec:
                 properties:
                   shipper:
                     properties:
-                      image:
-                        properties:
-                          registry:
-                            type: string
-                          repository:
-                            type: string
-                          tag:
-                            type: string
-                        type: object
+                      registry:
+                        type: string
+                      repository:
+                        type: string
+                      tag:
+                        type: string
                     type: object
                   chartVersion:
                     type: string

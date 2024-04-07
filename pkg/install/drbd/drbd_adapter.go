@@ -20,7 +20,7 @@ var defaultImageRegistry = "ghcr.io"
 var defaultShipperRepository = "hwameistor/drbd9-shipper"
 var defaultImagePullPolicy = "IfNotPresent"
 var defaultDRBDVersion = "v9.0.32-1"
-var defaultShipperChar = "v0.4.0"
+var defaultShipperChar = "v0.4.1"
 var defaultDRBDUpgrade = "no"
 var defaultCheckHostName = "no"
 var defaultUseAffinity = "no"
@@ -38,7 +38,7 @@ var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
 		},
 	},
 }
-var defaultChartVersion = "v0.4.0"
+var defaultChartVersion = "v0.4.1"
 
 var distroRegexMap = map[string]string{
 	"(red hat enterprise|centos|almalinux|rocky linux) .*7": "rhel7",
