@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"time"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
+	"github.com/hwameistor/hwameistor/pkg/utils/certmanager"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,6 +37,9 @@ var defaultAdmissionControllerImageRegistry = "ghcr.m.daocloud.io"
 var defaultAdmissionControllerImageRepository = "hwameistor/admission"
 var defaultAdmissionControllerImageTag = install.DefaultHwameistorVersion
 var admissionControllerContainerName = "server"
+var defaultEffectiveYear = 10
+var organization = "hwameistor.io"
+var webhookService = "hwameistor-admission-controller"
 
 var admissionController = appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
@@ -179,6 +184,12 @@ func needOrNotToUpdateAdmissionController(cluster *hwameistoriov1alpha1.Cluster,
 func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
 	SetAdmissionController(newClusterInstance)
+
+	// ensure admission controller CA is generated
+	if err := m.ensureAdmissionCA(); err != nil {
+		log.WithError(err).Error("failed to ensure admission controller CA")
+		return newClusterInstance, err
+	}
 	key := types.NamespacedName{
 		Namespace: admissionController.Namespace,
 		Name:      admissionController.Name,
@@ -260,6 +271,56 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		}
 	}
 	return newClusterInstance, nil
+}
+
+// ensure hwameistor-admission-ca is generated before the admission controller running
+func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
+	// skip generation if the ca already exists
+	secret := corev1.Secret{}
+	if err := m.Client.Get(context.Background(), client.ObjectKey{Name: "hwameistor-admission-ca", Namespace: m.ClusterInstance.Spec.TargetNamespace}, &secret); err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.WithError(err).Error("failed to get admission ca secret")
+			return err
+		}
+	} else {
+		if secret.Data != nil || secret.Data[corev1.TLSPrivateKeyKey] != nil || secret.Data[corev1.TLSCertKey] != nil {
+			log.Info("admission ca secret found, skip generation")
+			return nil
+		}
+	}
+
+	// generate self-signed certs
+	var dnsNames = []string{webhookService, webhookService + "." + m.ClusterInstance.Spec.TargetNamespace, webhookService + "." + m.ClusterInstance.Spec.TargetNamespace + "." + "svc"}
+	var commonName = webhookService + "." + m.ClusterInstance.Spec.TargetNamespace + "." + "svc"
+	serverCertPEM, serverPrivateKeyPEM, err := certmanager.NewCertManager(
+		[]string{organization},
+		time.Until(time.Date(time.Now().Year()+defaultEffectiveYear, time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), 0, 0, time.Now().Location())),
+		dnsNames,
+		commonName,
+	).GenerateSelfSignedCerts()
+	if err != nil {
+		log.WithError(err).Error("failed to generate certs")
+		return err
+	}
+	secret.Name = "hwameistor-admission-ca"
+	secret.Namespace = m.ClusterInstance.Spec.TargetNamespace
+
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte)
+		secret.Data[corev1.TLSCertKey] = serverCertPEM.Bytes()
+		secret.Data[corev1.TLSPrivateKeyKey] = serverPrivateKeyPEM.Bytes()
+		log.Info("creating hwameistor-admission-ca secret...")
+		err = m.Client.Create(context.Background(), &secret)
+	} else {
+		secret.Data[corev1.TLSCertKey] = serverCertPEM.Bytes()
+		secret.Data[corev1.TLSPrivateKeyKey] = serverPrivateKeyPEM.Bytes()
+		log.Info("updating hwameistor-admission-ca secret...")
+		err = m.Client.Update(context.Background(), &secret)
+	}
+	if err != nil {
+		log.WithError(err).Error("failed to update admission ca secret")
+	}
+	return err
 }
 
 func FulfillAdmissionControllerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
