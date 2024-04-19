@@ -2,7 +2,13 @@ package E2eTest
 
 import (
 	"context"
+	"github.com/hwameistor/hwameistor-operator/test/e2e/framework"
+	"github.com/hwameistor/hwameistor-operator/test/e2e/utils"
+	clientset "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme"
 	"github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1"
+	"github.com/onsi/ginkgo/v2"
+	"github.com/onsi/gomega"
+	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
@@ -10,17 +16,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"time"
-
-	"github.com/hwameistor/hwameistor-operator/test/e2e/framework"
-	"github.com/hwameistor/hwameistor-operator/test/e2e/utils"
-	clientset "github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme"
-	"github.com/onsi/ginkgo/v2"
-	"github.com/onsi/gomega"
-	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/wait"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"time"
 )
 
 var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck"), func() {
@@ -75,7 +74,7 @@ var _ = ginkgo.Describe("localstorage volume test ", ginkgo.Label("periodCheck")
 			//	f.ExpectNoError(err)
 			//}
 			//_ = utils.RunInLinux("kubectl apply -f sample.yaml")
-			time.Sleep(1 * time.Minute)
+			time.Sleep(4 * time.Minute)
 			err := utils.CheckHwameiInstall(ctx)
 			gomega.Expect(err).To(gomega.BeNil())
 		})
