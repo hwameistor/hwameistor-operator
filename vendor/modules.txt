@@ -1,5 +1,5 @@
-# cloud.google.com/go v0.81.0
-## explicit; go 1.11
+# cloud.google.com/go/compute v1.7.0
+## explicit; go 1.15
 cloud.google.com/go/compute/metadata
 # github.com/Azure/go-autorest v14.2.0+incompatible
 ## explicit
@@ -32,7 +32,7 @@ github.com/container-storage-interface/spec/lib/go/csi
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
 github.com/davecgh/go-spew/spew
-# github.com/emicklei/go-restful v2.9.5+incompatible => github.com/emicklei/go-restful v2.16.1-0.20220930181236-19cadd947697+incompatible
+# github.com/emicklei/go-restful v2.16.1-0.20220930181236-19cadd947697+incompatible => github.com/emicklei/go-restful v2.16.1-0.20220930181236-19cadd947697+incompatible
 ## explicit
 github.com/emicklei/go-restful
 github.com/emicklei/go-restful/log
@@ -99,7 +99,6 @@ github.com/google/gofuzz
 github.com/google/uuid
 # github.com/hwameistor/hwameistor v0.14.3
 ## explicit; go 1.18
-github.com/hwameistor/hwameistor/deploy/crds
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/typed/hwameistor/v1alpha1
@@ -107,6 +106,7 @@ github.com/hwameistor/hwameistor/pkg/apis/client/informers/externalversions/hwam
 github.com/hwameistor/hwameistor/pkg/apis/client/informers/externalversions/internalinterfaces
 github.com/hwameistor/hwameistor/pkg/apis/client/listers/hwameistor/v1alpha1
 github.com/hwameistor/hwameistor/pkg/apis/hwameistor/v1alpha1
+github.com/hwameistor/hwameistor/pkg/utils/certmanager
 # github.com/imdario/mergo v0.3.12
 ## explicit; go 1.13
 github.com/imdario/mergo
@@ -116,6 +116,8 @@ github.com/josharian/intern
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
+# github.com/kr/pretty v0.3.0
+## explicit; go 1.12
 # github.com/mailru/easyjson v0.7.7
 ## explicit; go 1.12
 github.com/mailru/easyjson/buffer
@@ -212,6 +214,8 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/rogpeppe/go-internal v1.8.0
+## explicit; go 1.11
 # github.com/sirupsen/logrus v1.9.0
 ## explicit; go 1.13
 github.com/sirupsen/logrus
@@ -309,10 +313,10 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368
-## explicit; go 1.11
+# google.golang.org/genproto v0.0.0-20220616135557-88e70c0c3a90
+## explicit; go 1.15
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.40.0 => google.golang.org/grpc v1.38.0
+# google.golang.org/grpc v1.47.0 => google.golang.org/grpc v1.38.0
 ## explicit; go 1.11
 google.golang.org/grpc
 google.golang.org/grpc/attributes
