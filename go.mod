@@ -12,7 +12,7 @@ require (
 )
 
 require (
-	github.com/hwameistor/hwameistor v0.14.2
+	github.com/hwameistor/hwameistor v0.14.3
 	github.com/sirupsen/logrus v1.9.0
 	k8s.io/api v0.26.0
 	k8s.io/apiextensions-apiserver v0.23.0
