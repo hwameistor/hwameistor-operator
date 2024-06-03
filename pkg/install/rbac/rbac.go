@@ -104,7 +104,8 @@ func (m *RBACMaintainer) ensureClusterRole() error {
 	var gottenClusterRole rbacv1.ClusterRole
 	if err := m.Client.Get(context.TODO(), key, &gottenClusterRole); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &clusterRole); errCreate != nil {
+			clusterRoleToCreate := clusterRole.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), clusterRoleToCreate); errCreate != nil {
 				log.Errorf("Create ClusterRole err: %v", err)
 				return errCreate
 			}
@@ -125,7 +126,8 @@ func (m *RBACMaintainer) ensureServiceAccount() error {
 	var gottenSA corev1.ServiceAccount
 	if err := m.Client.Get(context.TODO(), key, &gottenSA); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &sa); errCreate != nil {
+			saToCreate := sa.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), saToCreate); errCreate != nil {
 				log.Errorf("Create ServiceAccount err: %v", errCreate)
 				return errCreate
 			}
@@ -145,7 +147,8 @@ func (m *RBACMaintainer) ensureClusterRoleBinding() error {
 	var gottenClusterRoleBinding rbacv1.ClusterRoleBinding
 	if err := m.Client.Get(context.TODO(), key, &gottenClusterRoleBinding); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &clusterRoleBinding); errCreate != nil {
+			clusterRoleBindingToCreate := clusterRoleBinding.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), clusterRoleBindingToCreate); errCreate != nil {
 				log.Errorf("Create ClusterRoleBinding err: %v", errCreate)
 				return errCreate
 			}
