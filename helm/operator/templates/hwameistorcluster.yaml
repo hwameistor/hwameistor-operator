@@ -11,6 +11,7 @@ spec:
     - {{ . }}
     {{- end }}
   {{- end }}
+  datasetDefaultPoolClass: {{ $.Values.datasetDefaultPoolClass }}
   notClaimDisk: {{ $.Values.global.notClaimDisk }}
   targetNamespace: {{ $.Values.global.targetNamespace }}
   rbac:
@@ -256,3 +257,19 @@ spec:
     allowVolumeExpansion: true
     reclaimPolicy: "Delete"
     fsType: "xfs"
+
+  dataLoadManager:
+    disable: {{ $.Values.dataLoadManager.disable }}
+    dataLoadManagerContainer:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.dataLoadManager.imageRepository }}
+        tag: {{ template "hwameistor.dataLoalManagerImageTag" . }}
+
+  dataSetManager:
+    disable: {{ $.Values.dataSetManager.disable }}
+    dataSetManagerContainer:
+      image:
+        registry: {{ $.Values.global.hwameistorImageRegistry }}
+        repository: {{ $.Values.dataSetManager.imageRepository }}
+        tag: {{ template "hwameistor.dataSetManagerImageTag" . }}

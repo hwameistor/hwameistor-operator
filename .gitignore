@@ -1,5 +1,6 @@
 
-
+#_build
+_build/
 
 # Binaries for programs and plugins
 *.exe
@@ -28,3 +29,7 @@ testbin/*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# macOS system files
+.DS_Store
+helm/.DS_Store

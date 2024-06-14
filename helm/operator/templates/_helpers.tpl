@@ -125,3 +125,13 @@ Create the name of the service account to use
 {{- define "hwameistor.uiImageTag" -}}
   {{- default .Values.global.hwameistorVersion .Values.ui.tag -}}
 {{- end -}}
+
+{{/* Allow dataLoadManager image tag to be overridden. */}}
+{{- define "hwameistor.dataLoalManagerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.dataLoadManager.tag -}}
+{{- end -}}
+
+{{/* Allow dataSetManager image tag to be overridden. */}}
+{{- define "hwameistor.dataSetManagerImageTag" -}}
+  {{- default .Values.global.hwameistorVersion .Values.dataSetManager.tag -}}
+{{- end -}}

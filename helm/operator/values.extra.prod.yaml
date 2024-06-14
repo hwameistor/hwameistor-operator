@@ -193,3 +193,22 @@ localDiskActionController:
     requests:
       cpu: 1m
       memory: 20Mi
+
+
+dataLoadManager:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
+
+dataSetManager:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 300Mi
+    requests:
+      cpu: 1m
+      memory: 20Mi
