@@ -57,6 +57,9 @@ spec:
           spec:
             description: DataSetSpec defines the desired state of DataSet
             properties:
+              capacityBytes:
+                format: int64
+                type: integer
               ftp:
                 properties:
                   dir:
