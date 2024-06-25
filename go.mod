@@ -1,8 +1,9 @@
 module github.com/hwameistor/hwameistor-operator
 
-go 1.17
+go 1.21.11
 
 require (
+	github.com/hwameistor/datastore v0.0.0-20240625063533-a8da393b4022
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0
@@ -12,8 +13,8 @@ require (
 )
 
 require (
-	github.com/hwameistor/datastore v0.0.0-20240613033429-35e712326d4d
-	github.com/hwameistor/hwameistor v0.14.4
+	github.com/hwameistor/datastore v0.0.1
+	github.com/hwameistor/hwameistor v0.14.5
 	github.com/sirupsen/logrus v1.9.3
 	k8s.io/api v0.26.0
 	k8s.io/apiextensions-apiserver v0.23.0
