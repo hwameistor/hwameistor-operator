@@ -17,7 +17,7 @@ var dsmDeploymentLabelSelectorValue = "hwameistor-dataset-manager"
 var dsmContainerName = "dataset-manager"
 var defaultDSMDeploymentImageRegistry = "ghcr.m.daocloud.io"
 var defaultDSMDeploymentImageRepository = "hwameistor/dataset-manager"
-var defaultDSMDeploymentImageTag = "v1.0.0"
+var defaultDSMDeploymentImageTag = "v0.0.1"
 
 type DataSetManagerMaintainer struct {
 	Client          client.Client

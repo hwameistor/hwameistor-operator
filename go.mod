@@ -3,7 +3,6 @@ module github.com/hwameistor/hwameistor-operator
 go 1.21.11
 
 require (
-	github.com/hwameistor/datastore v0.0.0-20240625063533-a8da393b4022
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.19.0

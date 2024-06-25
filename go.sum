@@ -317,8 +317,8 @@ github.com/hashicorp/mdns v1.0.0/go.mod h1:tL+uN++7HEJ6SQLQ2/p+z2pH24WQKWjBPkE0m
 github.com/hashicorp/memberlist v0.1.3/go.mod h1:ajVTdAv/9Im8oMAAj5G31PhhMCZJV2pPBoIllUwCN7I=
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
-github.com/hwameistor/datastore v0.0.0-20240625063533-a8da393b4022 h1:ISKowQ2egPomev8juANJfLiBcFqA4csMs8106ViswXM=
-github.com/hwameistor/datastore v0.0.0-20240625063533-a8da393b4022/go.mod h1:KmL2ksVATXymfa4OnD8aUAL/39gRKj1SaTpDsP3SWEs=
+github.com/hwameistor/datastore v0.0.1 h1:X8l4QxwRXNv2SBz5g4YrM8XJauLjpk6F9xtO/3rMy0c=
+github.com/hwameistor/datastore v0.0.1/go.mod h1:KmL2ksVATXymfa4OnD8aUAL/39gRKj1SaTpDsP3SWEs=
 github.com/hwameistor/hwameistor v0.14.5 h1:5BP/U3xngzYD1YPX7wM6mq+HhoPNqBx/DtVkJVeXrcU=
 github.com/hwameistor/hwameistor v0.14.5/go.mod h1:/UJxAXQz3kBuBB5XPhBpEqgP95gpuRwHvYxtYUKSl+s=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
