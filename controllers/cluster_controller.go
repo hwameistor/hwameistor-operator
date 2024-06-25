@@ -18,6 +18,8 @@ package controllers
 
 import (
 	"context"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/dataloadmanager"
+	"github.com/hwameistor/hwameistor-operator/pkg/install/datasetmanager"
 	"reflect"
 	"time"
 
@@ -411,6 +413,22 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if !newInstance.Spec.DataLoadManager.Disable {
+		newInstance, err = dataloadmanager.NewMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure DataLoadManager err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
+	if !newInstance.Spec.DataSetManager.Disable {
+		newInstance, err = datasetmanager.NewMaintainer(r.Client, newInstance).Ensure()
+		if err != nil {
+			log.Errorf("Ensure DataSetManager err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	// Use Phase to adopt DiskReserveState, notice that don't lose the value of DiskReserveState
 	if newInstance.Status.DiskReserveState != "" && newInstance.Status.Phase == "" {
 		newInstance.Status.Phase = newInstance.Status.DiskReserveState
@@ -503,6 +521,8 @@ func FulfillClusterInstance(clusterInstance *hwameistoroperatorv1alpha1.Cluster)
 	newClusterInstance = ui.FulfillUISpec(newClusterInstance)
 	newClusterInstance = storageclass.FulfillStorageClassSpec(newClusterInstance)
 	newClusterInstance = drbd.FulfillDRBDSpec(newClusterInstance)
+	newClusterInstance = dataloadmanager.FulfillDataLoadManagerSpec(newClusterInstance)
+	newClusterInstance = datasetmanager.FulfillDataSetManagerSpec(newClusterInstance)
 
 	return newClusterInstance
 }

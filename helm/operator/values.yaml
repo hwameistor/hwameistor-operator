@@ -167,6 +167,21 @@ drbdBionic:
 drbdFocal:
   imageRepository: hwameistor/drbd9-focal
 
+dataLoadManager:
+  disable: true
+  tolerationOnMaster: true
+  imageRepository: hwameistor/dataload-manager
+  tag: v1.0.0
+
+dataSetManager:
+  disable: true
+  tolerationOnMaster: true
+  imageRepository: hwameistor/dataset-manager
+  tag: v1.0.0
+
+
+#datasetDefaultPoolClass: NVMe > SSD > HDD
+
 # diskReserve example
 # diskReserve: 
 # - nodeName: node1

@@ -277,7 +277,7 @@ e2e-test:
 pr-test:
 	bash test/pr-test.sh
 
-
-
-
-
+.PHONY: apis
+apis:
+	make generate
+	make manifests

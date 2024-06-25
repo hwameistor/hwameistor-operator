@@ -69,6 +69,10 @@ type ClusterSpec struct {
 	RBAC *RBACSpec `json:"rbac,omitempty"`
 
 	StorageClass *StorageClassSpec `json:"storageClass,omitempty"`
+
+	DataLoadManager *DataLoadManagerSpec `json:"dataLoadManager,omitempty"`
+
+	DataSetManager *DataSetManagerSpec `json:"dataSetManager,omitempty"`
 }
 
 type DiskReserveConfiguration struct {
@@ -245,6 +249,18 @@ type StorageClassSpec struct {
 	FSType               string                               `json:"fsType,omitempty"`
 }
 
+type DataLoadManagerSpec struct {
+	Disable                  bool                 `json:"disable,omitempty"`
+	Common                   *PodCommonSpec       `json:"common,omitempty"`
+	DataLoadManagerContainer *ContainerCommonSpec `json:"dataLoadManagerContainer,omitempty"`
+}
+
+type DataSetManagerSpec struct {
+	Disable                 bool                 `json:"disable,omitempty"`
+	Common                  *PodCommonSpec       `json:"common,omitempty"`
+	DataSetManagerContainer *ContainerCommonSpec `json:"dataSetManagerContainer,omitempty"`
+}
+
 // ClusterStatus defines the observed state of Cluster
 type ClusterStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
@@ -254,6 +270,7 @@ type ClusterStatus struct {
 	DRBDAdapterCreated       bool            `json:"drbdAdapterCreated"`
 	DRBDAdapterCreatedJobNum int             `json:"drbdAdapterCreatedJobNum"`
 	DiskReserveState         string          `json:"diskReserveState,omitempty"`
+	DatasetDefaultPoolClass  string          `json:"datasetDefaultPoolClass,omitempty"`
 	Phase                    string          `json:"phase,omitempty"`
 	ComponentStatus          ComponentStatus `json:"componentStatus"`
 }
@@ -270,6 +287,8 @@ type ComponentStatus struct {
 	PVCAutoResizer            *PVCAutoResizerStatus            `json:"pvcAutoResizer,omitempty"`
 	LocalDiskActionController *LocalDiskActionControllerStatus `json:"localDiskActionController,omitempty"`
 	Exporter                  *ExporterStatus                  `json:"exporter,omitempty"`
+	DataLoadManager           *DataLoadManagerStatus           `json:"dataLoadManager,omitempty"`
+	DataSetManager            *DataSetManagerStatus            `json:"dataSetManager,omitempty"`
 }
 
 type DeployStatus struct {
@@ -339,6 +358,16 @@ type LocalDiskActionControllerStatus struct {
 }
 
 type ExporterStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health    string        `json:"health,omitempty"`
+}
+
+type DataLoadManagerStatus struct {
+	Instances *DeployStatus `json:"instances,omitempty"`
+	Health    string        `json:"health,omitempty"`
+}
+
+type DataSetManagerStatus struct {
 	Instances *DeployStatus `json:"instances,omitempty"`
 	Health    string        `json:"health,omitempty"`
 }
