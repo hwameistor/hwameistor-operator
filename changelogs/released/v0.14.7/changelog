@@ -1,0 +1,6 @@
+v0.14.6 / 2024-6-25
+========================
+
+* Need to implement the installation of the two modules dataload-manager and dataset-manager #278 (@peng9808)
+* fix reinstalling RBAC bug #276 (@peng9808)
+* use hwameistor v0.14.5 #273 (@peng9808)

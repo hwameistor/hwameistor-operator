@@ -31,5 +31,7 @@
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdKylin10.imageRepository }}:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdBionic.imageRepository }}:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdFocal.imageRepository }}:{{ .ha.drbdVersion }}"
+- "{{ .global.hwameistorImageRegistry }}/{{ .dataLoadManager.imageRepository }}:{{ .dataLoadManager.tag }}"
+- "{{ .global.hwameistorImageRegistry }}/{{ .dataSetManager.imageRepository }}:{{ .dataSetManager.tag }}"
 
 # - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-jammy:v9.1.11"

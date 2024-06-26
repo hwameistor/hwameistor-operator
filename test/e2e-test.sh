@@ -2,6 +2,7 @@
 
 set -x
 set -e
+source /etc/profile || true
 # git clone https://github.com/hwameistor/hwameistor.git test/hwameistor
 
 # common defines

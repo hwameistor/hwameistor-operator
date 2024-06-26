@@ -20,7 +20,7 @@ var dlmDaemonSetLabelSelectorValue = "hwameistor-dataload-manager"
 var dlmContainerName = "dataload-manager"
 var defaultDLMDaemonsetImageRegistry = "ghcr.m.daocloud.io"
 var defaultDLMDaemonsetImageRepository = "hwameistor/dataload-manager"
-var defaultDLMDaemonsetImageTag = "v1.0.0"
+var defaultDLMDaemonsetImageTag = "v0.0.1"
 
 type DataLoadManagerMaintainer struct {
 	Client          client.Client

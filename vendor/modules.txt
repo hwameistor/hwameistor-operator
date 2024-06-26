@@ -97,7 +97,7 @@ github.com/google/gofuzz
 # github.com/google/uuid v1.5.0
 ## explicit
 github.com/google/uuid
-# github.com/hwameistor/datastore v0.0.0-20240625063533-a8da393b4022
+# github.com/hwameistor/datastore v0.0.1
 ## explicit; go 1.21.11
 github.com/hwameistor/datastore/deploy/crds
 # github.com/hwameistor/hwameistor v0.14.5
