@@ -84,10 +84,10 @@ func SetDSMDeployment(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Dep
 	dsmDeploymentToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	dsmDeploymentToCreate = setdsmDeploymentContainers(clusterInstance, dsmDeploymentToCreate)
 
-	if clusterInstance.Status.DatasetDefaultPoolClass != "" {
+	if clusterInstance.Spec.DatasetDefaultPoolClass != "" {
 		pool_env := corev1.EnvVar{
 			Name:  "DEFAULT_POOL_CLASS",
-			Value: clusterInstance.Status.DatasetDefaultPoolClass,
+			Value: clusterInstance.Spec.DatasetDefaultPoolClass,
 		}
 		dsmDeploymentToCreate.Spec.Template.Spec.Containers[0].Env = append(dsmDeploymentToCreate.Spec.Template.Spec.Containers[0].Env, pool_env)
 	}
