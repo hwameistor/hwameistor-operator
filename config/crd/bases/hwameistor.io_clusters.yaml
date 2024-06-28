@@ -3176,6 +3176,8 @@ spec:
                   disable:
                     type: boolean
                 type: object
+              datasetDefaultPoolClass:
+                type: string
               diskReserveConfigurations:
                 items:
                   properties:
@@ -11560,8 +11562,6 @@ spec:
                         type: object
                     type: object
                 type: object
-              datasetDefaultPoolClass:
-                type: string
               diskReserveState:
                 type: string
               drbdAdapterCreated:

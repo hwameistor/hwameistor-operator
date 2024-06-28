@@ -73,6 +73,8 @@ type ClusterSpec struct {
 	DataLoadManager *DataLoadManagerSpec `json:"dataLoadManager,omitempty"`
 
 	DataSetManager *DataSetManagerSpec `json:"dataSetManager,omitempty"`
+
+	DatasetDefaultPoolClass string `json:"datasetDefaultPoolClass,omitempty"`
 }
 
 type DiskReserveConfiguration struct {
@@ -270,7 +272,6 @@ type ClusterStatus struct {
 	DRBDAdapterCreated       bool            `json:"drbdAdapterCreated"`
 	DRBDAdapterCreatedJobNum int             `json:"drbdAdapterCreatedJobNum"`
 	DiskReserveState         string          `json:"diskReserveState,omitempty"`
-	DatasetDefaultPoolClass  string          `json:"datasetDefaultPoolClass,omitempty"`
 	Phase                    string          `json:"phase,omitempty"`
 	ComponentStatus          ComponentStatus `json:"componentStatus"`
 }
