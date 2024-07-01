@@ -3,6 +3,7 @@ package admissioncontroller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -133,6 +134,10 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 			}
 			imageSpec := clusterInstance.Spec.AdmissionController.Controller.Image
 			container.Image = imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
+
+			dataLoadManager := clusterInstance.Spec.DataLoadManager.DataLoadManagerContainer.Image
+			dataloadImageValue := dataLoadManager.Registry + "/" + "hwameistor/dataload-init" + ":" + dataLoadManager.Tag
+
 			container.Env = append(container.Env, []corev1.EnvVar{
 				{
 					Name:  "WEBHOOK_NAMESPACE",
@@ -141,6 +146,10 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 				{
 					Name:  "FAILURE_POLICY",
 					Value: clusterInstance.Spec.AdmissionController.FailurePolicy,
+				},
+				{
+					Name:  "DATALOADER_IMAGE",
+					Value: dataloadImageValue,
 				},
 			}...)
 		}
@@ -168,6 +177,22 @@ func needOrNotToUpdateAdmissionController(cluster *hwameistoriov1alpha1.Cluster,
 				container.Image = wantedImage
 				admissionControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
+			}
+			for k, envVar := range container.Env {
+				if envVar.Name == "FAILURE_POLICY" {
+					if envVar.Value != cluster.Spec.AdmissionController.FailurePolicy {
+						admissionControllerToUpdate.Spec.Template.Spec.Containers[i].Env[k].Value = cluster.Spec.AdmissionController.FailurePolicy
+						needToUpdate = true
+					}
+				}
+				if envVar.Name == "DATALOADER_IMAGE" {
+					dataLoadManager := cluster.Spec.DataLoadManager.DataLoadManagerContainer.Image
+					dataloadImageValue := dataLoadManager.Registry + "/" + "hwameistor/dataload-init" + ":" + dataLoadManager.Tag
+					if envVar.Value != dataloadImageValue {
+						admissionControllerToUpdate.Spec.Template.Spec.Containers[i].Env[k].Value = dataloadImageValue
+						needToUpdate = true
+					}
+				}
 			}
 		}
 	}
@@ -271,6 +296,36 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func (m *AdmissionControllerMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: admissionController.Namespace,
+		Name:      admissionController.Name,
+	}
+	var gottenAdmissionController appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gottenAdmissionController); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.WithError(err)
+			return nil
+		} else {
+			log.Errorf("Get AdmissionController err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gottenAdmissionController.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gottenAdmissionController); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	err := fmt.Errorf("Admission Owner is not %s", m.ClusterInstance.Name)
+	log.WithError(err)
+	return nil
 }
 
 // ensure hwameistor-admission-ca is generated before the admission controller running

@@ -33,5 +33,5 @@
 - "{{ .global.hwameistorImageRegistry }}/{{ .drbdFocal.imageRepository }}:{{ .ha.drbdVersion }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .dataLoadManager.imageRepository }}:{{ .dataLoadManager.tag }}"
 - "{{ .global.hwameistorImageRegistry }}/{{ .dataSetManager.imageRepository }}:{{ .dataSetManager.tag }}"
-
+- "{{ .global.hwameistorImageRegistry }}/{{ .dataLoadInit.imageRepository }}:{{ .dataLoadInit.tag }}"
 # - "{{ .global.hwameistorImageRegistry }}/{{ .ha.imageRepoOwner }}/drbd9-jammy:v9.1.11"
