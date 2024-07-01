@@ -1,4 +1,4 @@
-FROM centos:7
+FROM centos:7.9
 
 RUN yum upgrade nss -y
 
