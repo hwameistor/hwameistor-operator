@@ -179,6 +179,9 @@ dataSetManager:
   imageRepository: hwameistor/dataset-manager
   tag: v0.0.1
 
+dataLoadInit:
+  imageRepository: hwameistor/dataload-init
+  tag: v0.0.1
 
 #datasetDefaultPoolClass: NVMe > SSD > HDD
 

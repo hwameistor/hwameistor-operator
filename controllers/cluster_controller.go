@@ -197,6 +197,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.AdmissionController.Disable {
+		err = admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.AdmissionController.Disable {
 		newInstance, err = admissioncontroller.NewAdmissionControllerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
