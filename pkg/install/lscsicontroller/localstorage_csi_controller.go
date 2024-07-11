@@ -541,6 +541,35 @@ func (m *LSCSIMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
+func (m *LSCSIMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      lsCSIController.Name,
+	}
+	var gottenDS appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gottenDS); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("Get LSCSI DaemonSet err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gottenDS.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gottenDS); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+
+	log.Errorf("LSCSI Owner is not %s, can't delete", m.ClusterInstance.Name)
+	return nil
+}
+
 func FulfillLSCSISpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.LocalStorage == nil {
 		clusterInstance.Spec.LocalStorage = &hwameistoriov1alpha1.LocalStorageSpec{}

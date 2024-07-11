@@ -3,7 +3,6 @@ package admissioncontroller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -300,7 +299,7 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 
 func (m *AdmissionControllerMaintainer) Uninstall() error {
 	key := types.NamespacedName{
-		Namespace: admissionController.Namespace,
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
 		Name:      admissionController.Name,
 	}
 	var gottenAdmissionController appsv1.Deployment
@@ -323,8 +322,8 @@ func (m *AdmissionControllerMaintainer) Uninstall() error {
 			}
 		}
 	}
-	err := fmt.Errorf("Admission Owner is not %s", m.ClusterInstance.Name)
-	log.WithError(err)
+
+	log.Errorf("AdmissionController Owner is not %s, can't delete. ", m.ClusterInstance.Name)
 	return nil
 }
 

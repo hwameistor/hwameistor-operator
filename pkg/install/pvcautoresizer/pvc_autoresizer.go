@@ -206,3 +206,31 @@ func (m *PVCAutoResizerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	}
 	return newClusterInstance, nil
 }
+
+func (m *PVCAutoResizerMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      deployTemplate.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get PVCAutoResizer err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	log.Errorf("PVCAutoResizer Owner is not %s,can't delete ", m.ClusterInstance.Name)
+	return nil
+}

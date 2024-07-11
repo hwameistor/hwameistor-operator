@@ -8,6 +8,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -254,6 +255,34 @@ func (m *DataLoadManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, err
 		}
 	}
 	return newClusterInstance, nil
+}
+
+func (m *DataLoadManagerMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      dlmDaemonSetTemplate.Name,
+	}
+	var gotten appsv1.DaemonSet
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get DataLoadManager err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	log.Errorf("DataLoadManager Owner is not %s,can't delete.  ", m.ClusterInstance.Name)
+	return nil
 }
 
 func FulfillDataLoadManagerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {

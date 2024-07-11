@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	appsv1 "k8s.io/api/apps/v1"
 	"os"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -125,5 +126,52 @@ func (m *SchedulerConfigMapMaintainer) Ensure() error {
 		}
 	}
 
+	return nil
+}
+
+func (m *SchedulerConfigMapMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      "hwameistor-scheduler",
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("Get hwameistor-scheduler  err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					key2 := types.NamespacedName{
+						Namespace: m.ClusterInstance.Spec.TargetNamespace,
+						Name:      "hwameistor-scheduler-config",
+					}
+					var cmgotten corev1.ConfigMap
+					if err := m.Client.Get(context.TODO(), key2, &cmgotten); err != nil {
+						if errors.IsNotFound(err) {
+							return nil
+						} else {
+							log.Errorf("Get hwameistor-scheduler cm  err: %v", err)
+							return err
+						}
+					} else {
+						if err = m.Client.Delete(context.TODO(), &cmgotten); err != nil {
+							return err
+						} else {
+							return nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	log.Errorf("hwameistor-scheduler Owner is not %s，can't delete ", m.ClusterInstance.Name)
 	return nil
 }

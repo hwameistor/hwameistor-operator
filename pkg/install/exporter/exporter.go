@@ -222,6 +222,34 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	return newClusterInstance, nil
 }
 
+func (m *ExporterMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      exporter.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get Exporter err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	log.Errorf("Exporter Owner is not %s, can't delete ", m.ClusterInstance.Name)
+	return nil
+}
+
 func FulfillExporterSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.Exporter == nil {
 		clusterInstance.Spec.Exporter = &hwameistoriov1alpha1.ExporterSpec{}

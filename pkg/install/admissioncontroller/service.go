@@ -2,7 +2,6 @@ package admissioncontroller
 
 import (
 	"context"
-
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -64,6 +63,29 @@ func (m *AdmissionControllerServiceMaintainer) Ensure() error {
 			}
 		} else {
 			log.Errorf("Get AdmissionController Service err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *AdmissionControllerServiceMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      admissionController.Name,
+	}
+	var gottenService corev1.Service
+	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
+		if errors.IsNotFound(err) {
+			log.WithError(err)
+			return nil
+		} else {
+			log.Errorf("Get AdmissionController Service err: %v", err)
+			return err
+		}
+	} else {
+		if err = m.Client.Delete(context.TODO(), &gottenService); err != nil {
 			return err
 		}
 	}

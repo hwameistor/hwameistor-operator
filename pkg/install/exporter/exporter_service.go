@@ -2,7 +2,6 @@ package exporter
 
 import (
 	"context"
-
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -68,6 +67,28 @@ func (m *ExporterServiceMaintainer) Ensure() error {
 			}
 		} else {
 			log.Errorf("Get Exporters Service err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *ExporterServiceMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      exporterService.Name,
+	}
+	var gotten corev1.Service
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get Exporter Service err: %v", err)
+			return err
+		}
+	} else {
+		if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
 			return err
 		}
 	}
