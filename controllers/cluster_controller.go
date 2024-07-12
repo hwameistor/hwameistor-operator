@@ -171,6 +171,17 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.LocalStorage.Disable {
+		err = localstorage.NewMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		lscsicontroller.NewMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.LocalStorage.Disable {
 		newInstance, err = localstorage.NewMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -202,6 +213,10 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		if err != nil {
 			return ctrl.Result{}, err
 		}
+		err = admissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	if !newInstance.Spec.AdmissionController.Disable {
@@ -224,6 +239,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 		if err := admissioncontroller.NewAdmissionControllerServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
 			log.Errorf("Ensure AdmissionController Service err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
+	if newInstance.Spec.Scheduler.Disable {
+		if err := scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Uninstall(); err != nil {
+			log.Errorf("Uninstall Scheduler err: %v", err)
 			return ctrl.Result{}, err
 		}
 	}
@@ -269,6 +291,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.Auditor.Disable {
+		err = auditor.NewAuditorMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.Auditor.Disable {
 		newInstance, err = auditor.NewAuditorMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -285,6 +314,13 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					newInstance.Status.ComponentStatus.Auditor.Health = "Abnormal"
 				}
 			}
+		}
+	}
+
+	if newInstance.Spec.FailoverAssistant.Disable {
+		err = failoverassistant.NewFailoverAssistantMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -307,6 +343,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.PVCAutoResizer.Disable {
+		err = pvcautoresizer.NewPVCAutoResizerMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall failover-assistant err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.PVCAutoResizer.Disable {
 		newInstance, err = pvcautoresizer.NewPVCAutoResizerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -326,6 +370,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.LocalDiskActionController.Disable {
+		err = localdiskactioncontroller.NewActionControllerMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall LocalDiskActionController err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.LocalDiskActionController.Disable {
 		newInstance, err = localdiskactioncontroller.NewActionControllerMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -342,6 +394,17 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 					newInstance.Status.ComponentStatus.LocalDiskActionController.Health = "Abnormal"
 				}
 			}
+		}
+	}
+
+	if newInstance.Spec.ApiServer.Disable {
+		err = apiserver.NewApiServerMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		err = apiserver.NewApiServerServiceMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
@@ -369,6 +432,19 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.Exporter.Disable {
+		err = exporter.NewExporterMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall Exporter Collector err: %v", err)
+			return ctrl.Result{}, err
+		}
+		err = exporter.NewExporterServiceMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall Exporter Service err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.Exporter.Disable {
 		newInstance, err = exporter.NewExporterMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
@@ -389,6 +465,20 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 		if err := exporter.NewExporterServiceMaintainer(r.Client, newInstance).Ensure(); err != nil {
 			log.Errorf("Ensure Exporter Service err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
+	if newInstance.Spec.UI.Disable {
+		err = ui.NewUIMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall UI Collector err: %v", err)
+			return ctrl.Result{}, err
+		}
+
+		err = ui.NewUIServiceMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall UI Service err: %v", err)
 			return ctrl.Result{}, err
 		}
 	}
@@ -420,10 +510,26 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+	if newInstance.Spec.DataLoadManager.Disable {
+		err = dataloadmanager.NewMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall DataLoadManager err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if !newInstance.Spec.DataLoadManager.Disable {
 		newInstance, err = dataloadmanager.NewMaintainer(r.Client, newInstance).Ensure()
 		if err != nil {
-			log.Errorf("Ensure DataLoadManager err: %v", err)
+			log.Errorf("Uninstall DataLoadManager err: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
+	if newInstance.Spec.DataSetManager.Disable {
+		err = datasetmanager.NewMaintainer(r.Client, newInstance).Uninstall()
+		if err != nil {
+			log.Errorf("Uninstall DataSetManager err: %v", err)
 			return ctrl.Result{}, err
 		}
 	}

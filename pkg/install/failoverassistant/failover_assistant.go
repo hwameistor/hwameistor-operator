@@ -204,3 +204,33 @@ func (m *FailoverAssistantMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, e
 	}
 	return newClusterInstance, nil
 }
+
+func (m *FailoverAssistantMaintainer) Uninstall() error {
+
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      failoverAssistantTemplate.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get failover-assistant err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+
+	log.Errorf("FailoverAssistant Owner is not %s,can't delete ", m.ClusterInstance.Name)
+	return nil
+}

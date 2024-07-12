@@ -2,7 +2,6 @@ package ui
 
 import (
 	"context"
-
 	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
@@ -153,6 +152,28 @@ func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
 	}
 
 	return newClusterInstance, nil
+}
+
+func (m *UIMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      ui.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			log.Warnf("not found ui %s", ui.Name)
+			return nil
+		} else {
+			log.Errorf("get hwameistor-ui err: %v", err)
+			return err
+		}
+	} else {
+		if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func FulfillUISpec(clusterInstance *operatorv1alpha1.Cluster) *operatorv1alpha1.Cluster {

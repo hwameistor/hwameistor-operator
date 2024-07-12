@@ -7,6 +7,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -159,6 +160,34 @@ func (m *DataSetManagerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, erro
 	}
 
 	return newClusterInstance, nil
+}
+
+func (m *DataSetManagerMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      dsmDeploymentTemplate.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get DataSetManager err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	log.Errorf("DataSetManager Owner is not %s,can't delete. ", m.ClusterInstance.Name)
+	return nil
 }
 
 func FulfillDataSetManagerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {

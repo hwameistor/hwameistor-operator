@@ -201,3 +201,31 @@ func (m *ActionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, er
 	}
 	return newClusterInstance, nil
 }
+
+func (m *ActionControllerMaintainer) Uninstall() error {
+	key := types.NamespacedName{
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+		Name:      deployTemplate.Name,
+	}
+	var gotten appsv1.Deployment
+	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		} else {
+			log.Errorf("get ActionController err: %v", err)
+			return err
+		}
+	} else {
+		for _, reference := range gotten.OwnerReferences {
+			if reference.Name == m.ClusterInstance.Name {
+				if err = m.Client.Delete(context.TODO(), &gotten); err != nil {
+					return err
+				} else {
+					return nil
+				}
+			}
+		}
+	}
+	log.Errorf("ActionController Owner is not %s", m.ClusterInstance.Name)
+	return nil
+}
