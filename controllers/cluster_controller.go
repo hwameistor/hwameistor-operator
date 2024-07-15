@@ -115,7 +115,7 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	// status.installedCRDs true bool value will cause hwameistor crds not updated when upgrade,
 	// so we turn status.installedCRDS to false bool value here once spec generation changed.
 	// That will ensure hwameistor crds updating not missed when upgrading.
-	if r.ClusterSpecGeneration != newInstance.Generation {
+	if r.ClusterSpecGeneration != newInstance.Generation && newInstance.Status.InstalledCRDS{
 		log.Infof("cached cluster spec generation:%v, gotten cluster generation: %v", r.ClusterSpecGeneration, newInstance.Generation)
 		log.Infof("going to set status.installedCRDS to false bool value")
 		newInstance.Status.InstalledCRDS = false
