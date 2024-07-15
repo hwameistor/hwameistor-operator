@@ -254,8 +254,8 @@ spec:
             operator: DoesNotExist
     chartVersion: "v0.4.1"
   storageClass:
-    allowVolumeExpansion: true
-    reclaimPolicy: "Delete"
+    allowVolumeExpansion: {{ $.Values.storageClass.allowVolumeExpansion }}
+    reclaimPolicy: {{ $.Values.storageClass.reclaimPolicy }}
     fsType: "xfs"
 
   dataLoadManager:

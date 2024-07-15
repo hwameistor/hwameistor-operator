@@ -183,6 +183,13 @@ dataLoadInit:
   imageRepository: hwameistor/dataload-init
   tag: v0.0.1
 
+# StorageClass Settings
+storageClass:
+  # If allowed, volume can be expanded by modify pvc related field
+  allowVolumeExpansion: true
+  reclaimPolicy: Retain
+
+#storageClassReclaimPolicy: Retain > Delete
 #datasetDefaultPoolClass: NVMe > SSD > HDD
 
 # diskReserve example
