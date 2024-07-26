@@ -331,13 +331,18 @@ func (m *AdmissionControllerMaintainer) Uninstall() error {
 func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
 	// skip generation if the ca already exists
 	secret := corev1.Secret{}
-	if err := m.Client.Get(context.Background(), client.ObjectKey{Name: "hwameistor-admission-ca", Namespace: m.ClusterInstance.Spec.TargetNamespace}, &secret); err != nil {
+	secret.Name = "hwameistor-admission-ca"
+	secret.Namespace = m.ClusterInstance.Spec.TargetNamespace
+
+	secretExist := false
+	if err := m.Client.Get(context.Background(), client.ObjectKey{Name: secret.Name, Namespace: secret.Namespace}, &secret); err != nil {
 		if !apierrors.IsNotFound(err) {
 			log.WithError(err).Error("failed to get admission ca secret")
 			return err
 		}
 	} else {
-		if secret.Data != nil || secret.Data[corev1.TLSPrivateKeyKey] != nil || secret.Data[corev1.TLSCertKey] != nil {
+		secretExist = true
+		if secret.Data != nil && secret.Data[corev1.TLSPrivateKeyKey] != nil && secret.Data[corev1.TLSCertKey] != nil {
 			log.Info("admission ca secret found, skip generation")
 			return nil
 		}
@@ -356,21 +361,21 @@ func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
 		log.WithError(err).Error("failed to generate certs")
 		return err
 	}
-	secret.Name = "hwameistor-admission-ca"
-	secret.Namespace = m.ClusterInstance.Spec.TargetNamespace
 
 	if secret.Data == nil {
 		secret.Data = make(map[string][]byte)
-		secret.Data[corev1.TLSCertKey] = serverCertPEM.Bytes()
-		secret.Data[corev1.TLSPrivateKeyKey] = serverPrivateKeyPEM.Bytes()
-		log.Info("creating hwameistor-admission-ca secret...")
-		err = m.Client.Create(context.Background(), &secret)
-	} else {
-		secret.Data[corev1.TLSCertKey] = serverCertPEM.Bytes()
-		secret.Data[corev1.TLSPrivateKeyKey] = serverPrivateKeyPEM.Bytes()
-		log.Info("updating hwameistor-admission-ca secret...")
-		err = m.Client.Update(context.Background(), &secret)
 	}
+	secret.Data[corev1.TLSCertKey] = serverCertPEM.Bytes()
+	secret.Data[corev1.TLSPrivateKeyKey] = serverPrivateKeyPEM.Bytes()
+
+	if !secretExist {
+		err = m.Client.Create(context.Background(), &secret)
+		log.Info("creating hwameistor-admission-ca secret...")
+	} else {
+		err = m.Client.Update(context.Background(), &secret)
+		log.Info("updating hwameistor-admission-ca secret...")
+	}
+
 	if err != nil {
 		log.WithError(err).Error("failed to update admission ca secret")
 	}
