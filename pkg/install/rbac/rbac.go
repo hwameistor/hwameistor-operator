@@ -33,13 +33,109 @@ var clusterRole = rbacv1.ClusterRole{
 	},
 	Rules: []rbacv1.PolicyRule{
 		{
-			APIGroups: []string{"*"},
-			Resources: []string{"*"},
+			APIGroups: []string{"apiextensions.k8s.io"},
+			Resources: []string{"customresourcedefinitions"},
 			Verbs:     []string{"*"},
 		},
 		{
-			NonResourceURLs: []string{"*"},
-			Verbs:           []string{"*"},
+			APIGroups: []string{""},
+			Resources: []string{"nodes"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"persistentvolumes", "pods/binding", "pods/status"},
+			Verbs:     []string{"get", "list", "watch", "create", "delete", "update", "patch"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"persistentvolumeclaims"},
+			Verbs:     []string{"get", "list", "watch", "update", "patch"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"persistentvolumeclaims/status"},
+			Verbs:     []string{"update", "patch"},
+		},
+		{
+			APIGroups: []string{"storage.k8s.io"},
+			Resources: []string{"storageclasses"},
+			Verbs:     []string{"get", "list", "watch", "create", "update"},
+		},
+		{
+			APIGroups: []string{"storage.k8s.io"},
+			Resources: []string{"volumeattachments", "volumeattachments/status"},
+			Verbs:     []string{"get", "list", "watch", "update", "patch", "delete"},
+		},
+		{
+			APIGroups: []string{"apps"},
+			Resources: []string{"deployments", "daemonsets"},
+			Verbs:     []string{"get"},
+		},
+		{
+			APIGroups: []string{"apps"},
+			Resources: []string{"replicasets", "statefulsets"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"pods", "services", "replicationcontrollers"},
+			Verbs:     []string{"get", "list", "watch"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"namespaces"},
+			Verbs:     []string{"get", "list", "watch", "update", "patch"},
+		},
+		{
+			APIGroups: []string{"policy"},
+			Resources: []string{"poddisruptionbudgets"},
+			Verbs:     []string{"get", "list", "watch", "update", "patch"},
+		},
+		{
+			APIGroups: []string{"", "events.k8s.io"},
+			Resources: []string{"events"},
+			Verbs:     []string{"get", "list", "watch", "create", "update"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"secrets"},
+			Verbs:     []string{"get", "list", "create"},
+		},
+		{
+			APIGroups: []string{"snapshot.storage.k8s.io"},
+			Resources: []string{"volumesnapshots", "volumesnapshotcontents", "volumesnapshotclasses", "volumesnapshots/status", "volumesnapshotcontents/status"},
+			Verbs:     []string{"get", "list", "watch", "create", "delete", "update", "patch"},
+		},
+		{
+			APIGroups: []string{"storage.k8s.io"},
+			Resources: []string{"csinodes", "csidrivers", "csistoragecapacities"},
+			Verbs:     []string{"get", "list", "watch", "update"},
+		},
+		{
+			APIGroups: []string{"admissionregistration.k8s.io"},
+			Resources: []string{"mutatingwebhookconfigurations"},
+			Verbs:     []string{"get", "list", "watch", "update", "create"},
+		},
+		{
+			APIGroups: []string{"batch"},
+			Resources: []string{"jobs"},
+			Verbs:     []string{"get", "list", "watch", "update", "create", "delete"},
+		},
+		{
+			APIGroups: []string{"coordination.k8s.io"},
+			Resources: []string{"leases"},
+			Verbs:     []string{"get", "list", "watch", "update", "create"},
+		},
+		{
+			APIGroups: []string{""},
+			Resources: []string{"configmaps"},
+			Verbs:     []string{"get", "list", "watch", "update", "create"},
+		},
+		{
+			APIGroups: []string{"hwameistor.io"},
+			Resources: []string{"*"},
+			Verbs:     []string{"get", "list", "watch", "update", "create", "delete", "patch"},
 		},
 	},
 }

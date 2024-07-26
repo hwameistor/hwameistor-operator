@@ -1,7 +1,5 @@
 FROM centos:7
 
-FROM centos:7
-
 # Update the CentOS repository configuration
 RUN sed -i 's|mirrorlist=http://mirrorlist.centos.org/?|#mirrorlist=http://mirrorlist.centos.org/?|g' /etc/yum.repos.d/CentOS-*.repo && \
     sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*.repo

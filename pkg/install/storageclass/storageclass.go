@@ -34,7 +34,7 @@ func NewMaintainer(cli client.Client, clusterInstance *hwameistoroperatorv1alpha
 
 var volumeBindingWaitForFirstConsumer = storagev1.VolumeBindingWaitForFirstConsumer
 var defaultAllowVolumeExpansionBooleanValue = true
-var defaultReclaimPolicy = corev1.PersistentVolumeReclaimDelete
+var defaultReclaimPolicy = corev1.PersistentVolumeReclaimRetain
 var defaultDiskType = "HDD"
 var defaultFSType = "xfs"
 
