@@ -3,6 +3,7 @@ package admissioncontroller
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 	"time"
 
@@ -115,17 +116,19 @@ var admissionController = appsv1.Deployment{
 	},
 }
 
-func SetAdmissionController(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	admissionController.Namespace = clusterInstance.Spec.TargetNamespace
-	admissionController.OwnerReferences = append(admissionController.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+func SetAdmissionController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
+
+	resourceCreate := admissionController.DeepCopy()
+	resourceCreate.Namespace = clusterInstance.Spec.TargetNamespace
+	resourceCreate.OwnerReferences = append(resourceCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getAdmissionControllerReplicasFromClusterInstance(clusterInstance)
-	admissionController.Spec.Replicas = &replicas
-	admissionController.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	setAdmissionControllerContainers(clusterInstance)
+	resourceCreate.Spec.Replicas = &replicas
+	resourceCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	return setAdmissionControllerContainers(clusterInstance, resourceCreate)
 }
 
-func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	for i, container := range admissionController.Spec.Template.Spec.Containers {
+func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster, resourceCreate *appsv1.Deployment) *appsv1.Deployment {
+	for i, container := range resourceCreate.Spec.Template.Spec.Containers {
 		if container.Name == admissionControllerContainerName {
 			// container.Resources = *clusterInstance.Spec.AdmissionController.Controller.Resources
 			if resources := clusterInstance.Spec.AdmissionController.Controller.Resources; resources != nil {
@@ -152,8 +155,10 @@ func setAdmissionControllerContainers(clusterInstance *hwameistoriov1alpha1.Clus
 				},
 			}...)
 		}
-		admissionController.Spec.Template.Spec.Containers[i] = container
+		resourceCreate.Spec.Template.Spec.Containers[i] = container
 	}
+
+	return resourceCreate
 }
 
 func getAdmissionControllerContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -207,7 +212,7 @@ func needOrNotToUpdateAdmissionController(cluster *hwameistoriov1alpha1.Cluster,
 
 func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetAdmissionController(newClusterInstance)
+	resourceCreate := SetAdmissionController(newClusterInstance)
 
 	// ensure admission controller CA is generated
 	if err := m.ensureAdmissionCA(); err != nil {
@@ -215,13 +220,13 @@ func (m *AdmissionControllerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster,
 		return newClusterInstance, err
 	}
 	key := types.NamespacedName{
-		Namespace: admissionController.Namespace,
-		Name:      admissionController.Name,
+		Namespace: resourceCreate.Namespace,
+		Name:      resourceCreate.Name,
 	}
 	var gottenAdmissionController appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gottenAdmissionController); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &admissionController); errCreate != nil {
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create AdmissionController err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}

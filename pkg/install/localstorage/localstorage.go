@@ -2,6 +2,7 @@ package localstorage
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -266,7 +267,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
 	lsDaemonSetToCreate := lsDaemonSetTemplate.DeepCopy()
 
-	lsDaemonSetToCreate.OwnerReferences = append(lsDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	lsDaemonSetToCreate.OwnerReferences = append(lsDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	lsDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 	// lsDaemonSet.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalStorage.Common.PriorityClassName
 	lsDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName

@@ -3,6 +3,7 @@ package exporter
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -88,7 +89,7 @@ var exporter = appsv1.Deployment{
 
 func SetExporter(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	exporter.Namespace = clusterInstance.Spec.TargetNamespace
-	exporter.OwnerReferences = append(exporter.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	exporter.OwnerReferences = append(exporter.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getExporterReplicasFromClusterInstance(clusterInstance)
 	exporter.Spec.Replicas = &replicas
 	exporter.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
@@ -146,7 +147,8 @@ func (m *ExporterMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &exporter); errCreate != nil {
+			resourceCreate := exporter.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create Exporter err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}

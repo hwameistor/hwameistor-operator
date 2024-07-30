@@ -131,7 +131,8 @@ func (m *UIMaintainer) Ensure() (*operatorv1alpha1.Cluster, error) {
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &ui); errCreate != nil {
+			resourceCreate := ui.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create UI err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}

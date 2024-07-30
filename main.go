@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -76,6 +77,7 @@ func main() {
 	kubeconfig.Set(ctrl.GetConfigOrDie())
 
 	mgr, err := ctrl.NewManager(kubeconfig.Get(), ctrl.Options{
+		ClientDisableCacheFor:  []client.Object{&hwameistoroperatorv1alpha1.Cluster{}},
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,

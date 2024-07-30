@@ -3,6 +3,7 @@ package ldmcsicontroller
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -133,7 +134,7 @@ var ldmCSIController = appsv1.Deployment{
 func SetLDMCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
 	ldmCSIControllerToCreate := ldmCSIController.DeepCopy()
 	ldmCSIControllerToCreate.Namespace = clusterInstance.Spec.TargetNamespace
-	ldmCSIControllerToCreate.OwnerReferences = append(ldmCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	ldmCSIControllerToCreate.OwnerReferences = append(ldmCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	// ldmCSIController.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalDiskManager.CSI.Controller.Common.PriorityClassName
 	replicas := getReplicasFromClusterInstance(clusterInstance)
 	ldmCSIControllerToCreate.Spec.Replicas = &replicas

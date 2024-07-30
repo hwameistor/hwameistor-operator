@@ -61,7 +61,8 @@ func (m *ExporterServiceMaintainer) Ensure() error {
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &exporterService); errCreate != nil {
+			resourceCreate := exporterService.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create Exporter Service err: %v", err)
 				return errCreate
 			}

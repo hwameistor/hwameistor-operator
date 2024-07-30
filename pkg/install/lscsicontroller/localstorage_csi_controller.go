@@ -3,6 +3,7 @@ package lscsicontroller
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -281,7 +282,7 @@ func SetLSCSIController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.D
 	lsCSIControllerToCreate := lsCSIController.DeepCopy()
 
 	lsCSIControllerToCreate.Namespace = clusterInstance.Spec.TargetNamespace
-	lsCSIControllerToCreate.OwnerReferences = append(lsCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	lsCSIControllerToCreate.OwnerReferences = append(lsCSIControllerToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getReplicasFromClusterInstance(clusterInstance)
 	lsCSIControllerToCreate.Spec.Replicas = &replicas
 	lsCSIControllerToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
