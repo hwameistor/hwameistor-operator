@@ -1,0 +1,12 @@
+v0.14.8 / 2024-6-25
+========================
+
+* fix DatasetDefaultPoolClass bug #285 (@peng9808)
+* Inject dataload-init into the Admission module,Fixed the issue that changing the loop variable does not take effect #287 (@peng9808)
+* Added automatic uninstallation function #288 (@peng9808)
+* make data safer by default.in case user delete pvc by accident , and limit RBAC hwameistor-role permissions #289 (@peng9808)
+* fix(InstallCRDs): reverse CRD install status when necessary #292 (@SSmallMonster)
+* fix(admission): update when secrets found but not found data #293 (@SSmallMonster)
+* update base image #294 (@peng9808)
+* Fix the bug of reinstallation #296 (@peng9808)
+* use hwameistor v0.14.6 #295 (@peng9808)
