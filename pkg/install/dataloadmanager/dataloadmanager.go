@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
@@ -137,7 +138,7 @@ var dlmDaemonSetTemplate = appsv1.DaemonSet{
 
 func SetDLMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
 	dlmDaemonSetToCreate := dlmDaemonSetTemplate.DeepCopy()
-	dlmDaemonSetToCreate.OwnerReferences = append(dlmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	dlmDaemonSetToCreate.OwnerReferences = append(dlmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	dlmDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 	dlmDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	dlmDaemonSetToCreate = setDLMDaemonSetContainers(clusterInstance, dlmDaemonSetToCreate)

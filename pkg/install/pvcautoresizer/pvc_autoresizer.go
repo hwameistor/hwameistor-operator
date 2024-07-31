@@ -3,6 +3,7 @@ package pvcautoresizer
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -102,7 +103,7 @@ func SetPVCAutoResizer(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.De
 	deployToCreate := deployTemplate.DeepCopy()
 
 	deployToCreate.Namespace = clusterInstance.Spec.TargetNamespace
-	deployToCreate.OwnerReferences = append(deployToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	deployToCreate.OwnerReferences = append(deployToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getPVCAutoResizerReplicasFromClusterInstance(clusterInstance)
 	deployToCreate.Spec.Replicas = &replicas
 	deployToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName

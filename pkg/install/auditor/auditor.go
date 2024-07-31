@@ -3,6 +3,7 @@ package auditor
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -102,7 +103,7 @@ func SetAuditor(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deploymen
 	auditorToCreate := auditorTemplate.DeepCopy()
 
 	auditorToCreate.Namespace = clusterInstance.Spec.TargetNamespace
-	auditorToCreate.OwnerReferences = append(auditorToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	auditorToCreate.OwnerReferences = append(auditorToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getAuditorReplicasFromClusterInstance(clusterInstance)
 	auditorToCreate.Spec.Replicas = &replicas
 	auditorToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName

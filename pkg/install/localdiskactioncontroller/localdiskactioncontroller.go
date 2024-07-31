@@ -3,6 +3,7 @@ package localdiskactioncontroller
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -101,7 +102,7 @@ func SetActionController(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.
 	deployToCreate := deployTemplate.DeepCopy()
 
 	deployToCreate.Namespace = clusterInstance.Spec.TargetNamespace
-	deployToCreate.OwnerReferences = append(deployToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	deployToCreate.OwnerReferences = append(deployToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	deployToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	for i, container := range deployToCreate.Spec.Template.Spec.Containers {
 		if container.Name == ldaContainerName {

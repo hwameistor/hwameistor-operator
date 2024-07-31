@@ -57,7 +57,8 @@ func (m *AdmissionControllerServiceMaintainer) Ensure() error {
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &admissionControllerService); errCreate != nil {
+			resourceCreate := admissionControllerService.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create AdmissionController Service err: %v", err)
 				return errCreate
 			}

@@ -60,7 +60,8 @@ func (m *ApiServerServiceMaintainer) Ensure() error {
 	var gottenService corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gottenService); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &apiServerService); errCreate != nil {
+			resourceCreate := apiServerService.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create ApiServer Service err: %v", err)
 				return errCreate
 			}

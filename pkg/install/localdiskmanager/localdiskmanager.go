@@ -2,6 +2,7 @@ package localdiskmanager
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -223,7 +224,7 @@ var ldmDaemonSet = appsv1.DaemonSet{
 func SetLDMDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
 	ldmDaemonSetToCreate := ldmDaemonSet.DeepCopy()
 
-	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	ldmDaemonSetToCreate.OwnerReferences = append(ldmDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	ldmDaemonSetToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 
 	newClusterInstance := clusterInstance.DeepCopy()

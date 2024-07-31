@@ -3,6 +3,7 @@ package apiserver
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 	"strconv"
 
@@ -95,13 +96,14 @@ var apiServer = appsv1.Deployment{
 	},
 }
 
-func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
-	apiServer.Namespace = clusterInstance.Spec.TargetNamespace
-	apiServer.OwnerReferences = append(apiServer.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
+	resourceCreate := apiServer.DeepCopy()
+	resourceCreate.Namespace = clusterInstance.Spec.TargetNamespace
+	resourceCreate.OwnerReferences = append(resourceCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getApiserverReplicasFromClusterInstance(clusterInstance)
-	apiServer.Spec.Replicas = &replicas
-	apiServer.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
-	for i, container := range apiServer.Spec.Template.Spec.Containers {
+	resourceCreate.Spec.Replicas = &replicas
+	resourceCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	for i, container := range resourceCreate.Spec.Template.Spec.Containers {
 		if container.Name == apiserverContainerName {
 			container.Image = getApiserverContainerImageStringFromClusterInstance(clusterInstance)
 			if resources := clusterInstance.Spec.ApiServer.Server.Resources; resources != nil {
@@ -122,8 +124,9 @@ func SetApiServer(clusterInstance *hwameistoriov1alpha1.Cluster) {
 				},
 			}...)
 		}
-		apiServer.Spec.Template.Spec.Containers[i] = container
+		resourceCreate.Spec.Template.Spec.Containers[i] = container
 	}
+	return resourceCreate
 }
 
 func getApiserverContainerImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -161,15 +164,15 @@ func needOrNotToUpdateApiserver(cluster *hwameistoriov1alpha1.Cluster, gottenApi
 
 func (m *ApiServerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	SetApiServer(newClusterInstance)
+	resourceCreate := SetApiServer(newClusterInstance)
 	key := types.NamespacedName{
-		Namespace: apiServer.Namespace,
-		Name:      apiServer.Name,
+		Namespace: resourceCreate.Namespace,
+		Name:      resourceCreate.Name,
 	}
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &apiServer); errCreate != nil {
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create ApiServer err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}

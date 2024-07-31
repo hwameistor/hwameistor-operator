@@ -9,6 +9,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -80,7 +81,7 @@ func int64Ptr(i int64) *int64 { return &i }
 
 func SetDSMDeployment(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Deployment {
 	dsmDeploymentToCreate := dsmDeploymentTemplate.DeepCopy()
-	dsmDeploymentToCreate.OwnerReferences = append(dsmDeploymentToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	dsmDeploymentToCreate.OwnerReferences = append(dsmDeploymentToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	dsmDeploymentToCreate.Namespace = clusterInstance.Spec.TargetNamespace
 	dsmDeploymentToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	dsmDeploymentToCreate = setdsmDeploymentContainers(clusterInstance, dsmDeploymentToCreate)

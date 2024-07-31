@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -150,7 +151,7 @@ var schedulerDeploy = appsv1.Deployment{
 
 func SetScheduler(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	schedulerDeploy.Namespace = clusterInstance.Spec.TargetNamespace
-	schedulerDeploy.OwnerReferences = append(schedulerDeploy.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	schedulerDeploy.OwnerReferences = append(schedulerDeploy.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	schedulerDeploy.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	replicas := getSchedulerReplicasFromClusterInstance(clusterInstance)
 	schedulerDeploy.Spec.Replicas = &replicas
@@ -213,7 +214,8 @@ func (m *SchedulerMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &schedulerDeploy); errCreate != nil {
+			resourceCreate := schedulerDeploy.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create Scheduler err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}

@@ -61,7 +61,8 @@ func (m *UIServiceMaintainer) Ensure() error {
 	var gotten corev1.Service
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if errors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &uiService); errCreate != nil {
+			resourceCreate := uiService.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create UI Service err: %v", err)
 				return errCreate
 			}

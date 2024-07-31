@@ -3,6 +3,7 @@ package evictor
 import (
 	"context"
 	"errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -73,7 +74,7 @@ var evictorDeployment = appsv1.Deployment{
 
 func SetEvictor(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	evictorDeployment.Namespace = clusterInstance.Spec.TargetNamespace
-	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, clusterInstance.GroupVersionKind()))
+	evictorDeployment.OwnerReferences = append(evictorDeployment.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	replicas := getEvictorReplicasFromClusterInstance(clusterInstance)
 	evictorDeployment.Spec.Replicas = &replicas
 	evictorDeployment.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
@@ -152,7 +153,8 @@ func (m *EvictorMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	var gotten appsv1.Deployment
 	if err := m.Client.Get(context.TODO(), key, &gotten); err != nil {
 		if apierrors.IsNotFound(err) {
-			if errCreate := m.Client.Create(context.TODO(), &evictorDeployment); errCreate != nil {
+			resourceCreate := evictorDeployment.DeepCopy()
+			if errCreate := m.Client.Create(context.TODO(), resourceCreate); errCreate != nil {
 				log.Errorf("Create Evictor err: %v", errCreate)
 				return newClusterInstance, errCreate
 			}
