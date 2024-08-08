@@ -500,11 +500,12 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	if !newInstance.Spec.DRBD.Disable {
 		if !newInstance.Status.DRBDAdapterCreated {
 			drbd.HandelDRBDConfigs(instance)
-			drbdAdapterJobCreatedNum, err := drbd.CreateDRBDAdapter(r.Client)
+			drbdAdapterJobCreatedNum, err := drbd.HandleDrbd(r.Client)
 			if err != nil {
-				log.Errorf("Create DRBD Adapter err: %v", err)
+				log.Errorf("DRBD Install Error!: %v", err)
 				return ctrl.Result{}, err
 			} else {
+				log.Info("DRBD Install Success!")
 				newInstance.Status.DRBDAdapterCreated = true
 				newInstance.Status.DRBDAdapterCreatedJobNum = drbdAdapterJobCreatedNum
 			}

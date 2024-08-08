@@ -2,17 +2,23 @@ package drbd
 
 import (
 	"context"
-	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
-	"regexp"
-	"strings"
-
+	"fmt"
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strings"
+	"sync"
+	"time"
 )
 
 var defaultDeployOnMaster = "no"
@@ -98,329 +104,6 @@ func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	nodeAffinity = *drbdConfigs.NodeAffinity
 }
 
-func CreateDRBDAdapter(cli client.Client) (int, error) {
-	nodeList := corev1.NodeList{}
-	if err := cli.List(context.TODO(), &nodeList); err != nil {
-		log.Errorf("List nodes err: %v", err)
-		return adapterCreatedJobNum, err
-	}
-
-	for _, node := range nodeList.Items {
-		_, masterLabelExist := node.Labels["node-role.kubernetes.io/master"]
-		_, controlPlaneLabel := node.Labels["node-role.kubernetes.io/control-plane"]
-		if masterLabelExist || controlPlaneLabel {
-			if !deployOnMaster {
-				continue
-			}
-		}
-
-		osImage := strings.ToLower(node.Status.NodeInfo.OSImage)
-		distro := "unsupported"
-		for k, v := range distroRegexMap {
-			matched, err := regexp.Match(k, []byte(osImage))
-			if err != nil {
-				log.Errorf("Regexp match err: %v", err)
-				return adapterCreatedJobNum, err
-			}
-			if matched {
-				distro = v
-			}
-			if distro == "jammy" {
-				tag = "v9.1.11"
-			}
-		}
-		if distro == "unsupported" {
-			continue
-		} else {
-			//hwameistor/drbd9-shipper
-			distroImageRepository = strings.Replace(shapperImageRepository, "shipper", distro, 1)
-		}
-
-		kernelVersion := node.Status.NodeInfo.KernelVersion
-
-		job := batchv1.Job{
-			ObjectMeta: v1.ObjectMeta{
-				Name:      "drbd-adapter-" + node.Name + "-" + distro,
-				Namespace: namespace,
-				Labels: map[string]string{
-					"app":          "drbd-adapter",
-					"drbd-version": drbdVersion,
-				},
-			},
-			Spec: batchv1.JobSpec{
-				TTLSecondsAfterFinished: &ttlSecondsAfterFinished3600,
-				BackoffLimit:            &backoffLimit0,
-				Template: corev1.PodTemplateSpec{
-					ObjectMeta: v1.ObjectMeta{
-						Labels: map[string]string{
-							"app":          "drbd-adapter",
-							"drbd-version": drbdVersion,
-						},
-					},
-					Spec: corev1.PodSpec{
-						RestartPolicy: corev1.RestartPolicyNever,
-						NodeSelector: map[string]string{
-							"kubernetes.io/hostname": node.Name,
-						},
-						HostNetwork:                   true,
-						HostPID:                       true,
-						TerminationGracePeriodSeconds: &terminationGracePeriodSeconds0,
-						Containers: []corev1.Container{
-							{
-								Name:            "shipper",
-								Image:           shapperImageRegistry + "/" + shapperImageRepository + ":" + drbdVersion + "_" + shipperChar,
-								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
-								VolumeMounts: []corev1.VolumeMount{
-									{
-										Name:      "pkgs",
-										MountPath: "/pkgs",
-									},
-								},
-							},
-							{
-								Name:            distro,
-								Image:           shapperImageRegistry + "/" + distroImageRepository + ":" + tag,
-								ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
-								Command: []string{
-									"/pkgs/entrypoint.adapter.sh",
-									kernelVersion,
-								},
-								SecurityContext: &corev1.SecurityContext{
-									Privileged: &install.SecurityContextPrivilegedTrue,
-								},
-								Env: []corev1.EnvVar{
-									{
-										Name:  "LB_SKIP",
-										Value: "no",
-									},
-									{
-										Name:  "LB_DROP",
-										Value: "yes",
-									},
-									{
-										Name:  "LB_UPGRADE",
-										Value: upgrade,
-									},
-									{
-										Name:  "LB_CHECK_HOSTNAME",
-										Value: checkHostName,
-									},
-									{
-										Name: "NODE_NAME",
-										ValueFrom: &corev1.EnvVarSource{
-											FieldRef: &corev1.ObjectFieldSelector{
-												FieldPath: "spec.nodeName",
-											},
-										},
-									},
-								},
-								VolumeMounts: []corev1.VolumeMount{
-									{
-										Name:      "pkgs",
-										MountPath: "/pkgs",
-									},
-									{
-										Name:      "pkgroot",
-										MountPath: "/pkgs_root",
-									},
-									{
-										Name:      "os-release",
-										MountPath: "/etc/host-release",
-										ReadOnly:  true,
-									},
-									{
-										Name:      "usr-src",
-										MountPath: "/usr/src",
-										ReadOnly:  true,
-									},
-									{
-										Name:      "lib-modules",
-										MountPath: "/lib/modules",
-									},
-									{
-										Name:      "usr-local-bin",
-										MountPath: "/usr-local-bin",
-									},
-									{
-										Name:      "etc-drbd-conf",
-										MountPath: "/etc/drbd.conf",
-									},
-									{
-										Name:      "etc-drbd-d",
-										MountPath: "/etc/drbd.d",
-									},
-									{
-										Name:      "var-lib-drbd",
-										MountPath: "/var/lib/drbd",
-										ReadOnly:  true,
-									},
-									{
-										Name:      "etc-modules-load",
-										MountPath: "/etc/modules-load.d",
-									},
-									{
-										Name:      "etc-sysconfig-modules",
-										MountPath: "/etc/sysconfig/modules",
-									},
-								},
-							},
-						},
-						Volumes: []corev1.Volume{
-							{
-								Name: "pkgs",
-								VolumeSource: corev1.VolumeSource{
-									EmptyDir: &corev1.EmptyDirVolumeSource{},
-								},
-							},
-							{
-								Name: "pkgroot",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/root",
-									},
-								},
-							},
-							{
-								Name: "os-release",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/os-release",
-										Type: &install.HostPathFileOrCreate,
-									},
-								},
-							},
-							{
-								Name: "centos-release",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/centos-release",
-										Type: &install.HostPathFileOrCreate,
-									},
-								},
-							},
-							{
-								Name: "usr-src",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/usr/src",
-									},
-								},
-							},
-							{
-								Name: "lib-modules",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/lib/modules",
-									},
-								},
-							},
-							{
-								Name: "usr-local-bin",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/usr/local/bin",
-									},
-								},
-							},
-							{
-								Name: "etc-drbd-conf",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/drbd.conf",
-										Type: &install.HostPathFileOrCreate,
-									},
-								},
-							},
-							{
-								Name: "etc-drbd-d",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/drbd.d",
-										Type: &install.HostPathDirectoryOrCreate,
-									},
-								},
-							},
-							{
-								Name: "var-lib-drbd",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/var/lib/drbd",
-										Type: &install.HostPathDirectoryOrCreate,
-									},
-								},
-							},
-							{
-								Name: "etc-modules-load",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/modules-load.d",
-										Type: &install.HostPathDirectoryOrCreate,
-									},
-								},
-							},
-							{
-								Name: "etc-sysconfig-modules",
-								VolumeSource: corev1.VolumeSource{
-									HostPath: &corev1.HostPathVolumeSource{
-										Path: "/etc/sysconfig/modules",
-										Type: &install.HostPathDirectoryOrCreate,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-
-		matched, err := regexp.Match("^rhel[78]$", []byte(distro))
-		if err != nil {
-			log.Errorf("Regexp match err: %v", err)
-			return adapterCreatedJobNum, err
-		}
-		if matched {
-			for i, container := range job.Spec.Template.Spec.Containers {
-				if container.Name == distro {
-					container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
-						Name:      "centos-release",
-						MountPath: "/etc/centos-release",
-						ReadOnly:  true,
-					})
-					job.Spec.Template.Spec.Containers[i] = container
-				}
-			}
-		}
-
-		if useAffinity == "yes" {
-			job.Spec.Template.Spec.Affinity.NodeAffinity = &nodeAffinity
-		}
-
-		if deployOnMaster {
-			job.Spec.Template.Spec.Tolerations = []corev1.Toleration{
-				{
-					Effect:   corev1.TaintEffectNoSchedule,
-					Key:      "node-role.kubernetes.io/master",
-					Operator: corev1.TolerationOpExists,
-				},
-				{
-					Effect:   corev1.TaintEffectNoSchedule,
-					Key:      "node-role.kubernetes.io/control-plane",
-					Operator: corev1.TolerationOpExists,
-				},
-			}
-		}
-
-		if err := cli.Create(context.TODO(), &job); err != nil {
-			log.Errorf("Create job err: %v", job)
-			return adapterCreatedJobNum, err
-		} else {
-			adapterCreatedJobNum = adapterCreatedJobNum + 1
-		}
-	}
-
-	return adapterCreatedJobNum, nil
-}
-
 func FulfillDRBDSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
 	if clusterInstance.Spec.DRBD == nil {
 		clusterInstance.Spec.DRBD = &hwameistoriov1alpha1.DRBDSpec{}
@@ -469,4 +152,489 @@ func FulfillDRBDSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistori
 	}
 
 	return clusterInstance
+}
+
+func CreateDRBDJob(cli client.Client, node corev1.Node) error {
+
+	_, masterLabelExist := node.Labels["node-role.kubernetes.io/master"]
+	_, controlPlaneLabel := node.Labels["node-role.kubernetes.io/control-plane"]
+	if masterLabelExist || controlPlaneLabel {
+		if !deployOnMaster {
+			return nil
+		}
+	}
+
+	osImage := strings.ToLower(node.Status.NodeInfo.OSImage)
+	distro := "unsupported"
+	for k, v := range distroRegexMap {
+		matched, err := regexp.Match(k, []byte(osImage))
+		if err != nil {
+			log.Errorf("Regexp match err: %v", err)
+			return err
+		}
+		if matched {
+			distro = v
+		}
+		if distro == "jammy" {
+			tag = "v9.1.11"
+		}
+	}
+	if distro == "unsupported" {
+		return nil
+	} else {
+		//hwameistor/drbd9-shipper
+		distroImageRepository = strings.Replace(shapperImageRepository, "shipper", distro, 1)
+	}
+
+	kernelVersion := node.Status.NodeInfo.KernelVersion
+
+	job := batchv1.Job{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      "drbd-adapter-" + node.Name,
+			Namespace: namespace,
+			Labels: map[string]string{
+				"app":          "drbd-adapter",
+				"drbd-version": drbdVersion,
+			},
+		},
+		Spec: batchv1.JobSpec{
+			BackoffLimit: &backoffLimit0,
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: v1.ObjectMeta{
+					Labels: map[string]string{
+						"app":          "drbd-adapter",
+						"drbd-version": drbdVersion,
+					},
+				},
+				Spec: corev1.PodSpec{
+					RestartPolicy: corev1.RestartPolicyNever,
+					NodeSelector: map[string]string{
+						"kubernetes.io/hostname": node.Name,
+					},
+					HostNetwork:                   true,
+					HostPID:                       true,
+					TerminationGracePeriodSeconds: &terminationGracePeriodSeconds0,
+					Containers: []corev1.Container{
+						{
+							Name:            "shipper",
+							Image:           shapperImageRegistry + "/" + shapperImageRepository + ":" + drbdVersion + "_" + shipperChar,
+							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "pkgs",
+									MountPath: "/pkgs",
+								},
+							},
+						},
+						{
+							Name:            distro,
+							Image:           shapperImageRegistry + "/" + distroImageRepository + ":" + tag,
+							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
+							Command: []string{
+								"/pkgs/entrypoint.adapter.sh",
+								kernelVersion,
+							},
+							SecurityContext: &corev1.SecurityContext{
+								Privileged: &install.SecurityContextPrivilegedTrue,
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "LB_SKIP",
+									Value: "no",
+								},
+								{
+									Name:  "LB_DROP",
+									Value: "yes",
+								},
+								{
+									Name:  "LB_UPGRADE",
+									Value: upgrade,
+								},
+								{
+									Name:  "LB_CHECK_HOSTNAME",
+									Value: checkHostName,
+								},
+								{
+									Name: "NODE_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "spec.nodeName",
+										},
+									},
+								},
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "pkgs",
+									MountPath: "/pkgs",
+								},
+								{
+									Name:      "pkgroot",
+									MountPath: "/pkgs_root",
+								},
+								{
+									Name:      "os-release",
+									MountPath: "/etc/host-release",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "usr-src",
+									MountPath: "/usr/src",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "lib-modules",
+									MountPath: "/lib/modules",
+								},
+								{
+									Name:      "usr-local-bin",
+									MountPath: "/usr-local-bin",
+								},
+								{
+									Name:      "etc-drbd-conf",
+									MountPath: "/etc/drbd.conf",
+								},
+								{
+									Name:      "etc-drbd-d",
+									MountPath: "/etc/drbd.d",
+								},
+								{
+									Name:      "var-lib-drbd",
+									MountPath: "/var/lib/drbd",
+									ReadOnly:  true,
+								},
+								{
+									Name:      "etc-modules-load",
+									MountPath: "/etc/modules-load.d",
+								},
+								{
+									Name:      "etc-sysconfig-modules",
+									MountPath: "/etc/sysconfig/modules",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "pkgs",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: "pkgroot",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/root",
+								},
+							},
+						},
+						{
+							Name: "os-release",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/os-release",
+									Type: &install.HostPathFileOrCreate,
+								},
+							},
+						},
+						{
+							Name: "centos-release",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/centos-release",
+									Type: &install.HostPathFileOrCreate,
+								},
+							},
+						},
+						{
+							Name: "usr-src",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/usr/src",
+								},
+							},
+						},
+						{
+							Name: "lib-modules",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/lib/modules",
+								},
+							},
+						},
+						{
+							Name: "usr-local-bin",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/usr/local/bin",
+								},
+							},
+						},
+						{
+							Name: "etc-drbd-conf",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/drbd.conf",
+									Type: &install.HostPathFileOrCreate,
+								},
+							},
+						},
+						{
+							Name: "etc-drbd-d",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/drbd.d",
+									Type: &install.HostPathDirectoryOrCreate,
+								},
+							},
+						},
+						{
+							Name: "var-lib-drbd",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/var/lib/drbd",
+									Type: &install.HostPathDirectoryOrCreate,
+								},
+							},
+						},
+						{
+							Name: "etc-modules-load",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/modules-load.d",
+									Type: &install.HostPathDirectoryOrCreate,
+								},
+							},
+						},
+						{
+							Name: "etc-sysconfig-modules",
+							VolumeSource: corev1.VolumeSource{
+								HostPath: &corev1.HostPathVolumeSource{
+									Path: "/etc/sysconfig/modules",
+									Type: &install.HostPathDirectoryOrCreate,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	matched, err := regexp.Match("^rhel[78]$", []byte(distro))
+	if err != nil {
+		log.Errorf("Regexp match err: %v", err)
+		return err
+	}
+	if matched {
+		for i, container := range job.Spec.Template.Spec.Containers {
+			if container.Name == distro {
+				container.VolumeMounts = append(container.VolumeMounts, corev1.VolumeMount{
+					Name:      "centos-release",
+					MountPath: "/etc/centos-release",
+					ReadOnly:  true,
+				})
+				job.Spec.Template.Spec.Containers[i] = container
+			}
+		}
+	}
+
+	if useAffinity == "yes" {
+		job.Spec.Template.Spec.Affinity.NodeAffinity = &nodeAffinity
+	}
+
+	if deployOnMaster {
+		job.Spec.Template.Spec.Tolerations = []corev1.Toleration{
+			{
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/master",
+				Operator: corev1.TolerationOpExists,
+			},
+			{
+				Effect:   corev1.TaintEffectNoSchedule,
+				Key:      "node-role.kubernetes.io/control-plane",
+				Operator: corev1.TolerationOpExists,
+			},
+		}
+	}
+
+	if err := cli.Create(context.TODO(), &job); err != nil {
+		log.Errorf("Create job err: %v", job)
+		return err
+	}
+	return nil
+}
+
+func HandleDrbd(cli client.Client) (int, error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		return adapterCreatedJobNum, err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return adapterCreatedJobNum, fmt.Errorf("failed to new clientset: %v", err)
+	}
+	nodeList, err := clientset.CoreV1().Nodes().List(context.TODO(), v1.ListOptions{})
+	if err != nil {
+		return adapterCreatedJobNum, err
+	}
+	jobStatus := make(map[string]bool)
+	var wg sync.WaitGroup
+	for _, node := range nodeList.Items {
+		wg.Add(1)
+		go monitorNodeJobs(cli, clientset, node, jobStatus, &wg)
+	}
+	wg.Wait()
+	allSucceeded := true
+	for _, status := range jobStatus {
+		if !status {
+			allSucceeded = false
+			break
+		}
+	}
+
+	if allSucceeded {
+		return adapterCreatedJobNum, nil
+	} else {
+		err = fmt.Errorf("Some jobs failed.")
+		return adapterCreatedJobNum, err
+	}
+}
+
+func monitorNodeJobs(cli client.Client, clientset *kubernetes.Clientset, node corev1.Node, jobStatus map[string]bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	jobName := "drbd-adapter-" + node.Name
+	for {
+		// Check the current status of the job
+		job, err := clientset.BatchV1().Jobs(namespace).Get(context.TODO(), jobName, v1.GetOptions{})
+		if err == nil {
+			if isJobComplete(job) {
+				jobStatus[node.Name] = true
+				break
+			} else if isJobFailed(job) {
+				// Wait for the job to be deleted manually
+				if waitForJobDeletion(clientset, jobName) {
+					// After deletion, create the job again
+					CreateDRBDJob(cli, node)
+					if watchJob(clientset, jobName) {
+						jobStatus[node.Name] = true
+						break
+					}
+
+				}
+			} else {
+				// The job is still running, continue watching
+				if watchJob(clientset, jobName) {
+					jobStatus[node.Name] = true
+					break
+				}
+			}
+		} else {
+			// Job does not exist, create it
+			CreateDRBDJob(cli, node)
+			if watchJob(clientset, jobName) {
+				jobStatus[node.Name] = true
+				break
+			}
+		}
+	}
+}
+
+func watchJob(clientset *kubernetes.Clientset, jobName string) bool {
+	jobSucceeded := make(chan bool)
+	jobFailed := make(chan bool)
+	jobDeleted := make(chan bool)
+	watchlist := cache.NewListWatchFromClient(
+		clientset.BatchV1().RESTClient(),
+		"jobs",
+		namespace,
+		fields.OneTermEqualSelector("metadata.name", jobName),
+	)
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&batchv1.Job{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				job := newObj.(*batchv1.Job)
+				if isJobComplete(job) {
+					log.Printf("Job succeeded: %s", job.Name)
+					adapterCreatedJobNum++
+					jobSucceeded <- true
+				} else if isJobFailed(job) {
+					log.Printf("Job failed: %s", job.Name)
+					jobFailed <- true
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				job := obj.(*batchv1.Job)
+				log.Printf("Job deleted: %s", job.Name)
+				jobDeleted <- true
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	go controller.Run(stop)
+
+	for {
+		select {
+		case <-jobSucceeded:
+			return true
+		case <-jobFailed:
+			<-jobDeleted
+			return false
+		}
+	}
+}
+
+func isJobComplete(job *batchv1.Job) bool {
+	for _, condition := range job.Status.Conditions {
+		if condition.Type == batchv1.JobComplete && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+func isJobFailed(job *batchv1.Job) bool {
+	for _, condition := range job.Status.Conditions {
+		if condition.Type == batchv1.JobFailed && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
+}
+
+func waitForJobDeletion(clientset *kubernetes.Clientset, jobName string) bool {
+	jobDeleted := make(chan bool)
+	watchlist := cache.NewListWatchFromClient(
+		clientset.BatchV1().RESTClient(),
+		"jobs",
+		namespace,
+		fields.OneTermEqualSelector("metadata.name", jobName),
+	)
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&batchv1.Job{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			DeleteFunc: func(obj interface{}) {
+				job := obj.(*batchv1.Job)
+				log.Printf("Job deleted: %s", job.Name)
+				jobDeleted <- true
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	go controller.Run(stop)
+
+	<-jobDeleted
+	return true
 }
