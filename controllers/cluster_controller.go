@@ -20,7 +20,16 @@ import (
 	"context"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/dataloadmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/datasetmanager"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"reflect"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -128,19 +137,15 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	if !newInstance.Status.InstalledCRDS {
-		if err := install.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
-			log.Errorf("Install err: %v", err)
-			return ctrl.Result{}, err
-		}
-		newInstance.Status.InstalledCRDS = true
-		if err := r.Client.Status().Update(ctx, newInstance); err != nil {
-			log.Errorf("Update InstalledCRDS=true status err: %v", err)
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{}, nil
+	if err := install.InstallCRDs(r.Client, newInstance.Spec.TargetNamespace); err != nil {
+		log.Errorf("Install err: %v", err)
+		return ctrl.Result{}, err
 	}
-	log.Infof("Handling of crds passed")
+	newInstance.Status.InstalledCRDS = true
+	if err := r.Client.Status().Update(ctx, newInstance); err != nil {
+		log.Errorf("Update InstalledCRDS=true status err: %v", err)
+		return ctrl.Result{}, err
+	}
 
 	if err := rbac.NewMaintainer(r.Client, newInstance).Ensure(); err != nil {
 		log.Errorf("Ensure RBAC err: %v", err)
@@ -498,15 +503,14 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if !newInstance.Spec.DRBD.Disable {
-		if !newInstance.Status.DRBDAdapterCreated {
+		if newInstance.Status.DRBDAdapterCreated != true {
 			drbd.HandelDRBDConfigs(instance)
-			drbdAdapterJobCreatedNum, err := drbd.CreateDRBDAdapter(r.Client)
+			err := drbd.CreateDRBDAdapter(instance, r.Client)
 			if err != nil {
-				log.Errorf("Create DRBD Adapter err: %v", err)
+				log.Errorf("DRBD Install Error!: %v", err)
 				return ctrl.Result{}, err
 			} else {
 				newInstance.Status.DRBDAdapterCreated = true
-				newInstance.Status.DRBDAdapterCreatedJobNum = drbdAdapterJobCreatedNum
 			}
 		}
 	}
@@ -615,7 +619,129 @@ func (r *ClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&hwameistoroperatorv1alpha1.Cluster{}).
 		Owns(&appsv1.DaemonSet{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&batchv1.Job{}).Watches(&source.Kind{Type: &batchv1.Job{}},
+		&handler.EnqueueRequestForObject{},
+		builder.WithPredicates(
+			predicate.Funcs{
+				CreateFunc: r.handleDrbdJobCreatePredicate,
+				UpdateFunc: r.handleDrbdJobUpdatePredicate,
+				DeleteFunc: r.handleDrbdJobDeletePredicate,
+			},
+		)).
 		Complete(r)
+}
+
+func (r *ClusterReconciler) handleDrbdJobCreatePredicate(e event.CreateEvent) bool {
+	job := e.Object.(*batchv1.Job)
+	r.handleDrbdJobUpdate(r.Client, job)
+	return true
+}
+
+func (r *ClusterReconciler) handleDrbdJobUpdatePredicate(e event.UpdateEvent) bool {
+	newJob := e.ObjectNew.(*batchv1.Job)
+	r.handleDrbdJobUpdate(r.Client, newJob)
+	return true
+}
+
+func (r *ClusterReconciler) handleDrbdJobDeletePredicate(e event.DeleteEvent) bool {
+	job := e.Object.(*batchv1.Job)
+	r.handleDrbdJobDelete(r.Client, job)
+	return false
+}
+
+func (r *ClusterReconciler) handleDrbdJobUpdate(cli client.Client, job *batchv1.Job) error {
+	if !isJobComplete(job) {
+		return nil
+	}
+	log.Infof("Job %s has successfully completed.", job.Name)
+	var nodeList corev1.NodeList
+	if err := cli.List(context.TODO(), &nodeList); err != nil {
+		log.Errorf("List nodes err: %v", err)
+		return err
+	}
+	var jobList batchv1.JobList
+	if err := cli.List(context.TODO(), &jobList, client.InNamespace("hwameistor")); err != nil {
+		log.Errorf("List jobs err: %v", err)
+		return err
+	}
+	jobCount := 0
+	nodeCount := 0
+	for _, item := range jobList.Items {
+		if strings.HasPrefix(item.Name, "drbd-adapter") && isJobComplete(&item) {
+			jobCount++
+		}
+	}
+	for _, node := range nodeList.Items {
+		if _, needInstall := drbd.GetDistro(&node); needInstall {
+			nodeCount++
+		}
+	}
+
+	if jobCount >= nodeCount {
+		instance := &hwameistoroperatorv1alpha1.Cluster{}
+		var clusterName string
+		for _, reference := range job.OwnerReferences {
+			if reference.Name != "" {
+				clusterName = reference.Name
+				break
+			}
+		}
+		if err := cli.Get(context.TODO(), types.NamespacedName{Name: clusterName, Namespace: job.Namespace}, instance); err != nil {
+			log.Errorf("Get cluster instance err: %v", err)
+			return err
+		}
+		cluster := instance.DeepCopy()
+		cluster.Status.DRBDAdapterCreated = true
+		cluster.Status.DRBDAdapterCreatedJobNum = jobCount
+		if err := cli.Status().Update(context.TODO(), cluster); err != nil {
+			log.Errorf("Update status err: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *ClusterReconciler) handleDrbdJobDelete(cli client.Client, job *batchv1.Job) error {
+	instance := &hwameistoroperatorv1alpha1.Cluster{}
+	var clusterName string
+	for _, reference := range job.OwnerReferences {
+		if reference.Name != "" {
+			clusterName = reference.Name
+			break
+		}
+	}
+	if err := cli.Get(context.TODO(), types.NamespacedName{Name: clusterName, Namespace: job.Namespace}, instance); err != nil {
+		log.Errorf("Get cluster instance err: %v", err)
+		return err
+	}
+	if instance.Status.DRBDAdapterCreatedJobNum > 0 {
+		return nil
+	}
+
+	hostname, _ := job.Spec.Template.Spec.NodeSelector["kubernetes.io/hostname"]
+	node := corev1.Node{}
+	if err := cli.Get(context.TODO(), types.NamespacedName{Name: hostname}, &node); err != nil {
+		log.Errorf("Get node %s err: %v", hostname, err)
+		return err
+	}
+
+	drbd.HandelDRBDConfigs(instance)
+	if err := drbd.CreateDRBDForNode(cli, &node, job.OwnerReferences); err != nil {
+		log.Errorf("Failed to create Job: %v", err)
+		return err
+	}
+	log.Infof("Successfully recreated Job %s in namespace %s", job.Name, job.Namespace)
+	return nil
+}
+
+func isJobComplete(job *batchv1.Job) bool {
+	for _, condition := range job.Status.Conditions {
+		if condition.Type == batchv1.JobComplete && condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+	return false
 }
 
 func FulfillClusterInstance(clusterInstance *hwameistoroperatorv1alpha1.Cluster) *hwameistoroperatorv1alpha1.Cluster {
