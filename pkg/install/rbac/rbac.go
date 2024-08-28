@@ -95,7 +95,7 @@ var clusterRole = rbacv1.ClusterRole{
 		{
 			APIGroups: []string{"", "events.k8s.io"},
 			Resources: []string{"events"},
-			Verbs:     []string{"get", "list", "watch", "create", "update"},
+			Verbs:     []string{"get", "list", "watch", "create", "update", "patch"},
 		},
 		{
 			APIGroups: []string{""},

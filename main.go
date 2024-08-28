@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	batchv1 "k8s.io/api/batch/v1"
 	"os"
 	"path"
 	"runtime"
@@ -77,7 +78,7 @@ func main() {
 	kubeconfig.Set(ctrl.GetConfigOrDie())
 
 	mgr, err := ctrl.NewManager(kubeconfig.Get(), ctrl.Options{
-		ClientDisableCacheFor:  []client.Object{&hwameistoroperatorv1alpha1.Cluster{}},
+		ClientDisableCacheFor:  []client.Object{&hwameistoroperatorv1alpha1.Cluster{}, &batchv1.Job{}},
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
 		Port:                   9443,
