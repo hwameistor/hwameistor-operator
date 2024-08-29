@@ -1,3 +1,9 @@
+v0.14.9 / 2024-8-29
+========================
+
+* Optimize the Drbd installation process #299(peng9808)
+* use hwameistor v0.14.7 #300 (peng9808)
+
 v0.14.8 / 2024-7-31
 ========================
 
