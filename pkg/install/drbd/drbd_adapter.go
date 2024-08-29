@@ -22,7 +22,7 @@ var defaultImageRegistry = "ghcr.io"
 var defaultShipperRepository = "hwameistor/drbd9-shipper"
 var defaultImagePullPolicy = "IfNotPresent"
 var defaultDRBDVersion = "v9.0.32-1"
-var defaultShipperChar = "v0.4.1"
+var defaultShipperChar = "v0.4.2"
 var defaultDRBDUpgrade = "no"
 var defaultCheckHostName = "no"
 var defaultUseAffinity = "no"
@@ -40,7 +40,7 @@ var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
 		},
 	},
 }
-var defaultChartVersion = "v0.4.1"
+var defaultChartVersion = "v0.4.2"
 
 var distroRegexMap = map[string]string{
 	"(red hat enterprise|centos|almalinux|rocky linux) .*7": "rhel7",
@@ -166,7 +166,7 @@ func CreateDRBDForNode(cli client.Client, node *corev1.Node, ownerReference []v1
 						},
 						{
 							Name:            distro,
-							Image:           shapperImageRegistry + "/" + distroImageRepository + ":" + tag,
+							Image:           shapperImageRegistry + "/" + distroImageRepository + ":" + tag + "_" + shipperChar,
 							ImagePullPolicy: corev1.PullPolicy(imagePullPolicy),
 							Command: []string{
 								"/pkgs/entrypoint.adapter.sh",
