@@ -232,7 +232,7 @@ DOCKER_MAKE_CMD = docker run --rm -v ${PROJECT_SOURCE_CODE_DIR}:${BUILDER_MOUNT_
 DOCKER_BUILDX_CMD_AMD64 = DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform=linux/amd64 -o type=docker
 DOCKER_BUILDX_CMD_ARM64 = DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform=linux/arm64 -o type=docker
 RELEASE_TAG ?= $(shell tagged="$$(git describe --tags --match='v*' --abbrev=0 2> /dev/null)"; if [ "$$tagged" ] && [ "$$(git rev-list -n1 HEAD)" = "$$(git rev-list -n1 $$tagged)" ]; then echo $$tagged; fi)
-MUILT_ARCH_PUSH_CMD = ${PROJECT_SOURCE_CODE_DIR}/docker-push-with-multi-arch.sh
+MUILT_ARCH_PUSH_CMD = ${PROJECT_SOURCE_CODE_DIR}/build/util/docker-push-with-multi-arch.sh
 
 .PHONY: compile
 compile: ## compile
