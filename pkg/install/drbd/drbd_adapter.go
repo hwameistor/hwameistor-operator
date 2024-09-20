@@ -43,13 +43,13 @@ var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
 var defaultChartVersion = "v0.4.2"
 
 var distroRegexMap = map[string]string{
-	"(red hat enterprise|centos|almalinux|rocky linux) .*7([\\s\\-\\.]|$)": "rhel7",
-	"(red hat enterprise|centos|almalinux|rocky linux) .*8([\\s\\-\\.]|$)": "rhel8",
-	"(red hat enterprise|centos|almalinux|rocky linux) .*9([\\s\\-\\.]|$)": "rhel9",
-	"ubuntu .*18([\\s\\-\\.]|$)": "bionic",
-	"ubuntu .*20([\\s\\-\\.]|$)": "focal",
-	"ubuntu .*22([\\s\\-\\.]|$)": "jammy",
-	"kylin .*v10([\\s\\-\\.]|$)": "kylin10",
+	"(red hat enterprise|centos|almalinux|rocky linux) .*?7(\\.|\\s|$)": "rhel7",
+	"(red hat enterprise|centos|almalinux|rocky linux) .*?8(\\.|\\s|$)": "rhel8",
+	"(red hat enterprise|centos|almalinux|rocky linux) .*?9(\\.|\\s|$)": "rhel9",
+	"ubuntu .*?18(\\.|\\s|$)": "bionic",
+	"ubuntu .*?20(\\.|\\s|$)": "focal",
+	"ubuntu .*?22(\\.|\\s|$)": "jammy",
+	"kylin .*?v10(\\.|\\s|$)": "kylin10",
 }
 
 var backoffLimit0 = int32(0)
