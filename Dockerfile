@@ -1,4 +1,6 @@
-FROM ghcr.io/hwameistor/hwameistor-base-image:latest
+FROM rockylinux:8
+
+RUN yum install -y  nss
 
 COPY ./vendor/github.com/hwameistor/hwameistor/deploy/crds /hwameistorcrds
 COPY ./vendor/github.com/hwameistor/datastore/deploy/crds /hwameistorcrds
