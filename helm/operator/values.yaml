@@ -10,7 +10,7 @@ global:
 operator:
   replicas: 1
   imageRepository: hwameistor/operator
-  tag: v0.14.9
+  tag: v0.15.0
  
 localDiskManager:
   tolerationOnMaster: true

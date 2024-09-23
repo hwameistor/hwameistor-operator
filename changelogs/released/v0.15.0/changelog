@@ -1,0 +1,8 @@
+v0.15.0 / 2024-9-23
+========================
+* use hwameistor v0.15.0 #313（peng9808）
+* Fixed minor version not being recognized correctly #310 (peng9808)
+* use rockylinux to baseImage,Fixed drbd minor version not being recognized correctly #306 (peng9808)
+* add trivy，gosec scan #304 (peng9808)
+* correct default container annotation #303 (peng9808)
+
