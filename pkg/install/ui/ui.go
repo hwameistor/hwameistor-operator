@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -77,6 +78,7 @@ func SetUI(clusterInstance *operatorv1alpha1.Cluster) {
 	replicas := getUIReplicasFromClusterInstance(clusterInstance)
 	ui.Spec.Replicas = &replicas
 	ui.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
+	ui.OwnerReferences = append(ui.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
 	for i, container := range ui.Spec.Template.Spec.Containers {
 		if container.Name == uiContainerName {
 			container.Image = getUIContainerImageStringFromClusterInstance(clusterInstance)
