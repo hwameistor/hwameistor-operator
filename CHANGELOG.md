@@ -1,3 +1,9 @@
+v0.16.0 / 2024-10-28
+========================
+* use hwameistor v0.16.0 #319（peng9808）
+* add readme to helm #318 (peng9808)
+* Fixed the issue that UI cannot be automatically uninstalled #316 (peng9808)
+
 v0.15.0 / 2024-9-23
 ========================
 * use hwameistor v0.15.0 #313（peng9808）
