@@ -9040,15 +9040,6 @@ spec:
                         type: object
                       maxHAVolumeCount:
                         type: integer
-                      rcloneImage:
-                        properties:
-                          registry:
-                            type: string
-                          repository:
-                            type: string
-                          tag:
-                            type: string
-                        type: object
                       resources:
                         description: ResourceRequirements describes the compute resource
                           requirements.
