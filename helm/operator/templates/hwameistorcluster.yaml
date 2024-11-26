@@ -112,9 +112,6 @@ spec:
         tag: {{ template "hwameistor.localStorageImageTag" . }}
       resources:
         {{- toYaml .Values.localStorage.member.resources | nindent 8 }}
-      rcloneImage:
-        repository: {{ $.Values.localStorage.migrate.rclone.imageRepository }}
-        tag: {{ $.Values.localStorage.migrate.rclone.tag }}
       juicesyncImage:
         registry: {{ $.Values.global.hwameistorImageRegistry }}
         repository: {{ $.Values.localStorage.migrate.juicesync.imageRepository }}
@@ -252,7 +249,7 @@ spec:
             operator: DoesNotExist
           - key: node-role.kubernetes.io/control-plane
             operator: DoesNotExist
-    chartVersion: "v0.4.2"
+    chartVersion: "v0.4.3"
   storageClass:
     allowVolumeExpansion: {{ $.Values.storageClass.allowVolumeExpansion }}
     reclaimPolicy: {{ $.Values.storageClass.reclaimPolicy }}

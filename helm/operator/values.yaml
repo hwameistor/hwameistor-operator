@@ -65,9 +65,6 @@ localStorage:
       imageRepository: sig-storage/csi-snapshotter
       tag: v6.0.0
   migrate:
-    rclone:
-      imageRepository: rclone/rclone
-      tag: 1.53.2
     juicesync:
       imageRepository: hwameistor/hwameistor-juicesync
       tag: v1.0.4-01
@@ -147,7 +144,7 @@ ha:
   deployOnMaster: "yes"
   imageRepository: hwameistor/drbd9-shipper
   drbdVersion: v9.0.32-1
-  shipperChar: v0.4.2
+  shipperChar: v0.4.3
 
 drbdRhel7:
   imageRepository: hwameistor/drbd9-rhel7
@@ -211,4 +208,4 @@ storageClass:
 
 preHookJob:
   imageRepository: dtzar/helm-kubectl
-  tag: 3.9
+  tag: 3.16

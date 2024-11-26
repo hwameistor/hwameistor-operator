@@ -41,9 +41,6 @@ spec:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-storage"
         tag: "v0.9.2"
-      rcloneImage:
-        repository: "rclone/rclone"
-        tag: "1.53.2"
     tolerationOnMaster: true
   localDiskManager:
     kubeletRootDir: "/var/lib/kubelet"

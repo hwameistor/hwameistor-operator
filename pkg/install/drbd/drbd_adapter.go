@@ -22,7 +22,7 @@ var defaultImageRegistry = "ghcr.io"
 var defaultShipperRepository = "hwameistor/drbd9-shipper"
 var defaultImagePullPolicy = "IfNotPresent"
 var defaultDRBDVersion = "v9.0.32-1"
-var defaultShipperChar = "v0.4.2"
+var defaultShipperChar = "v0.4.3"
 var defaultDRBDUpgrade = "no"
 var defaultCheckHostName = "no"
 var defaultUseAffinity = "no"
@@ -40,7 +40,7 @@ var defaultNodeSelectTerms = []corev1.NodeSelectorTerm{
 		},
 	},
 }
-var defaultChartVersion = "v0.4.2"
+var defaultChartVersion = "v0.4.3"
 
 var distroRegexMap = map[string]string{
 	"(red hat enterprise|centos|almalinux|rocky linux) .*?7(\\.|\\s|$)": "rhel7",
@@ -424,9 +424,9 @@ func GetDistro(node *corev1.Node) (string, bool) {
 		if matched {
 			distro = v
 		}
-		if distro == "jammy" {
-			tag = "v9.1.11"
-		}
+		//if distro == "jammy" {
+		//	tag = "v9.1.11"
+		//}
 	}
 	if distro == "unsupported" {
 		return distro, false

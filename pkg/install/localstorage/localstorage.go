@@ -38,11 +38,9 @@ var defaultLSDaemonsetImageTag = install.DefaultHwameistorVersion
 var defaultLSDaemonsetCSIRegistrarImageRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver-registrar"
 var defaultLSDaemonsetCSIRegistrarImageTag = "v2.5.0"
-var defaultRCloneImageRepository = "rclone/rclone"
-var defaultRCloneImageTag = "1.53.2"
 var memberContainerName = "member"
 var registrarContainerName = "registrar"
-var rcloneEnvName = "MIGRAGE_RCLONE_IMAGE"
+
 var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
@@ -395,13 +393,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 				Name:  "CSI_ENDPOINT",
 				Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
 			})
-			// rcloneImageSpec := clusterInstance.Spec.LocalStorage.Member.RcloneImage
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name: rcloneEnvName,
-				// Value: rcloneImageSpec.Registry + "/" + rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
-				// Value: rcloneImageSpec.Repository + ":" + rcloneImageSpec.Tag,
-				Value: getRcloneEnvFromClusterInstance(clusterInstance),
-			})
+
 			container.Env = append(container.Env, corev1.EnvVar{
 				Name:  juicesyncEnvName,
 				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
@@ -442,11 +434,6 @@ func getLSContainerRegistrarImageStringFromClusterInstance(clusterInstance *hwam
 	return imageSpec.Registry + "/" + imageSpec.Repository + ":" + imageSpec.Tag
 }
 
-func getRcloneEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
-	rcloneImage := clusterInstance.Spec.LocalStorage.Member.RcloneImage
-	return rcloneImage.Repository + ":" + rcloneImage.Tag
-}
-
 func getJuicesyncEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
 	juicesyncImage := clusterInstance.Spec.LocalStorage.Member.JuicesyncImage
 	return juicesyncImage.Registry + "/" + juicesyncImage.Repository + ":" + juicesyncImage.Tag
@@ -459,17 +446,6 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 	for i, container := range ds.Spec.Template.Spec.Containers {
 		if container.Name == memberContainerName {
 			var containerModified bool
-
-			wantedRcloneEnv := getRcloneEnvFromClusterInstance(cluster)
-			for i, env := range container.Env {
-				if env.Name == rcloneEnvName {
-					if env.Value != wantedRcloneEnv {
-						env.Value = wantedRcloneEnv
-						container.Env[i] = env
-						containerModified = true
-					}
-				}
-			}
 
 			wantedJuicesyncEnv := getJuicesyncEnvFromClusterInstance(cluster)
 			juicesyncEnvNotFound := true
@@ -646,15 +622,6 @@ func FulfillLSDaemonsetSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwam
 	}
 	if clusterInstance.Spec.LocalStorage.Member.Image.Tag == "" {
 		clusterInstance.Spec.LocalStorage.Member.Image.Tag = defaultLSDaemonsetImageTag
-	}
-	if clusterInstance.Spec.LocalStorage.Member.RcloneImage == nil {
-		clusterInstance.Spec.LocalStorage.Member.RcloneImage = &hwameistoriov1alpha1.ImageSpec{}
-	}
-	if clusterInstance.Spec.LocalStorage.Member.RcloneImage.Repository == "" {
-		clusterInstance.Spec.LocalStorage.Member.RcloneImage.Repository = defaultRCloneImageRepository
-	}
-	if clusterInstance.Spec.LocalStorage.Member.RcloneImage.Tag == "" {
-		clusterInstance.Spec.LocalStorage.Member.RcloneImage.Tag = defaultRCloneImageTag
 	}
 	if clusterInstance.Spec.LocalStorage.CSI == nil {
 		clusterInstance.Spec.LocalStorage.CSI = &hwameistoriov1alpha1.CSISpec{}
