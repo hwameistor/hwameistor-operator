@@ -131,6 +131,9 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 							"--csi-address=$(CSI_ENDPOINT)",
 							"--http-port=80",
 							"--v=5",
+							"--max-migrate-count=1",
+							"--migrate-check=false",
+							"snapshot--restore-timeout=600",
 						},
 						Env: []corev1.EnvVar{
 							{
