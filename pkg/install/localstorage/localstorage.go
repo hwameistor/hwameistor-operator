@@ -133,7 +133,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 							"--v=5",
 							"--max-migrate-count=1",
 							"--migrate-check=false",
-							"snapshot--restore-timeout=600",
+							"snapshot-restore-timeout=600",
 						},
 						Env: []corev1.EnvVar{
 							{
