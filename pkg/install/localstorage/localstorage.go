@@ -131,9 +131,12 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 							"--csi-address=$(CSI_ENDPOINT)",
 							"--http-port=80",
 							"--v=5",
+							//Maximum number of concurrent volume migrations
 							"--max-migrate-count=1",
+							//Whether to enable data verification during migration
 							"--migrate-check=false",
-							"snapshot-restore-timeout=600",
+							//The default snapshot recovery time is ten minutes
+							"--snapshot-restore-timeout=600",
 						},
 						Env: []corev1.EnvVar{
 							{
