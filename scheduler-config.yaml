@@ -16,6 +16,10 @@ data:
           reserve:
             enabled:
               - name: hwameistor-scheduler-plugin
+          score:
+            enabled:
+              - name: hwameistor-scheduler-plugin
+                weight: 10                
     leaderElection:
       leaderElect: true
       resourceName: hwameistor-scheduler
