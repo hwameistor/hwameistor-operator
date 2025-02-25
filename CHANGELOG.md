@@ -1,3 +1,10 @@
+v0.16.2 / 2025-2-25
+========================
+* add args in local-storage ds #331 （peng9808）
+* fix member args snapshot-restore-timeout #332（peng9808）
+* Add parameter description #333（peng9808）
+* use hwameistor v0.16.2 #335（peng9808）
+
 v0.16.1 / 2024-11-26
 ========================
 * use hwameistor v0.16.1 #327（peng9808）
