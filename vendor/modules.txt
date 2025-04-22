@@ -99,8 +99,10 @@ github.com/google/gofuzz
 github.com/google/uuid
 # github.com/hwameistor/datastore v0.0.1
 ## explicit; go 1.21.11
+github.com/hwameistor/datastore/deploy/crds
 # github.com/hwameistor/hwameistor v0.16.3
 ## explicit; go 1.21
+github.com/hwameistor/hwameistor/deploy/crds
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/scheme
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned/typed/hwameistor/v1alpha1
