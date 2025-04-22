@@ -1,3 +1,7 @@
+v0.16.3 / 2025-4-22
+========================
+* upgrade hwameistor to v0.16.3 #346 (@FloatXD )
+
 v0.16.2 / 2025-2-25
 ========================
 * add args in local-storage ds #331 （peng9808）
