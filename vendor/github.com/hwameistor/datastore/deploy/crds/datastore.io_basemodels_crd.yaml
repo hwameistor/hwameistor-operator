@@ -1,0 +1,107 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: basemodels.datastore.io
+spec:
+  group: datastore.io
+  names:
+    kind: BaseModel
+    listKind: BaseModelList
+    plural: basemodels
+    shortNames:
+    - bm
+    singular: basemodel
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: BaseModel is the Schema for the basemodels API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BaseModelSpec defines the desired state of BaseModel
+            properties:
+              ftp:
+                properties:
+                  dir:
+                    default: /
+                    type: string
+                  endpoint:
+                    type: string
+                  password:
+                    type: string
+                  user:
+                    type: string
+                required:
+                - dir
+                - password
+                - user
+                type: object
+              http:
+                properties:
+                  url:
+                    type: string
+                required:
+                - url
+                type: object
+              minio:
+                properties:
+                  accessKey:
+                    type: string
+                  bucket:
+                    type: string
+                  endpoint:
+                    type: string
+                  prefix:
+                    type: string
+                  region:
+                    type: string
+                  secretKey:
+                    type: string
+                required:
+                - accessKey
+                - bucket
+                - secretKey
+                type: object
+              modelName:
+                type: string
+              nfs:
+                properties:
+                  endpoint:
+                    type: string
+                  export:
+                    type: string
+                  rootdir:
+                    default: .
+                    type: string
+                required:
+                - export
+                - rootdir
+                type: object
+              proto:
+                default: minio
+                type: string
+            required:
+            - modelName
+            - proto
+            type: object
+          status:
+            description: BaseModelStatus defines the observed state of BaseModel
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
