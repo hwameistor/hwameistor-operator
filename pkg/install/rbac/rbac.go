@@ -70,7 +70,7 @@ var clusterRole = rbacv1.ClusterRole{
 		{
 			APIGroups: []string{"apps"},
 			Resources: []string{"deployments", "daemonsets"},
-			Verbs:     []string{"get"},
+			Verbs:     []string{"get", "list"},
 		},
 		{
 			APIGroups: []string{"apps"},
