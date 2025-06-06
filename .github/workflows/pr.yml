@@ -7,7 +7,8 @@ on:
     paths:
       - "pkg/**"
       - "test/**"
-
+      - "controllers/**"
+      
 jobs:
   pr-test:
     runs-on: ["vsphere"]
