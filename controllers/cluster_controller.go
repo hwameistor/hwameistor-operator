@@ -23,6 +23,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"os"
 	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -62,6 +63,9 @@ import (
 	"github.com/hwameistor/hwameistor-operator/pkg/install/utils"
 )
 
+const (
+	SchedulerConfigmapManaged = "SCHEDULER_CONFIGMAP_MANAGED"
+)
 // ClusterReconciler reconciles a Cluster object
 type ClusterReconciler struct {
 	client.Client
@@ -257,9 +261,18 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	if !newInstance.Spec.Scheduler.Disable {
-		if err := scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Ensure(); err != nil {
-			log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
-			return ctrl.Result{}, err
+
+		// for some special purpose(e.g. run with GPU scheduler), user may want to modify
+		// the scheduler configmap, which is different from the default one, we won't update
+		// or create any scheduler configmap in this situation.
+		// see #1714 for more detail
+
+		// set env SCHEDULER_CONFIGMAP_MANAGED to NO to ignore the management for scheduler configmap
+		if v,exist := os.LookupEnv(SchedulerConfigmapManaged); !exist || strings.ToLower(v) == "yes"{
+			if err = scheduler.NewSchedulerConfigMapMaintainer(r.Client, newInstance).Ensure(); err != nil {
+				log.Errorf("Ensure Scheduler ConfigMap err: %v", err)
+				return ctrl.Result{}, err
+			}
 		}
 
 		newInstance, err = scheduler.NewSchedulerMaintainer(r.Client, newInstance).Ensure()
