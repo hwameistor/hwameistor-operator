@@ -1,3 +1,12 @@
+v0.16.4 / 2025-6-20
+========================
+* use hwameistor v0.16.4 #359 (@FloatXD )
+* detech CRD exist or not before install servicemonitor #358 (@SSmallMonster )
+* Increase pr test coverage #357 (@FloatXD )
+* add hwameistor servicemonitor to charts #354 (@SSmallMonster )
+* [Test]fix permission #352 (@FloatXD )
+* upgrade modules.txt #350 (@FloatXD )
+
 v0.16.3 / 2025-4-22
 ========================
 * upgrade hwameistor to v0.16.3 #346 (@FloatXD )
