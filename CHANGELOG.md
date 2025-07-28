@@ -1,3 +1,8 @@
+v0.16.5 / 2025-7-28
+========================
+* use hwameistor v0.16.5 #365 (@FloatXD )
+
+
 v0.16.4 / 2025-6-20
 ========================
 * use hwameistor v0.16.4 #359 (@FloatXD )
@@ -6,6 +11,7 @@ v0.16.4 / 2025-6-20
 * add hwameistor servicemonitor to charts #354 (@SSmallMonster )
 * [Test]fix permission #352 (@FloatXD )
 * upgrade modules.txt #350 (@FloatXD )
+
 
 v0.16.3 / 2025-4-22
 ========================
