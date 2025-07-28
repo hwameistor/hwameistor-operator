@@ -8,6 +8,7 @@ on:
       - "pkg/**"
       - "test/**"
       - "controllers/**"
+      - "helm/**"
       
 jobs:
   pr-test:
