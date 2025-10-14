@@ -248,6 +248,11 @@ build_image: ## build image
 	${DOCKER_MAKE_CMD} make compile
 	docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ${PROJECT_SOURCE_CODE_DIR}
 
+.PHONY: build_push_image
+build_push_image: build_image
+	echo "Push image ${IMAGE_NAME}:${IMAGE_TAG}"
+	docker push ${IMAGE_NAME}:${IMAGE_TAG}
+
 .PHONY: release
 release: ## release
 	# build for amd64 version
