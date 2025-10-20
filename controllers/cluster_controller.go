@@ -18,20 +18,21 @@ package controllers
 
 import (
 	"context"
+	"os"
+	"reflect"
+	"strings"
+	"time"
+
 	"github.com/hwameistor/hwameistor-operator/pkg/install/dataloadmanager"
 	"github.com/hwameistor/hwameistor-operator/pkg/install/datasetmanager"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"os"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strings"
-	"time"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -528,6 +529,17 @@ func (r *ClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 	}
 
+
+	if newInstance.Spec.DRBD.Disable {
+		err = drbd.DeleteDRBDAdapter(instance, r.Client)
+		if err != nil {
+			log.Errorf("DRBD Uninstall Error: %s", err)
+			return ctrl.Result{}, err
+		}
+		newInstance.Status.DRBDAdapterCreated = false
+		newInstance.Status.DRBDAdapterCreatedJobNum = 0
+	}
+
 	if newInstance.Spec.DataLoadManager.Disable {
 		err = dataloadmanager.NewMaintainer(r.Client, newInstance).Uninstall()
 		if err != nil {
@@ -728,7 +740,10 @@ func (r *ClusterReconciler) handleDrbdJobDelete(cli client.Client, job *batchv1.
 		log.Errorf("Get cluster instance err: %v", err)
 		return err
 	}
-	if instance.Status.DRBDAdapterCreatedJobNum > 0 {
+
+	// this happens when the user deletes drbd job manually(to retry installation) or disables drbd installation
+	// anyway, drbd job should be deleted here and don't recreate
+	if instance.Spec.DRBD.Disable || instance.Status.DRBDAdapterCreatedJobNum > 0 {
 		return nil
 	}
 

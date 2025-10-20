@@ -3,6 +3,10 @@ package drbd
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
+	"time"
+
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
@@ -10,11 +14,9 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"regexp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
-	"time"
 )
 
 var defaultDeployOnMaster = "no"
@@ -95,6 +97,12 @@ func HandelDRBDConfigs(clusterInstance *hwameistoriov1alpha1.Cluster) {
 	checkHostName = drbdConfigs.CheckHostName
 	useAffinity = drbdConfigs.UseAffinity
 	nodeAffinity = *drbdConfigs.NodeAffinity
+}
+
+func DeleteDRBDAdapter(instance *hwameistoriov1alpha1.Cluster, cli client.Client) error {
+	return cli.DeleteAllOf(context.TODO(), &batchv1.Job{}, client.GracePeriodSeconds(0), client.MatchingLabelsSelector{
+		Selector: labels.SelectorFromValidatedSet(labels.Set{"app": "drbd-adapter"}), },
+		client.InNamespace(instance.Spec.TargetNamespace), client.PropagationPolicy(v1.DeletePropagationBackground))
 }
 
 func CreateDRBDAdapter(instance *hwameistoriov1alpha1.Cluster, cli client.Client) error {
