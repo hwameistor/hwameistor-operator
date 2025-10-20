@@ -4,6 +4,7 @@ import (
 	"context"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -130,7 +131,7 @@ var clusterRole = rbacv1.ClusterRole{
 		{
 			APIGroups: []string{""},
 			Resources: []string{"configmaps"},
-			Verbs:     []string{"get", "list", "watch", "update", "create"},
+			Verbs:     []string{"get", "list", "watch", "update", "create", "delete"},
 		},
 		{
 			APIGroups: []string{"hwameistor.io"},
@@ -205,12 +206,45 @@ func (m *RBACMaintainer) ensureClusterRole() error {
 				log.Errorf("Create ClusterRole err: %v", err)
 				return errCreate
 			}
+			return nil
 		} else {
 			log.Errorf("Get ClusterRole err: %v", err)
 			return err
 		}
 	}
 
+	var updatedRules []rbacv1.PolicyRule
+
+	// ************* Patch of configmaps delete permissions for hwameistor-admin
+	cmCheckPassed := false
+	matchedCMRules := findRulesByGroupKind(gottenClusterRole.Rules, "", "configmaps")
+	for _,cmRule := range matchedCMRules {
+		if install.Contains(cmRule.Verbs, "delete") {
+			cmCheckPassed = true
+			break
+		}
+	}
+	if !cmCheckPassed {
+		updatedRules = append(updatedRules, rbacv1.PolicyRule{
+				APIGroups: []string{""},
+				Resources: []string{"configmaps"},
+				Verbs:     []string{"delete"},
+		})
+	}
+
+	// update all necessary permissions
+	if len(updatedRules) == 0 {
+		log.Debug("Nothing to update for hwameistor-role permissions")
+		return nil
+	}
+
+	gottenClusterRole.Rules = append(gottenClusterRole.Rules, updatedRules...)
+	if err := m.Client.Update(context.TODO(), &gottenClusterRole);err != nil {
+		log.Debug("Failed to update hwameistor-role permissions")
+		return err
+	}
+
+	log.WithFields(log.Fields{"APIGroup": updatedRules[0].APIGroups[0], "Resources": updatedRules[0].Resources[0], "Verbs": updatedRules[0].Verbs[0]}).Debug("Successfully add hwameistor-role delete permission for configmaps")
 	return nil
 }
 
@@ -255,6 +289,17 @@ func (m *RBACMaintainer) ensureClusterRoleBinding() error {
 	}
 
 	return nil
+}
+
+func findRulesByGroupKind(rules []rbacv1.PolicyRule, group,resource string) []rbacv1.PolicyRule{
+	var matchedRules []rbacv1.PolicyRule
+	for _,rule := range rules{
+		if install.Contains(rule.Resources,  resource) && install.Contains(rule.APIGroups, group) {
+			matchedRules = append(matchedRules, *rule.DeepCopy())
+		}
+	}
+
+	return matchedRules
 }
 
 func FulfillRBACSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {
