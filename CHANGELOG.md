@@ -1,3 +1,11 @@
+v1.0.1 / 2025-10-22
+========================
+* add workflows for release/v1.0.0 #374 (@FloatXD )
+* use hwameistor v1.0.1 #373 (@FloatXD )
+* feat: support drbd unsinstall #372 (@SSmallMonster )
+* ci: add build_push_image target #371 (@SSmallMonster )
+* add delete permissions of configmaps for hwameistor-admin #370 (@SSmallMonster )
+
 v0.16.5 / 2025-7-28
 ========================
 * use hwameistor v0.16.5 #365 (@FloatXD )
