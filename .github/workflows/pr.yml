@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: delete
         run: |
-          sudo rm -rf rm -rf /github/actions-runner/_work/hwameistor-operator/hwameistor-operator/_build
+          sudo rm -rf  /home/github/_work/hwameistor-operator/hwameistor-operator/_build
       - name: Checkout
         uses: actions/checkout@v2
         with:
