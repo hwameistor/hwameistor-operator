@@ -2,10 +2,14 @@ package admissioncontroller
 
 import (
 	"context"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"reflect"
+	"sync"
 	"time"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
@@ -16,19 +20,40 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type AdmissionControllerMaintainer struct {
 	Client          client.Client
 	ClusterInstance *hwameistoriov1alpha1.Cluster
+	watchChan       chan time.Time
+	lock            sync.Mutex
 }
 
+var DefaultBackoff = wait.Backoff{
+	Duration: 5 * time.Second,
+	Factor:   2.0,
+	Jitter:   0.1,
+	Steps:    5,
+	Cap:      5 * time.Minute,
+}
+
+var once sync.Once
+var maintainer *AdmissionControllerMaintainer
+
 func NewAdmissionControllerMaintainer(cli client.Client, clusterInstance *hwameistoriov1alpha1.Cluster) *AdmissionControllerMaintainer {
-	return &AdmissionControllerMaintainer{
-		Client:          cli,
-		ClusterInstance: clusterInstance,
-	}
+	once.Do(func() {
+		maintainer = &AdmissionControllerMaintainer{
+			Client:          cli,
+			ClusterInstance: clusterInstance,
+			watchChan:       make(chan time.Time, 1),
+		}
+		go maintainer.StartCertificateWatcher(context.TODO())
+	})
+	maintainer.ClusterInstance = clusterInstance
+	return maintainer
 }
 
 var replicas = int32(1)
@@ -334,6 +359,10 @@ func (m *AdmissionControllerMaintainer) Uninstall() error {
 
 // ensure hwameistor-admission-ca is generated before the admission controller running
 func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
+	log.Info("ensuring hwameistor-admission-ca secret...")
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	// skip generation if the ca already exists
 	secret := corev1.Secret{}
 	secret.Name = "hwameistor-admission-ca"
@@ -366,7 +395,7 @@ func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
 		log.WithError(err).Error("failed to generate certs")
 		return err
 	}
-
+	originalSecret := secret.DeepCopy()
 	if secret.Data == nil {
 		secret.Data = make(map[string][]byte)
 	}
@@ -377,7 +406,7 @@ func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
 		err = m.Client.Create(context.Background(), &secret)
 		log.Info("creating hwameistor-admission-ca secret...")
 	} else {
-		err = m.Client.Update(context.Background(), &secret)
+		err = m.Client.Patch(context.Background(), &secret, client.MergeFrom(originalSecret))
 		log.Info("updating hwameistor-admission-ca secret...")
 	}
 
@@ -385,6 +414,166 @@ func (m *AdmissionControllerMaintainer) ensureAdmissionCA() error {
 		log.WithError(err).Error("failed to update admission ca secret")
 	}
 	return err
+}
+
+// StartCertificateWatcher starts a goroutine to continuously watch the certificate expiry and trigger rolling update
+func (m *AdmissionControllerMaintainer) StartCertificateWatcher(ctx context.Context) {
+	log.Info("Starting certificate watcher...")
+	go func(ctx context.Context) {
+		retryRollingUpdateCertificate := func() {
+			retry.OnError(DefaultBackoff, func(err error) bool {
+				if err != nil {
+					log.WithError(err).Error("failed to rolling update certificate, retrying...")
+				}
+				return true
+			}, func() error {
+				err := m.rollingUpdateCertificate()
+				if err == nil {
+					go m.scheduleNextCertificateCheck()
+				}
+				return err
+			})
+		}
+
+		// Calculate and send the next certificate check time at startup
+		m.scheduleNextCertificateCheck()
+		for {
+			select {
+			case <-ctx.Done():
+				log.Info("Certificate watcher stopped")
+				return
+			case expireTime := <-m.watchChan:
+				log.WithField("expire_time", expireTime).Info("Received certificate expiry signal")
+				delay := time.Until(expireTime)
+				log.WithField("delay(hours)", delay.Hours()).Info("Scheduling certificate update")
+				time.AfterFunc(delay, retryRollingUpdateCertificate)
+			}
+		}
+	}(ctx)
+}
+
+// scheduleNextCertificateCheck calculates the next certificate check time and sends it to watchChan
+func (m *AdmissionControllerMaintainer) scheduleNextCertificateCheck() {
+	// Get the expiry time of the current certificate
+	expiryTime, err := m.getCertificateExpiryTime()
+	if err != nil {
+		log.WithError(err).Error("Failed to get certificate expiry time for scheduling")
+		// If failed to get expiry time, set a default check time (e.g., 1 hour later)
+		nextCheckTime := time.Now().Add(1 * time.Hour)
+		select {
+		case m.watchChan <- nextCheckTime:
+			log.WithField("next_check_time", nextCheckTime).Info("Scheduled next certificate check (fallback)")
+		default:
+			log.Warn("Failed to send next check time to watchChan (channel full)")
+		}
+		return
+	}
+
+	// Start updating 7 days before the certificate expires
+	updateTime := expiryTime.Add(-7 * 24 * time.Hour)
+
+	select {
+	case m.watchChan <- updateTime:
+		log.WithFields(log.Fields{
+			"certificate_expiry": expiryTime,
+			"update_time":        updateTime,
+		}).Info("Scheduled next certificate update")
+	default:
+		log.Warn("Failed to send update time to watchChan (channel full)")
+	}
+}
+
+// getCertificateExpiryTime gets the expiry time of the current certificate
+func (m *AdmissionControllerMaintainer) getCertificateExpiryTime() (time.Time, error) {
+	secret := corev1.Secret{}
+	if err := m.Client.Get(context.Background(), client.ObjectKey{
+		Name:      "hwameistor-admission-ca",
+		Namespace: m.ClusterInstance.Spec.TargetNamespace,
+	}, &secret); err != nil {
+		return time.Time{}, err
+	}
+
+	if secret.Data == nil || secret.Data[corev1.TLSCertKey] == nil {
+		return time.Time{}, errors.New("certificate data not found in secret")
+	}
+
+	expiryInfo, err := getCertificateExpiryInfo(secret.Data[corev1.TLSCertKey])
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return expiryInfo.Time, nil
+}
+
+// rollingUpdateCertificate performs a rolling update of the admission certificate
+// Steps:
+// - clear the existing secret data to force regeneration
+// - recreate the AdmissionController Pod to pick up the new certs
+func (m *AdmissionControllerMaintainer) rollingUpdateCertificate() error {
+	secret := corev1.Secret{}
+	if err := m.Client.Get(context.Background(), client.ObjectKey{Name: "hwameistor-admission-ca",
+		Namespace: m.ClusterInstance.Spec.TargetNamespace}, &secret); err != nil {
+		if !apierrors.IsNotFound(err) {
+			log.WithError(err).Error("failed to get admission ca secret")
+			return err
+		}
+	} else {
+		if secret.Data == nil && secret.Data[corev1.TLSCertKey] == nil {
+			expireTime, err := getCertificateExpiryInfo(secret.Data[corev1.TLSCertKey])
+			if err != nil {
+				log.WithError(err).Error("failed to get certificate expiry info")
+				return err
+			}
+			log.Infof("secret hwameistor-admission-ca expire time: %v", expireTime)
+		}
+		originalSecret := secret.DeepCopy()
+
+		// clear the secret data to force regeneration
+		secret.Data = nil
+		if err := m.Client.Patch(context.Background(), &secret, client.MergeFrom(originalSecret)); err != nil {
+			log.WithError(err).Error("failed to clear admission ca secret data")
+			return err
+		}
+		log.Info("cleared admission ca secret data to force regeneration")
+	}
+
+	log.Info("regenerating admission ca secret...")
+	if err := m.ensureAdmissionCA(); err != nil {
+		log.WithError(err).Error("failed to regenerate admission ca secret")
+		return err
+	}
+
+	// delete the existing AdmissionController Pod to force restart
+	var pod corev1.Pod
+	if err := m.Client.DeleteAllOf(
+		context.TODO(),
+		&pod,
+		client.InNamespace(m.ClusterInstance.Spec.TargetNamespace),
+		client.MatchingLabels(map[string]string{
+			admissionControllerLabelSelectorKey: admissionControllerLabelSelectorValue,
+		}),
+	); err != nil {
+		log.WithError(err).Error("failed to delete existing AdmissionController pods")
+		return err
+	}
+
+	log.Info("deleted existing AdmissionController pods to trigger restart")
+	return nil
+}
+
+func getCertificateExpiryInfo(certData []byte) (*metav1.Time, error) {
+	block, _ := pem.Decode(certData)
+	if block == nil {
+		return nil, errors.New("failed to decode PEM block")
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	expiryTime := metav1.NewTime(cert.NotAfter)
+	return &expiryTime, nil
 }
 
 func FulfillAdmissionControllerSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistoriov1alpha1.Cluster {

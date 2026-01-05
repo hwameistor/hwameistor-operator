@@ -347,6 +347,11 @@ type ListOptions struct {
 	Raw *metav1.ListOptions
 }
 
+// ApplyToDeleteAllOf implements DeleteAllOfOption.
+func (o *ListOptions) ApplyToDeleteAllOf(*DeleteAllOfOptions) {
+	panic("unimplemented")
+}
+
 var _ ListOption = &ListOptions{}
 
 // ApplyToList implements ListOption for ListOptions.
