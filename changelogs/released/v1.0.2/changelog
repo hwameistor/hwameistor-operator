@@ -1,0 +1,4 @@
+v1.0.2 / 2025-1-20
+========================
+* feat: implement certificate rolling update with continuous monitoring #381 (@SSmallMonster )
+* use hwameistor v1.0.2 #386 (@FloatXD )

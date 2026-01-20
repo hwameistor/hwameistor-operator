@@ -1,3 +1,8 @@
+v1.0.2 / 2025-1-20
+========================
+* feat: implement certificate rolling update with continuous monitoring #381 (@SSmallMonster )
+* use hwameistor v1.0.2 #386 (@FloatXD )
+
 v1.0.1 / 2025-10-22
 ========================
 * add workflows for release/v1.0.0 #374 (@FloatXD )
