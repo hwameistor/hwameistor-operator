@@ -100,7 +100,7 @@ github.com/google/uuid
 # github.com/hwameistor/datastore v0.0.1
 ## explicit; go 1.21.11
 github.com/hwameistor/datastore/deploy/crds
-# github.com/hwameistor/hwameistor v1.0.1
+# github.com/hwameistor/hwameistor v1.0.2
 ## explicit; go 1.21
 github.com/hwameistor/hwameistor/deploy/crds
 github.com/hwameistor/hwameistor/pkg/apis/client/clientset/versioned
