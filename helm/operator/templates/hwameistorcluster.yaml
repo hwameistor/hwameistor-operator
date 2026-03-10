@@ -50,6 +50,11 @@ spec:
       resources:
         {{- toYaml .Values.localDiskManager.manager.resources | nindent 8 }}
     tolerationOnMaster: {{ $.Values.localDiskManager.tolerationOnMaster }}
+    {{- with $.Values.localDiskManager.tolerations }}
+    common:
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
   localStorage:
     disable: {{ $.Values.localStorage.disable }}
     kubeletRootDir: {{ $.Values.localStorage.kubeletRootDir | quote }}
@@ -119,6 +124,11 @@ spec:
       hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
       hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
+    {{- with $.Values.localStorage.tolerations }}
+    common:
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
     snapshot: 
       disable: {{ $.Values.localStorage.snapshot.disable }}
   scheduler:

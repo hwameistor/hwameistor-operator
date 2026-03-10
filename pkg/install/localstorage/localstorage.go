@@ -278,33 +278,37 @@ func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Daemo
 	lsDaemonSetToCreate = setLSDaemonSetVolumes(clusterInstance, lsDaemonSetToCreate)
 	lsDaemonSetToCreate = setLSDaemonSetContainers(clusterInstance, lsDaemonSetToCreate)
 
+	if clusterInstance.Spec.LocalStorage.Common != nil && clusterInstance.Spec.LocalStorage.Common.Tolerations != nil {
+		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = append(lsDaemonSetToCreate.Spec.Template.Spec.Tolerations, (*clusterInstance.Spec.LocalStorage.Common.Tolerations)...)
+	}
+
 	if clusterInstance.Spec.LocalStorage.TolerationOnMaster {
-		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
-			{
+		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = append(lsDaemonSetToCreate.Spec.Template.Spec.Tolerations,
+			corev1.Toleration{
 				Key:      "CriticalAddonsOnly",
 				Operator: corev1.TolerationOpExists,
 			},
-			{
+			corev1.Toleration{
 				Effect:   corev1.TaintEffectNoSchedule,
 				Key:      "node.kubernetes.io/not-ready",
 				Operator: corev1.TolerationOpExists,
 			},
-			{
+			corev1.Toleration{
 				Effect:   corev1.TaintEffectNoSchedule,
 				Key:      "node-role.kubernetes.io/master",
 				Operator: corev1.TolerationOpExists,
 			},
-			{
+			corev1.Toleration{
 				Effect:   corev1.TaintEffectNoSchedule,
 				Key:      "node-role.kubernetes.io/control-plane",
 				Operator: corev1.TolerationOpExists,
 			},
-			{
+			corev1.Toleration{
 				Effect:   corev1.TaintEffectNoSchedule,
 				Key:      "node.cloudprovider.kubernetes.io/uninitialized",
 				Operator: corev1.TolerationOpExists,
 			},
-		}
+		)
 	}
 
 	return lsDaemonSetToCreate
