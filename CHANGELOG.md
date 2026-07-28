@@ -1,4 +1,8 @@
-v1.0.2 / 2025-1-20
+v1.1.1 / 2026-7-28
+========================
+* use hwameistor v1.1.1 #390 (@FloatXD )
+
+v1.0.2 / 2026-1-20
 ========================
 * feat: implement certificate rolling update with continuous monitoring #381 (@SSmallMonster )
 * use hwameistor v1.0.2 #386 (@FloatXD )
