@@ -142,8 +142,6 @@ type MemberSpec struct {
 	HostPathDRBDDir  string                       `json:"hostPathDRBDDir,omitempty"`
 	Resources        *corev1.ResourceRequirements `json:"resources,omitempty"`
 	Image            *ImageSpec                   `json:"image,omitempty"`
-	// ExtraEnv defines additional environment variables for the local-storage member container.
-	ExtraEnv         []corev1.EnvVar              `json:"extraEnv,omitempty"`
 }
 
 type SnapshotSpec struct {
