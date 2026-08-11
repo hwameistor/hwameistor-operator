@@ -40,6 +40,7 @@ localStorage:
     tag: v1.0.1
     hostPathSSHDir: /root/.ssh
     hostPathDRBDDir: /etc/drbd.d
+    # extraEnv is stored in a Cluster annotation and injected into the member container.
     # Keep the image's standard binary paths when extending PATH.
     # extraEnv:
     #   - name: PATH

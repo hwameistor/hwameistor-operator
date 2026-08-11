@@ -17,6 +17,7 @@ limitations under the License.
 package localstorage
 
 import (
+	"encoding/json"
 	"testing"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -26,28 +27,38 @@ import (
 
 func TestSetLSDaemonSetIncludesMemberExtraEnv(t *testing.T) {
 	cluster := newTestCluster()
-	cluster.Spec.LocalStorage.Member.ExtraEnv = []corev1.EnvVar{
+	setMemberExtraEnvAnnotation(t, cluster, []corev1.EnvVar{
 		{Name: "PATH", Value: "/usr/bin:/run/current-system/sw/bin"},
-	}
+	})
 
-	daemonSet := SetLSDaemonSet(cluster)
+	daemonSet, err := SetLSDaemonSet(cluster)
+	if err != nil {
+		t.Fatalf("SetLSDaemonSet returned an error: %v", err)
+	}
 	member := findMemberContainer(t, daemonSet)
 	assertEnvValue(t, member.Env, "PATH", "/usr/bin:/run/current-system/sw/bin")
 }
 
 func TestNeedOrNotToUpdateLSDaemonsetReconcilesMemberExtraEnv(t *testing.T) {
 	oldCluster := newTestCluster()
-	oldCluster.Spec.LocalStorage.Member.ExtraEnv = []corev1.EnvVar{
+	setMemberExtraEnvAnnotation(t, oldCluster, []corev1.EnvVar{
 		{Name: "OLD_ENV", Value: "old"},
+	})
+	oldDaemonSet, err := SetLSDaemonSet(oldCluster)
+	if err != nil {
+		t.Fatalf("SetLSDaemonSet returned an error: %v", err)
 	}
-	gotten := *SetLSDaemonSet(oldCluster)
+	gotten := *oldDaemonSet
 
 	wantedCluster := newTestCluster()
-	wantedCluster.Spec.LocalStorage.Member.ExtraEnv = []corev1.EnvVar{
+	setMemberExtraEnvAnnotation(t, wantedCluster, []corev1.EnvVar{
 		{Name: "NEW_ENV", Value: "new"},
-	}
+	})
 
-	needToUpdate, updated := needOrNotToUpdateLSDaemonset(wantedCluster, gotten)
+	needToUpdate, updated, err := needOrNotToUpdateLSDaemonset(wantedCluster, gotten)
+	if err != nil {
+		t.Fatalf("needOrNotToUpdateLSDaemonset returned an error: %v", err)
+	}
 	if !needToUpdate {
 		t.Fatal("expected DaemonSet update when member extraEnv changes")
 	}
@@ -55,6 +66,30 @@ func TestNeedOrNotToUpdateLSDaemonsetReconcilesMemberExtraEnv(t *testing.T) {
 	member := findMemberContainer(t, updated)
 	assertEnvValue(t, member.Env, "NEW_ENV", "new")
 	assertEnvMissing(t, member.Env, "OLD_ENV")
+}
+
+func TestSetLSDaemonSetRejectsInvalidMemberExtraEnvAnnotation(t *testing.T) {
+	cluster := newTestCluster()
+	cluster.Annotations = map[string]string{
+		memberExtraEnvAnnotationName: "not-json",
+	}
+
+	if _, err := SetLSDaemonSet(cluster); err == nil {
+		t.Fatal("expected an error for an invalid member extraEnv annotation")
+	}
+}
+
+func setMemberExtraEnvAnnotation(t *testing.T, cluster *hwameistoriov1alpha1.Cluster, env []corev1.EnvVar) {
+	t.Helper()
+
+	value, err := json.Marshal(env)
+	if err != nil {
+		t.Fatalf("marshal member extraEnv annotation: %v", err)
+	}
+	if cluster.Annotations == nil {
+		cluster.Annotations = map[string]string{}
+	}
+	cluster.Annotations[memberExtraEnvAnnotationName] = string(value)
 }
 
 func newTestCluster() *hwameistoriov1alpha1.Cluster {

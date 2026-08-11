@@ -2,6 +2,8 @@ apiVersion: hwameistor.io/v1alpha1
 kind: Cluster
 metadata:
   name: hwameistor-cluster
+  annotations:
+    hwameistor.io/local-storage-member-extra-env: {{ $.Values.localStorage.member.extraEnv | toJson | quote }}
 spec:
   diskReserveConfigurations:
   {{- range $.Values.diskReserve }}
@@ -118,8 +120,6 @@ spec:
         tag: {{ $.Values.localStorage.migrate.juicesync.tag }}
       hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
       hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
-      extraEnv:
-        {{- toYaml .Values.localStorage.member.extraEnv | nindent 8 }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
     snapshot: 
       disable: {{ $.Values.localStorage.snapshot.disable }}
