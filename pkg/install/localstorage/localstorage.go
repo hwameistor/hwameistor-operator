@@ -395,15 +395,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			// if clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount != 0 {
 			// 	container.Args = append(container.Args, "--max-ha-volume-count=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount))
 			// }
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name:  "CSI_ENDPOINT",
-				Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
-			})
-
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name:  juicesyncEnvName,
-				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
-			})
+			container.Env = getLSMemberEnvFromClusterInstance(clusterInstance)
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
@@ -445,6 +437,30 @@ func getJuicesyncEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cl
 	return juicesyncImage.Registry + "/" + juicesyncImage.Repository + ":" + juicesyncImage.Tag
 }
 
+func getLSMemberEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) []corev1.EnvVar {
+	var env []corev1.EnvVar
+	for _, container := range lsDaemonSetTemplate.Spec.Template.Spec.Containers {
+		if container.Name == memberContainerName {
+			env = append(env, container.Env...)
+			break
+		}
+	}
+
+	env = append(env,
+		corev1.EnvVar{
+			Name:  "CSI_ENDPOINT",
+			Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
+		},
+		corev1.EnvVar{
+			Name:  juicesyncEnvName,
+			Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
+		},
+	)
+	env = append(env, clusterInstance.Spec.LocalStorage.Member.ExtraEnv...)
+
+	return env
+}
+
 func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
 	ds := gotten.DeepCopy()
 	var needToUpdate bool
@@ -453,23 +469,9 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 		if container.Name == memberContainerName {
 			var containerModified bool
 
-			wantedJuicesyncEnv := getJuicesyncEnvFromClusterInstance(cluster)
-			juicesyncEnvNotFound := true
-			for i, env := range container.Env {
-				if env.Name == juicesyncEnvName {
-					juicesyncEnvNotFound = false
-					if env.Value != wantedJuicesyncEnv {
-						env.Value = wantedJuicesyncEnv
-						container.Env[i] = env
-						containerModified = true
-					}
-				}
-			}
-			if juicesyncEnvNotFound {
-				container.Env = append(container.Env, corev1.EnvVar{
-					Name:  juicesyncEnvName,
-					Value: wantedJuicesyncEnv,
-				})
+			wantedEnv := getLSMemberEnvFromClusterInstance(cluster)
+			if !reflect.DeepEqual(container.Env, wantedEnv) {
+				container.Env = wantedEnv
 				containerModified = true
 			}
 

@@ -118,6 +118,8 @@ spec:
         tag: {{ $.Values.localStorage.migrate.juicesync.tag }}
       hostPathSSHDir: {{ $.Values.localStorage.member.hostPathSSHDir }}
       hostPathDRBDDir: {{ $.Values.localStorage.member.hostPathDRBDDir }}
+      extraEnv:
+        {{- toYaml .Values.localStorage.member.extraEnv | nindent 8 }}
     tolerationOnMaster: {{ $.Values.localStorage.tolerationOnMaster }}
     snapshot: 
       disable: {{ $.Values.localStorage.snapshot.disable }}
