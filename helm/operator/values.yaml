@@ -40,6 +40,12 @@ localStorage:
     tag: v1.0.1
     hostPathSSHDir: /root/.ssh
     hostPathDRBDDir: /etc/drbd.d
+    # extraEnv is stored in a Cluster annotation and injected into the member container.
+    # Keep the image's standard binary paths when extending PATH.
+    # extraEnv:
+    #   - name: PATH
+    #     value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/current-system/sw/bin
+    extraEnv: []
   csi:
     registrar:
       imageRepository: sig-storage/csi-node-driver-registrar
