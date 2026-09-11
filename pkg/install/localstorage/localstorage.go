@@ -2,7 +2,8 @@ package localstorage
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/runtime/schema"
+	"encoding/json"
+	"fmt"
 	"reflect"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
@@ -12,6 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,6 +44,7 @@ var memberContainerName = "member"
 var registrarContainerName = "registrar"
 
 var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
+var memberExtraEnvAnnotationName = "hwameistor.io/local-storage-member-extra-env"
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -268,7 +271,7 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 	},
 }
 
-func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.DaemonSet {
+func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) (*appsv1.DaemonSet, error) {
 	lsDaemonSetToCreate := lsDaemonSetTemplate.DeepCopy()
 
 	lsDaemonSetToCreate.OwnerReferences = append(lsDaemonSetToCreate.OwnerReferences, *metav1.NewControllerRef(clusterInstance, schema.FromAPIVersionAndKind("hwameistor.io/v1alpha1", "Cluster")))
@@ -276,7 +279,11 @@ func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Daemo
 	// lsDaemonSet.Spec.Template.Spec.PriorityClassName = clusterInstance.Spec.LocalStorage.Common.PriorityClassName
 	lsDaemonSetToCreate.Spec.Template.Spec.ServiceAccountName = clusterInstance.Spec.RBAC.ServiceAccountName
 	lsDaemonSetToCreate = setLSDaemonSetVolumes(clusterInstance, lsDaemonSetToCreate)
-	lsDaemonSetToCreate = setLSDaemonSetContainers(clusterInstance, lsDaemonSetToCreate)
+	var err error
+	lsDaemonSetToCreate, err = setLSDaemonSetContainers(clusterInstance, lsDaemonSetToCreate)
+	if err != nil {
+		return nil, err
+	}
 
 	if clusterInstance.Spec.LocalStorage.TolerationOnMaster {
 		lsDaemonSetToCreate.Spec.Template.Spec.Tolerations = []corev1.Toleration{
@@ -307,7 +314,7 @@ func SetLSDaemonSet(clusterInstance *hwameistoriov1alpha1.Cluster) *appsv1.Daemo
 		}
 	}
 
-	return lsDaemonSetToCreate
+	return lsDaemonSetToCreate, nil
 }
 
 func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
@@ -375,7 +382,7 @@ func setLSDaemonSetVolumes(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaem
 	return lsDaemonSetToCreate
 }
 
-func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) *appsv1.DaemonSet {
+func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsDaemonSetToCreate *appsv1.DaemonSet) (*appsv1.DaemonSet, error) {
 	for i, container := range lsDaemonSetToCreate.Spec.Template.Spec.Containers {
 		if container.Name == registrarContainerName {
 			container.Args = append(container.Args, "--kubelet-registration-path="+clusterInstance.Spec.LocalStorage.KubeletRootDir+"/plugins/lvm.hwameistor.io/csi.sock")
@@ -395,15 +402,11 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			// if clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount != 0 {
 			// 	container.Args = append(container.Args, "--max-ha-volume-count=" + fmt.Sprintf("%v", clusterInstance.Spec.LocalStorage.Member.MaxHAVolumeCount))
 			// }
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name:  "CSI_ENDPOINT",
-				Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
-			})
-
-			container.Env = append(container.Env, corev1.EnvVar{
-				Name:  juicesyncEnvName,
-				Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
-			})
+			var err error
+			container.Env, err = getLSMemberEnvFromClusterInstance(clusterInstance)
+			if err != nil {
+				return nil, err
+			}
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
@@ -427,7 +430,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 		lsDaemonSetToCreate.Spec.Template.Spec.Containers[i] = container
 	}
 
-	return lsDaemonSetToCreate
+	return lsDaemonSetToCreate, nil
 }
 
 func getLSContainerMemberImageStringFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) string {
@@ -445,31 +448,63 @@ func getJuicesyncEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cl
 	return juicesyncImage.Registry + "/" + juicesyncImage.Repository + ":" + juicesyncImage.Tag
 }
 
-func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet) {
+func getLSMemberEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) ([]corev1.EnvVar, error) {
+	var env []corev1.EnvVar
+	for _, container := range lsDaemonSetTemplate.Spec.Template.Spec.Containers {
+		if container.Name == memberContainerName {
+			env = append(env, container.Env...)
+			break
+		}
+	}
+
+	env = append(env,
+		corev1.EnvVar{
+			Name:  "CSI_ENDPOINT",
+			Value: "unix:/" + clusterInstance.Spec.LocalStorage.KubeletRootDir + "/plugins/lvm.hwameistor.io/csi.sock",
+		},
+		corev1.EnvVar{
+			Name:  juicesyncEnvName,
+			Value: getJuicesyncEnvFromClusterInstance(clusterInstance),
+		},
+	)
+
+	extraEnv, err := getLSMemberExtraEnvFromClusterInstance(clusterInstance)
+	if err != nil {
+		return nil, err
+	}
+	env = append(env, extraEnv...)
+
+	return env, nil
+}
+
+func getLSMemberExtraEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Cluster) ([]corev1.EnvVar, error) {
+	rawExtraEnv, exists := clusterInstance.Annotations[memberExtraEnvAnnotationName]
+	if !exists || rawExtraEnv == "" {
+		return nil, nil
+	}
+
+	var extraEnv []corev1.EnvVar
+	if err := json.Unmarshal([]byte(rawExtraEnv), &extraEnv); err != nil {
+		return nil, fmt.Errorf("parse Cluster annotation %q: %w", memberExtraEnvAnnotationName, err)
+	}
+
+	return extraEnv, nil
+}
+
+func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet, error) {
 	ds := gotten.DeepCopy()
 	var needToUpdate bool
+	wantedEnv, err := getLSMemberEnvFromClusterInstance(cluster)
+	if err != nil {
+		return false, ds, err
+	}
 
 	for i, container := range ds.Spec.Template.Spec.Containers {
 		if container.Name == memberContainerName {
 			var containerModified bool
 
-			wantedJuicesyncEnv := getJuicesyncEnvFromClusterInstance(cluster)
-			juicesyncEnvNotFound := true
-			for i, env := range container.Env {
-				if env.Name == juicesyncEnvName {
-					juicesyncEnvNotFound = false
-					if env.Value != wantedJuicesyncEnv {
-						env.Value = wantedJuicesyncEnv
-						container.Env[i] = env
-						containerModified = true
-					}
-				}
-			}
-			if juicesyncEnvNotFound {
-				container.Env = append(container.Env, corev1.EnvVar{
-					Name:  juicesyncEnvName,
-					Value: wantedJuicesyncEnv,
-				})
+			if !reflect.DeepEqual(container.Env, wantedEnv) {
+				container.Env = wantedEnv
 				containerModified = true
 			}
 
@@ -495,12 +530,16 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 		}
 	}
 
-	return needToUpdate, ds
+	return needToUpdate, ds, nil
 }
 
 func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error) {
 	newClusterInstance := m.ClusterInstance.DeepCopy()
-	lsDaemonSetToCreate := SetLSDaemonSet(newClusterInstance)
+	lsDaemonSetToCreate, err := SetLSDaemonSet(newClusterInstance)
+	if err != nil {
+		log.Errorf("Build LocalStorage DaemonSet err: %v", err)
+		return newClusterInstance, err
+	}
 	key := types.NamespacedName{
 		Namespace: lsDaemonSetToCreate.Namespace,
 		Name:      lsDaemonSetToCreate.Name,
@@ -519,7 +558,11 @@ func (m *LocalStorageMaintainer) Ensure() (*hwameistoriov1alpha1.Cluster, error)
 		}
 	}
 
-	needToUpdate, dsToUpdate := needOrNotToUpdateLSDaemonset(newClusterInstance, gottenDS)
+	needToUpdate, dsToUpdate, err := needOrNotToUpdateLSDaemonset(newClusterInstance, gottenDS)
+	if err != nil {
+		log.Errorf("Reconcile LocalStorage DaemonSet err: %v", err)
+		return newClusterInstance, err
+	}
 	if needToUpdate {
 		log.Infof("need to update ls daemonset")
 		if err := m.Client.Update(context.TODO(), dsToUpdate); err != nil {
