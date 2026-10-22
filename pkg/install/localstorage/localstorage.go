@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
+	"strings"
 
 	hwameistoriov1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
 	"github.com/hwameistor/hwameistor-operator/pkg/install"
@@ -45,6 +47,11 @@ var registrarContainerName = "registrar"
 
 var juicesyncEnvName = "MIGRAGE_JUICESYNC_IMAGE"
 var memberExtraEnvAnnotationName = "hwameistor.io/local-storage-member-extra-env"
+
+const (
+	juiceFSVersionEnv = "JUICEFS_VERSION"
+	migrateCheckEnv   = "MIGRATE_CHECK"
+)
 
 var lsDaemonSetTemplate = appsv1.DaemonSet{
 	ObjectMeta: metav1.ObjectMeta{
@@ -136,8 +143,6 @@ var lsDaemonSetTemplate = appsv1.DaemonSet{
 							"--v=5",
 							//Maximum number of concurrent volume migrations
 							"--max-migrate-count=1",
-							//Whether to enable data verification during migration
-							"--migrate-check=false",
 							//The default snapshot recovery time is ten minutes
 							"--snapshot-restore-timeout=600",
 						},
@@ -407,6 +412,9 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			if err != nil {
 				return nil, err
 			}
+			if err := setMigrationCheck(&container); err != nil {
+				return nil, err
+			}
 			container.Image = getLSContainerMemberImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.Member.Resources
 			pluginDirVolumeMount := corev1.VolumeMount{
@@ -472,7 +480,20 @@ func getLSMemberEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Clu
 	if err != nil {
 		return nil, err
 	}
-	env = append(env, extraEnv...)
+	version := corev1.EnvVar{Name: juiceFSVersionEnv, Value: migrationVersion()}
+	for _, item := range extraEnv {
+		if item.Name == juiceFSVersionEnv {
+			// The existing per-Cluster environment override takes precedence over
+			// the Operator default. Keep only the last entry for this setting.
+			version = item
+		} else {
+			env = append(env, item)
+		}
+	}
+	if version.ValueFrom == nil && version.Value != "" && version.Value != "1.2.0" && version.Value != "1.4.1" {
+		return nil, fmt.Errorf("unsupported %s %q: expected 1.2.0 or 1.4.1", juiceFSVersionEnv, version.Value)
+	}
+	env = append(env, version)
 
 	return env, nil
 }
@@ -491,6 +512,40 @@ func getLSMemberExtraEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha
 	return extraEnv, nil
 }
 
+func migrationVersion() string {
+	if version := os.Getenv(juiceFSVersionEnv); version != "" {
+		return version
+	}
+	return "1.2.0"
+}
+
+// setMigrationCheck reconciles only the check flag, including old or duplicate
+// arguments on an existing DaemonSet. Empty/unset configuration enables checks.
+func setMigrationCheck(container *corev1.Container) error {
+	check := os.Getenv(migrateCheckEnv)
+	if check == "" {
+		check = "true"
+	}
+	if check != "true" && check != "false" {
+		return fmt.Errorf("unsupported %s %q: expected true or false", migrateCheckEnv, check)
+	}
+	args := make([]string, 0, len(container.Args)+1)
+	for i := 0; i < len(container.Args); i++ {
+		arg := container.Args[i]
+		if arg == "--migrate-check" {
+			if i+1 < len(container.Args) && (container.Args[i+1] == "true" || container.Args[i+1] == "false") {
+				i++
+			}
+			continue
+		}
+		if !strings.HasPrefix(arg, "--migrate-check=") {
+			args = append(args, arg)
+		}
+	}
+	container.Args = append(args, "--migrate-check="+check)
+	return nil
+}
+
 func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten appsv1.DaemonSet) (bool, *appsv1.DaemonSet, error) {
 	ds := gotten.DeepCopy()
 	var needToUpdate bool
@@ -505,6 +560,14 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 
 			if !reflect.DeepEqual(container.Env, wantedEnv) {
 				container.Env = wantedEnv
+				containerModified = true
+			}
+
+			previousArgs := append([]string(nil), container.Args...)
+			if err := setMigrationCheck(&container); err != nil {
+				return false, ds, err
+			}
+			if !reflect.DeepEqual(previousArgs, container.Args) {
 				containerModified = true
 			}
 
@@ -659,6 +722,19 @@ func FulfillLSDaemonsetSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwam
 	}
 	if clusterInstance.Spec.LocalStorage.Member == nil {
 		clusterInstance.Spec.LocalStorage.Member = &hwameistoriov1alpha1.MemberSpec{}
+	}
+	member := clusterInstance.Spec.LocalStorage.Member
+	if member.JuicesyncImage == nil {
+		member.JuicesyncImage = &hwameistoriov1alpha1.ImageSpec{}
+	}
+	if member.JuicesyncImage.Registry == "" {
+		member.JuicesyncImage.Registry = defaultLSDaemonsetImageRegistry
+	}
+	if member.JuicesyncImage.Repository == "" {
+		member.JuicesyncImage.Repository = "hwameistor/hwameistor-juicesync"
+	}
+	if member.JuicesyncImage.Tag == "" {
+		member.JuicesyncImage.Tag = "v1.2.0-v1.4.1-01"
 	}
 	if clusterInstance.Spec.LocalStorage.Member.Image == nil {
 		clusterInstance.Spec.LocalStorage.Member.Image = &hwameistoriov1alpha1.ImageSpec{}

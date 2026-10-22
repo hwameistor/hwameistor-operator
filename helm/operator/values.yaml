@@ -71,9 +71,14 @@ localStorage:
       imageRepository: sig-storage/csi-snapshotter
       tag: v6.0.0
   migrate:
+    # Operator MIGRATE_CHECK environment variable; defaults to --check-new verification.
+    check: true
     juicesync:
       imageRepository: hwameistor/hwameistor-juicesync
-      tag: v1.0.4-01
+      tag: v1.2.0-v1.4.1-01
+      # Default JUICEFS_VERSION; member.extraEnv can override it per Cluster.
+      # Both binaries are bundled; 1.4.1 skips device nodes, sockets and FIFOs.
+      version: "1.2.0"
   snapshot:
     disable: false
 

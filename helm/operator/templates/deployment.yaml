@@ -19,6 +19,11 @@ spec:
       - name: hwameistor-operator
         image: {{ .Values.global.hwameistorImageRegistry}}/{{ .Values.operator.imageRepository}}:{{ template "operator.imageTag" . }}
         imagePullPolicy: IfNotPresent
+        env:
+        - name: JUICEFS_VERSION
+          value: {{ .Values.localStorage.migrate.juicesync.version | default "1.2.0" | quote }}
+        - name: MIGRATE_CHECK
+          value: {{ if hasKey .Values.localStorage.migrate "check" }}{{ .Values.localStorage.migrate.check | quote }}{{ else }}"true"{{ end }}
         resources:
           limits:
             cpu: 100m
