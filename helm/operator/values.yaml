@@ -71,7 +71,7 @@ localStorage:
       imageRepository: sig-storage/csi-snapshotter
       tag: v6.0.0
   migrate:
-    # Operator MIGRATE_CHECK environment variable; defaults to --check-new verification.
+    # Operator MIGRATE_CHECK environment variable; defaults to --check-all verification.
     check: true
     juicesync:
       imageRepository: hwameistor/hwameistor-juicesync
