@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "repository": "hwameistor/hwameistor-operator",
+  "targetBranch": "release/v1.1",
+  "version": "v1.1.2-alpha1",
+  "fromTag": "v1.1.1",
+  "toRef": "refs/heads/release/v1.1",
+  "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+  "toSha": "c86aac3ec3885bccad1b36c6d78946bb8fbf1a06",
+  "targetSha": "c86aac3ec3885bccad1b36c6d78946bb8fbf1a06",
+  "createdAt": "2026-10-23T11:31:51.864Z",
+  "generatedPaths": [
+    "CHANGELOG.md",
+    "changelogs/released/v1.1.2-alpha1/changelog",
+    "helm/operator/Chart.yaml"
+  ]
+}
