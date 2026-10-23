@@ -6,6 +6,7 @@ The project refers to the respective components of this triple as < major >.< mi
 The Hwameistor Operator Project's release process is as follows:
 - [Minor Release Process](#Minor)
 - [Patch Release Process](#Patch)
+- [Backporting fixes](#backporting-fixes)
 
 <span id="Minor"> </span>
 ## Minor Release Process
@@ -67,3 +68,41 @@ A patch release requires 3 steps are as follows:
 
 1. Checkout release packages(includes helm packages, images) are generated correctly.
 2. Write release notes to explain the changes of this release corresponding to the changelog.
+
+## Backporting fixes
+
+Apply the following labels to a pull request targeting `main`:
+
+| Label | Target branch |
+| --- | --- |
+| `cherry-pick-v1.0` | `release/v1.0.0` |
+| `cherry-pick-v1.1` | `release/v1.1` |
+| `cherry-pick-v1` (legacy alias) | `release/v1.0.0` |
+
+After the pull request is merged, the `Cherry pick` workflow opens one backport
+pull request per selected target. Labels can also be added after merging. Adding
+both version labels selects both branches; the legacy alias does not create a
+second v1.0 backport. Backport pull requests are not merged automatically.
+
+The workflow reads current labels and skips targets that already have an open or
+merged backport. Concurrent runs for the same source pull request are serialized.
+Conflicts fail the affected target without committing conflict markers; inspect
+the action summary before preparing a manual backport. Start a manual backport
+description with `Backport of #<source PR number>` so it can be recognized on retries.
+
+To retry, run `Cherry pick` from the Actions tab with the workflow branch set to
+`main` and `pull_number` set to the merged source pull request. The source pull
+request's current labels select the targets. Closed, unmerged backport pull
+requests do not prevent a retry.
+
+Repository administrators must configure `BACKPORT_TOKEN` (or the existing
+`MY_TOKEN` alias) as a repository secret. Use a PAT or GitHub App token with access
+to this repository and write permission for contents and pull requests; backports
+that change workflows also need permission to update workflow files. The default
+`GITHUB_TOKEN` is not used to create backports because its pull request events do
+not start normal PR CI. A missing token fails before creating backport branches.
+
+The `pr.yml` branch filter must be present on each maintained release branch to
+enable its PR checks. A change to the workflow on `main` alone does not update an
+existing release branch. The image/chart release workflow is separate; adding a
+backport label does not publish a release.
