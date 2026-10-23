@@ -11,9 +11,17 @@ on:
         description: Version, for example v1.1.2-alpha1
         required: true
         type: string
+      from_tag_choice:
+        description: Automatic starting tag when from_tag is empty (highest SemVer first)
+        default: latest
+        type: choice
+        options:
+          - latest
+          - second-latest
+          - third-latest
       from_tag:
-        description: Starting tag (exclusive), for example v1.1.1
-        required: true
+        description: Optional manual starting tag; overrides automatic selection
+        required: false
         type: string
       to_ref:
         description: Ending ref (inclusive); empty means target branch HEAD
@@ -29,6 +37,10 @@ on:
           - gemini-4-argon
           - gpt-5.3-codex
           - gemini-3.8-flash
+      changelog_policy:
+        description: 'Advanced (optional): policy path or public HTTPS file URL; empty uses defaults'
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -37,15 +49,23 @@ concurrency:
 jobs:
   prepare:
     runs-on: ubuntu-latest # Or a trusted self-hosted runner; no GPU needed.
+    outputs:
+      pull-request-url: ${{ steps.release.outputs.pull-request-url }}
+      from-tag: ${{ steps.release.outputs.from-tag }}
+      from-sha: ${{ steps.release.outputs.from-sha }}
+      recent-tags: ${{ steps.release.outputs.recent-tags }}
     steps:
-      - uses: hwameistor/release-assistant@a455fb98474bd0d71afc641f01fc5156ce98cdbe # Release Assistant
+      - uses: hwameistor/release-assistant@fa0441a496a8c584044ceb8d7c85f767501f7a95 # Release Assistant
+        id: release
         with:
           target-branch: ${{ inputs.target_branch }}
           version: ${{ inputs.version }}
           from-tag: ${{ inputs.from_tag }}
+          from-tag-choice: ${{ inputs.from_tag_choice }}
           to-ref: ${{ inputs.to_ref }}
           template-ref: refs/heads/main
           model: ${{ inputs.model }}
+          changelog-policy: ${{ inputs.changelog_policy }}
           publish: 'true'
           token: ${{ secrets.RELEASE_ASSISTANT_TOKEN }}
           copilot-token: ${{ secrets.COPILOT_GITHUB_TOKEN }}
