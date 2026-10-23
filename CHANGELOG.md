@@ -1,3 +1,26 @@
+# Changelog
+
+<!-- release-assistant:v1.1.2-alpha1:start -->
+## v1.1.2-alpha1
+
+### Upgrade Notes
+
+- If you manually customized the member container's environment, move those customizations to `localStorage.member.extraEnv` or the Cluster annotation before upgrading; reconciliation now replaces the complete environment list.
+- To retain disabled migration checks, set Helm `localStorage.migrate.check=false`, or set `MIGRATE_CHECK=false` on the Operator Deployment for non-Helm installations.
+- If your Helm values retain an older migration image tag and you want the new image default, explicitly set `localStorage.migrate.juicesync.tag=v1.2.0`; existing nonempty Cluster image settings are not automatically replaced by Operator defaulting.
+
+### Features
+
+- Local Storage members support additional environment variables through Helm `localStorage.member.extraEnv` or the Cluster annotation `hwameistor.io/local-storage-member-extra-env`. Additions, changes and removals update existing DaemonSets; invalid annotation JSON stops reconciliation. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+
+### Changes
+
+- Local Storage now defaults to `--migrate-check=true` and reconciles this setting on existing DaemonSets. Helm `localStorage.migrate.check` controls the Operator's `MIGRATE_CHECK` environment variable; invalid environment values stop reconciliation. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+- Migration configuration defaults to image tag `v1.2.0` and member `JUICEFS_VERSION=1.2.0`, configurable through Helm `localStorage.migrate.juicesync.version`. Operator image defaulting fills only empty fields; per-Cluster version overrides in `localStorage.member.extraEnv` retain declaration order and `valueFrom` references. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...c86aac3ec3885bccad1b36c6d78946bb8fbf1a06)
+<!-- release-assistant:v1.1.2-alpha1:end -->
+
 v1.1.1 / 2026-7-28
 ========================
 * use hwameistor v1.1.1 #390 (@FloatXD )
