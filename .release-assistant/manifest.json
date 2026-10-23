@@ -1,0 +1,99 @@
+{
+  "snapshot": {
+    "schemaVersion": 1,
+    "repository": "hwameistor/hwameistor-operator",
+    "targetBranch": "release/v1.1",
+    "version": "v1.1.2-alpha1",
+    "fromTag": "v1.1.1",
+    "toRef": "6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8",
+    "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+    "toSha": "6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8",
+    "targetSha": "6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8",
+    "createdAt": "2026-10-23T13:29:45.071Z",
+    "generatedPaths": [
+      "CHANGELOG.md",
+      "changelogs/released/v1.1.2-alpha1/changelog",
+      "helm/operator/Chart.yaml"
+    ]
+  },
+  "templateSha": "a6ebefab86d7bee83e542136c049fd7fa28a4e29",
+  "generatedAt": "2026-10-23T13:41:59.212Z",
+  "policyHash": "08048334b572528114354647eeccfcbffc4b6d21dc5fdc1c2b1aba4591ada0a8",
+  "templateHash": "f255e42b8a736069c83f4e87404b11de3826b10730490303c991334b9aa80e7c",
+  "provider": "copilot",
+  "model": "gpt-6.1-sol",
+  "notes": {
+    "entries": [
+      {
+        "category": "breaking",
+        "summary": "Local Storage environment overrides can now accommodate nonstandard host-tool paths, but direct DaemonSet environment edits are no longer preserved.",
+        "impact": "Manage overrides through `localStorage.member.extraEnv` for new and existing members, including updates and removals. Reconciliation replaces the member environment; malformed Cluster annotation JSON blocks reconciliation. Extending `PATH` does not establish general NixOS compatibility.",
+        "sources": [
+          "pr:399"
+        ],
+        "upgradeNotes": [
+          "Before upgrading, move custom member environment variables from direct DaemonSet edits into `localStorage.member.extraEnv`, or the Cluster's `hwameistor.io/local-storage-member-extra-env` annotation as a JSON environment-variable array; preserve required container binary paths when extending `PATH`."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "changes",
+        "summary": "For migrations affected by directory-symlink SFTP failures, the Operator now supports adopting the companion JuiceFS migration implementation and requests content checks by default.",
+        "impact": "With the updated Local Storage controller and migration image, `localStorage.migrate.juicesync.version` selects an installed binary, defaulting to JuiceFS `1.2.0` in image `v1.2.0`. Checks change from disabled to enabled on new and existing members; the companion image uses `--check-all`. Missing binaries fail without fallback. Opt-in `1.4.1` skips special files that `1.2.0` fails to copy, and checks cannot detect those omissions. Neither version provides complete rootfs fidelity or a consistent snapshot of active writes. ARM64 execution and the complete updated-controller PVC migration lifecycle remain unverified.",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "To adopt the companion migration behavior, deploy a Local Storage image containing the companion implementation through `localStorage.member.tag` alongside the updated Operator and published migration image; the chart's member default remains `v1.1.1`.",
+          "When adopting the bundled migration image from an older configuration, set `localStorage.migrate.juicesync.tag` to `v1.2.0`, or update `spec.localStorage.member.juicesyncImage.tag` for non-Helm installations; existing nonempty image settings are preserved.",
+          "To retain disabled migration checks, set `localStorage.migrate.check=false`, or `MIGRATE_CHECK=false` on the Operator Deployment for non-Helm installations.",
+          "Wait for the Local Storage rollout before creating migration Jobs with the new settings; existing Jobs and their retry Pods retain their original templates."
+        ],
+        "needsReview": true
+      }
+    ],
+    "excluded": [
+      {
+        "sources": [
+          "pr:395",
+          "pr:398"
+        ],
+        "reason": "Routine maintenance-branch CI and publication-trigger configuration: updates branch filters and pins PR checkout without changing deployed storage behavior."
+      },
+      {
+        "sources": [
+          "pr:402",
+          "pr:405"
+        ],
+        "reason": "Internal release preparation, validation, baseline selection, policy configuration and draft-note presentation; no storage-runtime change."
+      },
+      {
+        "sources": [
+          "pr:408"
+        ],
+        "reason": "Internal release-generation prompt-limit increase and stale-range guidance; no product behavior change."
+      },
+      {
+        "sources": [
+          "pr:410"
+        ],
+        "reason": "Internal read-only release-research automation and timeout configuration. Auxiliary Operator references 1869 and 4879 were unavailable with HTTP 404; correctly qualified companion references were investigated instead, but the unavailable references provide no evidence."
+      }
+    ]
+  },
+  "sources": [
+    "pr:395",
+    "pr:398",
+    "pr:399",
+    "pr:400",
+    "pr:402",
+    "pr:405",
+    "pr:408",
+    "pr:410"
+  ],
+  "files": {
+    "CHANGELOG.md": "b1201b8a68e56e76c92d36b6277883ca41f6b900ff2f92ed218f36ffd29ff8f1",
+    "changelogs/released/v1.1.2-alpha1/changelog": "ae207e83a7a27d2b423c3451ab1936900257f05e673db5f8b2e77753443d4753",
+    "helm/operator/Chart.yaml": "0db2670f00d3027d7a429e074c65e23fcb394fe606eb9e51178a3b47a412eba3"
+  }
+}
