@@ -147,7 +147,7 @@ func TestMigrationReconcileOldDaemonSet(t *testing.T) {
 
 func TestMigrationDefaultsPreserveCustomImage(t *testing.T) {
 	cluster := migrationCluster()
-	if got := getJuicesyncEnvFromClusterInstance(cluster); !strings.HasSuffix(got, "/hwameistor/hwameistor-juicesync:v1.2.0-v1.4.1-01") {
+	if got := getJuicesyncEnvFromClusterInstance(cluster); !strings.HasSuffix(got, "/hwameistor/hwameistor-juicesync:v1.2.0") {
 		t.Fatalf("default image: %s", got)
 	}
 	member := cluster.Spec.LocalStorage.Member

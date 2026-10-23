@@ -40,7 +40,7 @@ spec:
       juicesyncImage:
         registry: "ghcr.io"
         repository: "hwameistor/hwameistor-juicesync"
-        tag: "v1.2.0-v1.4.1-01"
+        tag: "v1.2.0"
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-storage"

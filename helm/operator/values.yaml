@@ -75,7 +75,7 @@ localStorage:
     check: true
     juicesync:
       imageRepository: hwameistor/hwameistor-juicesync
-      tag: v1.2.0-v1.4.1-01
+      tag: v1.2.0
       # Default JUICEFS_VERSION; member.extraEnv can override it per Cluster.
       # Both binaries are bundled; 1.4.1 skips device nodes, sockets and FIFOs.
       version: "1.2.0"

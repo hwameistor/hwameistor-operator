@@ -734,7 +734,7 @@ func FulfillLSDaemonsetSpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwam
 		member.JuicesyncImage.Repository = "hwameistor/hwameistor-juicesync"
 	}
 	if member.JuicesyncImage.Tag == "" {
-		member.JuicesyncImage.Tag = "v1.2.0-v1.4.1-01"
+		member.JuicesyncImage.Tag = "v1.2.0"
 	}
 	if clusterInstance.Spec.LocalStorage.Member.Image == nil {
 		clusterInstance.Spec.LocalStorage.Member.Image = &hwameistoriov1alpha1.ImageSpec{}
