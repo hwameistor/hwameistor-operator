@@ -14,4 +14,4 @@ ai:
   timeoutSeconds: 180
 limits:
   maxCommits: 300
-  maxPromptBytes: 160000
+  maxPromptBytes: 256000
