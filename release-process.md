@@ -71,13 +71,17 @@ A patch release requires 3 steps are as follows:
 
 ## Backporting fixes
 
+Maintenance branches use `release/vX.Y` and track the corresponding HwameiStor
+major/minor version. `release/v1.0` starts from Operator `v1.0.2`, and
+`release/v1.1` starts from Operator `v1.1.1`.
+
 Apply the following labels to a pull request targeting `main`:
 
 | Label | Target branch |
 | --- | --- |
-| `cherry-pick-v1.0` | `release/v1.0.0` |
+| `cherry-pick-v1.0` | `release/v1.0` |
 | `cherry-pick-v1.1` | `release/v1.1` |
-| `cherry-pick-v1` (legacy alias) | `release/v1.0.0` |
+| `cherry-pick-v1` (legacy alias) | `release/v1.0` |
 
 After the pull request is merged, the `Cherry pick` workflow opens one backport
 pull request per selected target. Labels can also be added after merging. Adding
@@ -102,7 +106,8 @@ that change workflows also need permission to update workflow files. The default
 `GITHUB_TOKEN` is not used to create backports because its pull request events do
 not start normal PR CI. A missing token fails before creating backport branches.
 
-The `pr.yml` branch filter must be present on each maintained release branch to
-enable its PR checks. A change to the workflow on `main` alone does not update an
-existing release branch. The image/chart release workflow is separate; adding a
-backport label does not publish a release.
+The `pr.yml` and `release-image.yaml` branch filters must include the maintained
+release branches on each branch itself. A change to the workflows on `main`
+alone does not update an existing release branch. The image/chart release
+workflow runs when `helm/operator/Chart.yaml` changes on a supported branch or
+when manually dispatched; adding a backport label does not publish a release.

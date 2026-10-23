@@ -63,7 +63,7 @@ function harness({ pull = {}, candidates = [], listError } = {}) {
 
 test('routes supported labels and deduplicates the legacy v1.0 alias', () => {
   assert.deepEqual(targetsForLabels(labels('cherry-pick-v1.1', 'cherry-pick-v1', 'cherry-pick-v1.0')),
-    [target, 'release/v1.0.0']);
+    [target, 'release/v1.0']);
   assert.deepEqual(targetsForLabels(labels('cherry-pick', 'cherry-pick-v1.2', 'backport main')), []);
 });
 
@@ -84,7 +84,7 @@ test('recognizes the generated branch only in the current repository', () => {
 test('skips open and merged PRs but permits closed unmerged PRs and other targets', () => {
   assert.equal(isBackportOf(candidate({ state: 'closed', merged_at: '2026-01-01' }), 393, target, repository), true);
   assert.equal(isBackportOf(candidate({ state: 'closed' }), 393, target, repository), false);
-  assert.equal(isBackportOf(candidate(), 393, 'release/v1.0.0', repository), false);
+  assert.equal(isBackportOf(candidate(), 393, 'release/v1.0', repository), false);
 });
 
 test('reads current API labels instead of stale event labels', async () => {
@@ -97,9 +97,9 @@ test('reads current API labels instead of stale event labels', async () => {
 });
 
 for (const [selected, expected] of [
-  [['cherry-pick-v1.0'], 'release/v1.0.0'],
-  [['cherry-pick-v1.0', 'cherry-pick-v1.1'], 'release/v1.0.0 release/v1.1'],
-  [['cherry-pick-v1', 'cherry-pick-v1.0'], 'release/v1.0.0'],
+  [['cherry-pick-v1.0'], 'release/v1.0'],
+  [['cherry-pick-v1.0', 'cherry-pick-v1.1'], 'release/v1.0 release/v1.1'],
+  [['cherry-pick-v1', 'cherry-pick-v1.0'], 'release/v1.0'],
 ]) {
   test(`selects pending branches for ${selected.join(', ')}`, async () => {
     const h = harness({ pull: { labels: labels(...selected) } });
@@ -115,7 +115,7 @@ test('skips only targets with an existing open or merged backport and links to i
     candidates: [candidate()],
   });
   await h.run();
-  assert.equal(h.outputs.targets, 'release/v1.0.0');
+  assert.equal(h.outputs.targets, 'release/v1.0');
   assert.equal(h.calls.filter(([method]) => method === 'list').length, 2);
   assert.match(h.summary.join('\n'), /\[#394\]\(https:\/\/github.com\/hwameistor\/hwameistor-operator\/pull\/394\)/);
 });
