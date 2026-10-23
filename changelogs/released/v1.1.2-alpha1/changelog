@@ -1,0 +1,21 @@
+## v1.1.2-alpha1
+
+### Upgrade Notes
+
+- Before upgrading, move custom member environment variables from direct DaemonSet edits into `localStorage.member.extraEnv`, or the Cluster's `hwameistor.io/local-storage-member-extra-env` annotation as a JSON environment-variable array.
+- For Helm installations retaining an older migration image tag, set `localStorage.migrate.juicesync.tag` to `v1.2.0` if you want the new image default; existing nonempty Cluster image settings are preserved.
+- To retain disabled migration checks, set `localStorage.migrate.check=false`, or set `MIGRATE_CHECK=false` on the Operator Deployment for non-Helm installations.
+
+### Breaking Changes
+
+- Local Storage now replaces the member container's environment during reconciliation, removing custom variables added directly to the DaemonSet. Custom variables can now be managed declaratively through `localStorage.member.extraEnv`, including updates and removals on existing DaemonSets. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+
+### Features
+
+- Migration configuration now supports selecting a JuiceFS version through `localStorage.migrate.juicesync.version` without changing Operator code. The default version is `1.2.0`, with migration image tag `v1.2.0`; per-Cluster `JUICEFS_VERSION` declarations in member extra variables take precedence. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+
+### Changes
+
+- Local Storage now requests migration checks by default for both new and existing DaemonSets, replacing the previous disabled default. The Operator reconciles `--migrate-check=true`, so enabling this setting no longer requires manual DaemonSet changes. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...84d67688133a2ac22f682ff389b7fac8c300a450)
