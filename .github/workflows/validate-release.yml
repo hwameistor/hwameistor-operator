@@ -1,0 +1,17 @@
+name: Validate release PR
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'release-assistant/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hwameistor/release-assistant@a455fb98474bd0d71afc641f01fc5156ce98cdbe # Release Assistant
+        with:
+          command: validate
+          target-branch: ${{ github.base_ref }}
+          head-ref: ${{ github.head_ref }}
+          token: ${{ github.token }}
