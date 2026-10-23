@@ -37,10 +37,6 @@ spec:
             repository: "sig-storage/csi-external-health-monitor-controller"
             tag: "v0.8.0"
     member:
-      juicesyncImage:
-        registry: "ghcr.io"
-        repository: "hwameistor/hwameistor-juicesync"
-        tag: "v1.2.0"
       image:
         registry: "ghcr.m.daocloud.io"
         repository: "hwameistor/local-storage"
