@@ -480,20 +480,18 @@ func getLSMemberEnvFromClusterInstance(clusterInstance *hwameistoriov1alpha1.Clu
 	if err != nil {
 		return nil, err
 	}
-	version := corev1.EnvVar{Name: juiceFSVersionEnv, Value: migrationVersion()}
+	hasVersion := false
 	for _, item := range extraEnv {
 		if item.Name == juiceFSVersionEnv {
-			// The existing per-Cluster environment override takes precedence over
-			// the Operator default. Keep only the last entry for this setting.
-			version = item
-		} else {
-			env = append(env, item)
+			hasVersion = true
+			break
 		}
 	}
-	if version.ValueFrom == nil && version.Value != "" && version.Value != "1.2.0" && version.Value != "1.4.1" {
-		return nil, fmt.Errorf("unsupported %s %q: expected 1.2.0 or 1.4.1", juiceFSVersionEnv, version.Value)
+	if !hasVersion {
+		env = append(env, corev1.EnvVar{Name: juiceFSVersionEnv, Value: migrationVersion()})
 	}
-	env = append(env, version)
+	// Kubernetes expands variable references in declaration order.
+	env = append(env, extraEnv...)
 
 	return env, nil
 }

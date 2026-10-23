@@ -158,27 +158,21 @@ func TestMigrationDefaultsPreserveCustomImage(t *testing.T) {
 	}
 }
 
-func TestInvalidMigrationEnvironmentRejected(t *testing.T) {
-	for _, env := range []string{juiceFSVersionEnv, migrateCheckEnv} {
-		t.Run(env, func(t *testing.T) {
-			t.Setenv(juiceFSVersionEnv, "1.2.0")
-			t.Setenv(migrateCheckEnv, "true")
-			t.Setenv(env, "invalid")
-			cluster := migrationCluster()
-			// A nil client ensures invalid configuration fails before any API operation.
-			if _, err := NewMaintainer(nil, cluster).Ensure(); err == nil || !strings.Contains(err.Error(), env) {
-				t.Fatalf("invalid %s: %v", env, err)
-			}
-		})
+func TestInvalidMigrationCheckRejected(t *testing.T) {
+	t.Setenv(juiceFSVersionEnv, "1.2.0")
+	t.Setenv(migrateCheckEnv, "invalid")
+	cluster := migrationCluster()
+	// A nil client ensures invalid configuration fails before any API operation.
+	if _, err := NewMaintainer(nil, cluster).Ensure(); err == nil || !strings.Contains(err.Error(), migrateCheckEnv) {
+		t.Fatalf("invalid %s: %v", migrateCheckEnv, err)
 	}
 }
 
 func TestMigrationVersionAnnotationOverridesOperatorDefault(t *testing.T) {
-	t.Setenv(juiceFSVersionEnv, "1.2.0")
+	t.Setenv(juiceFSVersionEnv, "custom-build")
 	t.Setenv(migrateCheckEnv, "true")
 	cluster := migrationCluster()
 	setMemberExtraEnvAnnotation(t, cluster, []corev1.EnvVar{
-		{Name: juiceFSVersionEnv, Value: "1.2.0"},
 		{Name: juiceFSVersionEnv, Value: "1.4.1"},
 	})
 	ds, err := SetLSDaemonSet(cluster)
@@ -191,10 +185,31 @@ func TestMigrationVersionAnnotationOverridesOperatorDefault(t *testing.T) {
 	if err != nil || !changed {
 		t.Fatalf("removing override: changed=%v err=%v", changed, err)
 	}
-	assertMigrationConfig(t, findMemberContainer(t, updated), "1.2.0", "true")
-	setMemberExtraEnvAnnotation(t, cluster, []corev1.EnvVar{{Name: juiceFSVersionEnv, Value: "latest"}})
-	if _, err := SetLSDaemonSet(cluster); err == nil {
-		t.Fatal("invalid version annotation accepted")
+	assertMigrationConfig(t, findMemberContainer(t, updated), "custom-build", "true")
+}
+
+func TestMigrationEnvironmentOrderPreserved(t *testing.T) {
+	t.Setenv(juiceFSVersionEnv, "1.2.0")
+	t.Setenv(migrateCheckEnv, "true")
+	for _, extraEnv := range [][]corev1.EnvVar{
+		{{Name: "AFTER", Value: "$(JUICEFS_VERSION)"}},
+		{{Name: juiceFSVersionEnv, Value: "custom-build"}, {Name: "AFTER", Value: "$(JUICEFS_VERSION)"}},
+		{{Name: "MIGRATION_VERSION", Value: "custom-build"}, {Name: juiceFSVersionEnv, Value: "$(MIGRATION_VERSION)"}, {Name: "AFTER", Value: "$(JUICEFS_VERSION)"}},
+		{{Name: juiceFSVersionEnv, Value: "1.2.0"}, {Name: "BEFORE_OVERRIDE", Value: "$(JUICEFS_VERSION)"}, {Name: juiceFSVersionEnv, Value: "custom-build"}},
+	} {
+		cluster := migrationCluster()
+		setMemberExtraEnvAnnotation(t, cluster, extraEnv)
+		ds, err := SetLSDaemonSet(cluster)
+		if err != nil {
+			t.Fatal(err)
+		}
+		env := findMemberContainer(t, ds).Env
+		if len(env) < len(extraEnv) || !reflect.DeepEqual(env[len(env)-len(extraEnv):], extraEnv) {
+			t.Fatalf("environment declaration order changed: %v", env)
+		}
+		if len(extraEnv) == 1 {
+			assertMigrationConfig(t, findMemberContainer(t, ds), "1.2.0", "true")
+		}
 	}
 }
 
