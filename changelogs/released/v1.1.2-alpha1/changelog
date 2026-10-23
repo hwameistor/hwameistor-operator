@@ -1,0 +1,22 @@
+## v1.1.2-alpha1
+
+### Upgrade Notes
+
+- If you patched the member DaemonSet’s environment directly, move those variables to `localStorage.member.extraEnv` or the Cluster’s JSON annotation `hwameistor.io/local-storage-member-extra-env` before upgrading.
+- For installations retaining an older migration image tag, set `localStorage.migrate.juicesync.tag` to `v1.2.0` when adopting the new bundled image; retain intentional custom images only with a version configuration they support.
+- To retain disabled migration checks, set `localStorage.migrate.check=false`, or set `MIGRATE_CHECK=false` on the Operator Deployment when not using Helm.
+
+### Breaking Changes
+
+- Local Storage reconciliation now replaces the member container’s environment, removing variables added directly to the DaemonSet. Custom variables must be declared through the Cluster configuration to survive reconciliation. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+
+### Features
+
+- Local Storage members now accept custom environment variables through `localStorage.member.extraEnv`, including host-specific `PATH` extensions. Changes and removals are reconciled into existing DaemonSets without requiring direct workload edits. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+- Migration configuration now exposes JuiceFS version selection through `localStorage.migrate.juicesync.version`, defaulting to `1.2.0`. The version is passed to Local Storage, with per-Cluster environment overrides supported; the migration image default becomes `v1.2.0`, while existing nonempty image settings are preserved. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+
+### Changes
+
+- Migration checks are now requested by default for both new and existing Local Storage DaemonSets. Reconciliation replaces the previous `--migrate-check=false` setting with `--migrate-check=true`, so operators no longer need to enable the flag manually. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...c72ad39e37d709fc7ef7cf141cc451466967f0d1)
