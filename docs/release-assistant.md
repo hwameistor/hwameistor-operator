@@ -6,7 +6,11 @@ Review `research.json` in the run artifacts for actual queries, evidence, URLs, 
 
 An auxiliary reference that Copilot requests and receives HTTP 404/410 for is retained in `unavailableReferences`, with a limitation and review flag on the affected findings. Any resulting Changelog entry keeps the review flag; an unavailable URL cannot be cited as evidence. Source PR reads, authentication errors, rate limits and server failures still block generation. Use full GitHub URLs or `owner/repository#number` in cross-repository references to avoid ambiguous bare numbers.
 
+The default policy and layout put factual, categorized changes before Upgrade Notes. Entries retain concrete default/version changes and newly supported configuration keys; upgrade actions supplement those facts. The tool pin includes the matching Copilot composition prompt. A shared policy URL updates editorial rules only and does not replace the repository layout.
+
 After **Prepare release** succeeds, open the created or updated PR from the link at the top of the Actions run summary. The `prepare` job also exposes this URL as `pull-request-url`. The PR description shows the complete version Changelog, exactly as written to its file, with generation details collapsed below. **Re-run all jobs** replaces both the description and generated files with the latest notes while keeping the same PR link.
+
+When a new or refreshed source range is frozen, the tool first commits only the snapshot. On an existing Release PR this can trigger validation before the notes and manifest exist, producing a temporary missing-manifest failure. Check the associated **Prepare release** run: successful generation commits the complete files and triggers validation again. If generation fails, the incomplete branch must remain unmergeable; diagnose its run logs and research artifacts, then rerun generation rather than creating a manifest manually or bypassing validation.
 
 Run **Prepare release** with a target branch, explicit version (including prereleases), automatic tag rank or manual starting tag, optional ending ref and a model from the dropdown. Install `RELEASE_ASSISTANT_TOKEN` (App token or fine-grained PAT with Contents and Pull requests write permission) and `COPILOT_GITHUB_TOKEN` (Copilot Requests permission), or configure a compatible model endpoint and `RELEASE_ASSISTANT_API_KEY`.
 
