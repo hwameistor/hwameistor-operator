@@ -1,0 +1,26 @@
+## v1.1.2-alpha1
+
+### Upgrade Notes
+
+- Before upgrading, move direct member environment overrides into `localStorage.member.extraEnv`, or the Cluster's `hwameistor.io/local-storage-member-extra-env` annotation as a JSON environment-variable array.
+- When extending `PATH`, retain the container's required binary directories; this setting does not establish general NixOS compatibility.
+- To use the companion migration implementation, set `localStorage.member.tag` to an image containing it; the chart's member default remains `v1.1.1`.
+- When adopting the bundled migration image from an older configuration, set `localStorage.migrate.juicesync.tag` to `v1.2.0`, or update `spec.localStorage.member.juicesyncImage.tag` without Helm.
+- Choose `localStorage.migrate.juicesync.version` only for an executable installed in the selected image; avoid `1.4.1` when skipping special files is unacceptable.
+- Wait for the member rollout before creating migration Jobs with updated settings; existing Jobs and their retry Pods retain their original templates.
+- To retain disabled migration checks, set `localStorage.migrate.check=false`, or `MIGRATE_CHECK=false` on the Operator Deployment without Helm.
+
+### Breaking Changes
+
+- Local Storage reconciliation now replaces the complete member environment list, removing variables patched directly into existing DaemonSets. Only Operator-managed variables and overrides declared through the Cluster configuration are retained. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+
+### Features
+
+- Added `localStorage.member.extraEnv` for per-Cluster member environment variables, including PATH extensions; additions, changes and removals are reconciled on existing DaemonSets. Configuration uses the `hwameistor.io/local-storage-member-extra-env` Cluster annotation without CRD changes; malformed JSON blocks Local Storage reconciliation. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
+
+### Changes
+
+- Changed the default migration image tag from `v1.0.4-01` to `v1.2.0` and added `localStorage.migrate.juicesync.version`, defaulting to `1.2.0`, to configure member `JUICEFS_VERSION`. The companion controller and published image are required for runtime selection and the directory-symlink SFTP fix. Nonempty image settings are preserved. The image bundles `1.2.0` and `1.4.1`; missing binaries fail without fallback. Version `1.4.1` skips special files, while `1.2.0` fails on tested special files. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
+- Added `localStorage.migrate.check`, defaulting to `true`, and changed member `--migrate-check` from `false` to `true` on new and existing DaemonSets. With the companion migration image, checked Jobs use `--check-all`. Checks cannot detect filtered-out special files or guarantee hardlink, xattr/ACL or active-write snapshot fidelity. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8)
