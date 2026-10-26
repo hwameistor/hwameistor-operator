@@ -24,7 +24,7 @@ on:
         required: false
         type: string
       to_ref:
-        description: Ending ref (inclusive); empty means target branch HEAD
+        description: Ending ref (inclusive); empty resolves target HEAD on a new run, reruns keep the original range
         type: string
       model:
         description: Model for release notes (overrides ai.model)
@@ -57,7 +57,7 @@ jobs:
       from-sha: ${{ steps.release.outputs.from-sha }}
       recent-tags: ${{ steps.release.outputs.recent-tags }}
     steps:
-      - uses: hwameistor/release-assistant@0b7a82eb4df347c16dda33c42b8a74006dbc0971 # Release Assistant
+      - uses: hwameistor/release-assistant@0632de04eb75ebdcb670001be465bffdd8b91b7a # Release Assistant
         id: release
         with:
           target-branch: ${{ inputs.target_branch }}
