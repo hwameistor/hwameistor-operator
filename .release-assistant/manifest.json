@@ -1,0 +1,140 @@
+{
+  "snapshot": {
+    "schemaVersion": 1,
+    "repository": "hwameistor/hwameistor-operator",
+    "targetBranch": "release/v1.1",
+    "version": "v1.1.2-alpha1",
+    "fromTag": "v1.1.1",
+    "toRef": "feffb6d18d926fb04f5e5d8638288ac55d235169",
+    "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+    "toSha": "feffb6d18d926fb04f5e5d8638288ac55d235169",
+    "targetSha": "feffb6d18d926fb04f5e5d8638288ac55d235169",
+    "createdAt": "2026-10-26T08:25:27.821Z",
+    "generatedPaths": [
+      "CHANGELOG.md",
+      "changelogs/released/v1.1.2-alpha1/changelog",
+      "helm/operator/Chart.yaml",
+      "helm/operator/values.yaml"
+    ],
+    "versionFiles": [
+      {
+        "path": "helm/operator/values.yaml",
+        "fields": [
+          "operator.tag"
+        ]
+      }
+    ]
+  },
+  "templateSha": "6cae8194ebd7102239d70ab41d49f60c6595cc65",
+  "generatedAt": "2026-10-26T08:28:23.312Z",
+  "policyHash": "62bad62a890d90595e0fdfcd313225bd1b71f8f52fbe91f44c55ff186c7d5b48",
+  "templateHash": "59911745ccb25f01a89a0a1e88546ea15079fa765df1bdf5aa82e7e04cc4ca08",
+  "provider": "copilot",
+  "model": "gpt-6.1-sol",
+  "notes": {
+    "entries": [
+      {
+        "category": "breaking",
+        "summary": "Local Storage reconciliation now replaces the complete member environment list, removing variables patched directly into existing DaemonSets.",
+        "impact": "",
+        "sources": [
+          "pr:399"
+        ],
+        "upgradeNotes": [
+          "**Direct DaemonSet overrides:** move required member environment variables into `localStorage.member.extraEnv` before upgrading."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "features",
+        "summary": "Added `localStorage.member.extraEnv` for per-Cluster member environment overrides, including PATH extensions; additions, updates and removals reconcile on existing DaemonSets.",
+        "impact": "",
+        "sources": [
+          "pr:399"
+        ],
+        "upgradeNotes": [],
+        "needsReview": false
+      },
+      {
+        "category": "changes",
+        "summary": "Migration image changes `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Migration adopters:** set `localStorage.member.tag` to a companion-enabled Local Storage image and update retained `localStorage.migrate.juicesync.tag` to `v1.2.0` when adopting the bundled image.",
+          "**Special-file migrations:** avoid `localStorage.migrate.juicesync.version=1.4.1` when omissions are unacceptable; it skips FIFOs, sockets and devices, including whiteouts, even with checks."
+        ],
+        "needsReview": true
+      },
+      {
+        "category": "changes",
+        "summary": "Migration checks default `false` → `true` through `localStorage.migrate.check` on new and existing member DaemonSets; compatible companion migration images use `--check-all`.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Checks intentionally disabled:** retain that behavior by explicitly setting `localStorage.migrate.check=false` before upgrading."
+        ],
+        "needsReview": true
+      },
+      {
+        "category": "maintenance",
+        "summary": "Release preparation now targets `operator.tag` alongside Chart versions, addressing generated Charts retaining the previous Operator image.",
+        "impact": "",
+        "sources": [
+          "pr:414"
+        ],
+        "upgradeNotes": [],
+        "needsReview": true
+      }
+    ],
+    "excluded": [
+      {
+        "sources": [
+          "pr:395",
+          "pr:398"
+        ],
+        "reason": "Maintenance-branch CI filters and checkout pinning change repository automation, not installed product behavior."
+      },
+      {
+        "sources": [
+          "pr:402",
+          "pr:405"
+        ],
+        "reason": "Release-preparation workflows, baseline selection, policy inputs and editorial presentation are internal release-maintenance changes."
+      },
+      {
+        "sources": [
+          "pr:408"
+        ],
+        "reason": "Raises the internal release-generation prompt budget and documents snapshot refreshes; no installed product behavior changes."
+      },
+      {
+        "sources": [
+          "pr:410"
+        ],
+        "reason": "Enables read-only research tools and increases generation timeouts for internal release preparation; no cluster-runtime change."
+      }
+    ]
+  },
+  "sources": [
+    "pr:395",
+    "pr:398",
+    "pr:399",
+    "pr:400",
+    "pr:402",
+    "pr:405",
+    "pr:408",
+    "pr:410",
+    "pr:414"
+  ],
+  "files": {
+    "CHANGELOG.md": "d1b008fd632a0122972b30083523dda9460a9ffe91c8211ba4ff7f1a5b0f7d99",
+    "changelogs/released/v1.1.2-alpha1/changelog": "8276c2309dbc62d77d305b74fb3f5a08f2ee034e4bd01b03f071a984aba6778c",
+    "helm/operator/Chart.yaml": "0db2670f00d3027d7a429e074c65e23fcb394fe606eb9e51178a3b47a412eba3",
+    "helm/operator/values.yaml": "d2a502cc0aa791eef879d815528c1ec936ab93bfa07d6517552575da30d69458"
+  }
+}
