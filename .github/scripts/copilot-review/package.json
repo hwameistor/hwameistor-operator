@@ -1,0 +1,8 @@
+{
+  "name": "operator-copilot-review",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test review.test.mjs" },
+  "engines": { "node": ">=24" },
+  "dependencies": { "@github/copilot-sdk": "1.0.26" }
+}
