@@ -52,7 +52,6 @@ You can follow our [Quick Start](https://hwameistor.io/docs/quick_start/install/
 You can see our documentation at HwameiStor website for more in-depth installation and instructions for production:
 - [English](https://hwameistor.io/)
 - [简体中文](https://hwameistor.io/cn/)
-- [Local Storage member environment variables](docs/member-environment.md)
 
 ### Blog
 
