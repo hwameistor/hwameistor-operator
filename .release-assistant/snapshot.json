@@ -4,14 +4,23 @@
   "targetBranch": "release/v1.1",
   "version": "v1.1.2-alpha1",
   "fromTag": "v1.1.1",
-  "toRef": "refs/heads/release/v1.1",
+  "toRef": "feffb6d18d926fb04f5e5d8638288ac55d235169",
   "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
-  "toSha": "6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8",
-  "targetSha": "6bb145fd0dc082f2d8ca9d77f72a8d978a65a5e8",
-  "createdAt": "2026-10-25T13:22:14.553Z",
+  "toSha": "feffb6d18d926fb04f5e5d8638288ac55d235169",
+  "targetSha": "feffb6d18d926fb04f5e5d8638288ac55d235169",
+  "createdAt": "2026-10-26T08:25:27.821Z",
   "generatedPaths": [
     "CHANGELOG.md",
     "changelogs/released/v1.1.2-alpha1/changelog",
-    "helm/operator/Chart.yaml"
+    "helm/operator/Chart.yaml",
+    "helm/operator/values.yaml"
+  ],
+  "versionFiles": [
+    {
+      "path": "helm/operator/values.yaml",
+      "fields": [
+        "operator.tag"
+      ]
+    }
   ]
 }
