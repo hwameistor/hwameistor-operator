@@ -556,8 +556,9 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 		if container.Name == memberContainerName {
 			var containerModified bool
 
-			if !reflect.DeepEqual(container.Env, wantedEnv) {
-				container.Env = wantedEnv
+			mergedEnv := mergeMemberEnv(container.Env, wantedEnv)
+			if !reflect.DeepEqual(container.Env, mergedEnv) {
+				container.Env = mergedEnv
 				containerModified = true
 			}
 
