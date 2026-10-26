@@ -57,7 +57,7 @@ jobs:
       from-sha: ${{ steps.release.outputs.from-sha }}
       recent-tags: ${{ steps.release.outputs.recent-tags }}
     steps:
-      - uses: hwameistor/release-assistant@c765de3990b60175f0beb872b9b74f7e4d7019ec # Release Assistant
+      - uses: hwameistor/release-assistant@0b7a82eb4df347c16dda33c42b8a74006dbc0971 # Release Assistant
         id: release
         with:
           target-branch: ${{ inputs.target_branch }}
