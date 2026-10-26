@@ -65,7 +65,8 @@ func TestNeedOrNotToUpdateLSDaemonsetReconcilesMemberExtraEnv(t *testing.T) {
 
 	member := findMemberContainer(t, updated)
 	assertEnvValue(t, member.Env, "NEW_ENV", "new")
-	assertEnvMissing(t, member.Env, "OLD_ENV")
+	// Removing a declaration does not delete an existing environment variable.
+	assertEnvValue(t, member.Env, "OLD_ENV", "old")
 }
 
 func TestSetLSDaemonSetRejectsInvalidMemberExtraEnvAnnotation(t *testing.T) {
@@ -155,14 +156,4 @@ func assertEnvValue(t *testing.T, env []corev1.EnvVar, name, value string) {
 	}
 
 	t.Fatalf("environment variable %q not found", name)
-}
-
-func assertEnvMissing(t *testing.T, env []corev1.EnvVar, name string) {
-	t.Helper()
-
-	for _, item := range env {
-		if item.Name == name {
-			t.Fatalf("environment variable %q should not be present", name)
-		}
-	}
 }
