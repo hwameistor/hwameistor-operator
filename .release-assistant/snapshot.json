@@ -8,7 +8,7 @@
   "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
   "toSha": "015154645008d304cf3f24bb36a10c4033e5e6ee",
   "targetSha": "015154645008d304cf3f24bb36a10c4033e5e6ee",
-  "createdAt": "2026-10-26T08:44:44.082Z",
+  "createdAt": "2026-10-26T11:43:36.640Z",
   "generatedPaths": [
     "CHANGELOG.md",
     "changelogs/released/v1.1.2-alpha1/changelog",
@@ -17,7 +17,7 @@
   ],
   "workflowRun": {
     "repository": "hwameistor/hwameistor-operator",
-    "runId": "40294370463"
+    "runId": "40317154540"
   },
   "versionFiles": [
     {
