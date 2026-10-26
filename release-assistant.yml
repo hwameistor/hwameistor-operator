@@ -8,6 +8,9 @@ output:
   releaseNotes: changelogs/released/{version}/changelog
   charts:
     - helm/operator/Chart.yaml
+  versionFiles:
+    - path: helm/operator/values.yaml
+      fields: [operator.tag]
 ai:
   provider: copilot
   model: gpt-6.1-sol # Used when no workflow/CLI model override is supplied.
