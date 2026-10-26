@@ -1,39 +1,3 @@
-# Changelog
-
-<!-- release-assistant:v1.1.2-alpha1:start -->
-## v1.1.2-alpha1
-
-### Release Changes
-
-#### Breaking Changes
-
-- Local Storage reconciliation now replaces the complete member environment list, removing variables patched directly into existing DaemonSets. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
-
-#### Features
-
-- Added `localStorage.member.extraEnv` for per-Cluster member environment overrides, including PATH extensions; additions, updates and removals reconcile on existing DaemonSets. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399))
-
-#### Changes
-
-- Migration image changes `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
-- Migration checks default `false` → `true` through `localStorage.migrate.check` on new and existing member DaemonSets; compatible companion migration images use `--check-all`. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
-
-#### Maintenance
-
-- Release preparation now targets `operator.tag` alongside Chart versions, addressing generated Charts retaining the previous Operator image. ([#414](https://github.com/hwameistor/hwameistor-operator/pull/414)) **Needs review.**
-
----
-
-### Upgrade Actions
-
-- **Direct DaemonSet overrides:** move required member environment variables into `localStorage.member.extraEnv` before upgrading.
-- **Migration adopters:** set `localStorage.member.tag` to a companion-enabled Local Storage image and update retained `localStorage.migrate.juicesync.tag` to `v1.2.0` when adopting the bundled image.
-- **Special-file migrations:** avoid `localStorage.migrate.juicesync.version=1.4.1` when omissions are unacceptable; it skips FIFOs, sockets and devices, including whiteouts, even with checks.
-- **Checks intentionally disabled:** retain that behavior by explicitly setting `localStorage.migrate.check=false` before upgrading.
-
-[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...feffb6d18d926fb04f5e5d8638288ac55d235169)
-<!-- release-assistant:v1.1.2-alpha1:end -->
-
 v1.1.1 / 2026-7-28
 ========================
 * use hwameistor v1.1.1 #390 (@FloatXD )
