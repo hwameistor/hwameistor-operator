@@ -1,0 +1,121 @@
+{
+  "snapshot": {
+    "schemaVersion": 1,
+    "repository": "hwameistor/hwameistor-operator",
+    "targetBranch": "release/v1.1",
+    "version": "v1.1.2-alpha1",
+    "fromTag": "v1.1.1",
+    "toRef": "refs/heads/release/v1.1",
+    "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+    "toSha": "a297feac65d0bc18003fe746c1fe91bf55ac08fc",
+    "targetSha": "a297feac65d0bc18003fe746c1fe91bf55ac08fc",
+    "createdAt": "2026-10-26T12:13:49.621Z",
+    "generatedPaths": [
+      "CHANGELOG.md",
+      "changelogs/released/v1.1.2-alpha1/changelog",
+      "helm/operator/Chart.yaml",
+      "helm/operator/values.yaml"
+    ],
+    "workflowRun": {
+      "repository": "hwameistor/hwameistor-operator",
+      "runId": "40320893475"
+    },
+    "versionFiles": [
+      {
+        "path": "helm/operator/values.yaml",
+        "fields": [
+          "operator.tag"
+        ]
+      }
+    ]
+  },
+  "templateSha": "e1df34a78c4294b6aae66dff10a0ba71e63eee81",
+  "generatedAt": "2026-10-26T12:18:06.749Z",
+  "policyHash": "62bad62a890d90595e0fdfcd313225bd1b71f8f52fbe91f44c55ff186c7d5b48",
+  "templateHash": "59911745ccb25f01a89a0a1e88546ea15079fa765df1bdf5aa82e7e04cc4ca08",
+  "provider": "copilot",
+  "model": "gpt-6.1-sol",
+  "notes": {
+    "entries": [
+      {
+        "category": "features",
+        "summary": "Added `localStorage.member.extraEnv` for per-Cluster member environment overrides; additions and updates reconcile on existing DaemonSets without deleting undeclared custom variables.",
+        "impact": "",
+        "sources": [
+          "pr:399",
+          "pr:413"
+        ],
+        "upgradeNotes": [
+          "**Removing custom variables:** remove declarations from `localStorage.member.extraEnv` and manually delete retained entries from the member DaemonSet."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "changes",
+        "summary": "Migration image defaults change `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Migration adopters:** select a published [companion-compatible](https://github.com/hwameistor/hwameistor/pull/1869) `localStorage.member.tag` and set `localStorage.migrate.juicesync.tag=v1.2.0`; existing Jobs retain their original templates.",
+          "**Special-file migrations:** avoid `localStorage.migrate.juicesync.version=1.4.1`; it skips devices, sockets, FIFOs and OverlayFS whiteouts even with checks."
+        ],
+        "needsReview": true
+      },
+      {
+        "category": "changes",
+        "summary": "Local Storage migration checks default `false` → `true` via `localStorage.migrate.check`; reconciliation updates `--migrate-check` on new and existing member DaemonSets.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Checks intentionally disabled:** set `localStorage.migrate.check=false` to retain disabled verification."
+        ],
+        "needsReview": true
+      }
+    ],
+    "excluded": [
+      {
+        "sources": [
+          "pr:395",
+          "pr:398"
+        ],
+        "reason": "Routine maintenance-branch CI routing and checkout updates; no application runtime changes."
+      },
+      {
+        "sources": [
+          "pr:402",
+          "pr:405",
+          "pr:408",
+          "pr:410",
+          "pr:414",
+          "pr:416",
+          "pr:419"
+        ],
+        "reason": "Internal release preparation, validation, research and editorial tooling; these changes do not update deployed component versions or application behavior."
+      }
+    ]
+  },
+  "sources": [
+    "pr:395",
+    "pr:398",
+    "pr:399",
+    "pr:400",
+    "pr:402",
+    "pr:405",
+    "pr:408",
+    "pr:410",
+    "pr:414",
+    "pr:413",
+    "pr:416",
+    "pr:419"
+  ],
+  "files": {
+    "CHANGELOG.md": "77790b54b6473fc2a8ee80182e379521ff9423a86982177a8c05cad79db87924",
+    "changelogs/released/v1.1.2-alpha1/changelog": "10e019557cba62b928af0b5786cf08919d82a25578d249666455ef9c9f30a36a",
+    "helm/operator/Chart.yaml": "0db2670f00d3027d7a429e074c65e23fcb394fe606eb9e51178a3b47a412eba3",
+    "helm/operator/values.yaml": "d2a502cc0aa791eef879d815528c1ec936ab93bfa07d6517552575da30d69458"
+  }
+}
