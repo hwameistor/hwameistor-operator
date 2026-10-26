@@ -136,12 +136,14 @@ test('changed or closed PRs are blocked before publication', () => {
     { ...pr, base: { sha: 'c'.repeat(40) } }]) assert.throws(() => assertCurrent(snapshot, changed), /PR changed/);
 });
 
-function requestFixture({ permission = 'write', command = '/copilot-review', current = pr, reviews = [] } = {}) {
+function requestFixture({ permission = 'write', command = '/copilot-review', current = pr, reviews = [],
+  files = [{ filename: patch.path, patch: patch.content }] } = {}) {
   return async route => {
     if (route.startsWith('collaborators/')) return { permission };
     if (route.startsWith('issues/comments/')) return { body: command, user: { login: snapshot.actor },
       issue_url: `https://api.github.com/repos/${snapshot.repository}/issues/${snapshot.number}` };
     if (route.includes('/reviews?')) return reviews;
+    if (route.includes('/files?')) return files;
     if (route === `pulls/${snapshot.number}`) return current;
     throw new Error(`Unexpected route: ${route}`);
   };
@@ -173,6 +175,17 @@ test('reviews are advisory comments tied to the frozen commit and disclose binar
   assert.match(body.body, /image.png/);
   assert.equal(body.comments[0].path, finding.path);
   assert.throws(() => reviewPayload({ ...result, model: 'auto' }), /model/);
+});
+
+test('findings outside GitHub rename/truncated patch coordinates remain in the review overview', async () => {
+  let payload;
+  await publishReview(result, requestFixture({ files: [{ filename: 'renamed.go' }] }), async (_, body) => {
+    payload = body;
+    return { id: 1 };
+  }, 'reviewer');
+  assert.deepEqual(payload.comments, []);
+  assert.match(payload.body, /Check the return value/);
+  assert.match(payload.body, /pkg\/example.go:4/);
 });
 
 test('mock SDK end-to-end: evidence reads, strict model, findings and no publishing secret in child environment', async () => {

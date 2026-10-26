@@ -310,7 +310,7 @@ export async function generateReview(snapshot, evidence, directory, token, facto
   }
 }
 
-export function reviewPayload(result) {
+export function reviewPayload(result, inline = result.findings, overview = []) {
   if (result.model !== MODEL || result.models?.some(m => m !== MODEL) || !result.models?.includes(MODEL)) {
     throw new Error('Unexpected review model');
   }
@@ -321,8 +321,9 @@ export function reviewPayload(result) {
       + `审查提交：\`${snapshot.head}\`。已读取 ${result.changedFiles} 个文件的完整文本 diff；未运行测试。\n\n`
       + (result.findings.length ? '' : '未发现有充分证据的可操作问题；这不代表代码没有缺陷。\n\n')
       + (result.limitations ? `审查限制：${result.limitations}\n\n` : '')
-      + (result.binaryFiles.length ? `未审查二进制内容：${result.binaryFiles.map(p => `\`${p}\``).join('、')}。\n\n` : ''),
-    comments: result.findings.map(f => ({ path: f.path, line: f.line, side: f.side,
+      + (result.binaryFiles.length ? `未审查二进制内容：${result.binaryFiles.map(p => `\`${p}\``).join('、')}。\n\n` : '')
+      + overview.map(f => `**[${f.priority}] ${f.title}** — \`${f.path}:${f.line}\` (${f.side})\n\n${f.body}\n\n`).join(''),
+    comments: inline.map(f => ({ path: f.path, line: f.line, side: f.side,
       body: `**[${f.priority}] ${f.title}**\n\n${f.body}` })),
   };
 }
@@ -332,7 +333,21 @@ export async function publishReview(result, request, writer, login) {
   assertCurrent(result.snapshot, await request(`pulls/${result.snapshot.number}`));
   const previous = await existingReview(result.snapshot, request, login);
   if (previous) return previous;
-  return writer(`pulls/${result.snapshot.number}/reviews`, reviewPayload(result));
+  // GitHub can detect renames differently or omit large patches. Keep every finding,
+  // but only attach inline comments to lines GitHub actually exposes in its PR diff.
+  const files = [];
+  if (result.findings.length) for (let page = 1; page <= 30; page++) {
+    const batch = await request(`pulls/${result.snapshot.number}/files?per_page=100&page=${page}`);
+    files.push(...batch);
+    if (batch.length < 100) break;
+  }
+  const inline = [], overview = [];
+  for (const finding of result.findings) {
+    const file = files.find(f => f.filename === finding.path);
+    (file?.patch && changedLines(file.patch)[finding.side].has(finding.line) ? inline : overview).push(finding);
+  }
+  assertCurrent(result.snapshot, await request(`pulls/${result.snapshot.number}`));
+  return writer(`pulls/${result.snapshot.number}/reviews`, reviewPayload(result, inline, overview));
 }
 
 export async function main(mode) {
