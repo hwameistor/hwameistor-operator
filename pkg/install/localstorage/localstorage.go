@@ -412,6 +412,7 @@ func setLSDaemonSetContainers(clusterInstance *hwameistoriov1alpha1.Cluster, lsD
 			if err != nil {
 				return nil, err
 			}
+			setManagedMemberEnv(lsDaemonSetToCreate, container.Env)
 			if err := setMigrationCheck(&container); err != nil {
 				return nil, err
 			}
@@ -551,14 +552,22 @@ func needOrNotToUpdateLSDaemonset(cluster *hwameistoriov1alpha1.Cluster, gotten 
 	if err != nil {
 		return false, ds, err
 	}
+	previouslyManaged, err := getManagedMemberEnv(ds)
+	if err != nil {
+		return false, ds, err
+	}
 
 	for i, container := range ds.Spec.Template.Spec.Containers {
 		if container.Name == memberContainerName {
 			var containerModified bool
 
-			if !reflect.DeepEqual(container.Env, wantedEnv) {
-				container.Env = wantedEnv
+			mergedEnv := mergeMemberEnv(container.Env, wantedEnv, previouslyManaged)
+			if !reflect.DeepEqual(container.Env, mergedEnv) {
+				container.Env = mergedEnv
 				containerModified = true
+			}
+			if setManagedMemberEnv(ds, wantedEnv) {
+				needToUpdate = true
 			}
 
 			previousArgs := append([]string(nil), container.Args...)
