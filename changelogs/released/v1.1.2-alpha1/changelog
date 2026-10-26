@@ -1,0 +1,23 @@
+## v1.1.2-alpha1
+
+### Release Changes
+
+#### Features
+
+- Added `localStorage.member.extraEnv` for per-Cluster member environment overrides; additions and updates reconcile on existing DaemonSets without deleting undeclared custom variables. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399), [#413](https://github.com/hwameistor/hwameistor-operator/pull/413))
+
+#### Changes
+
+- Migration image defaults change `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
+- Local Storage migration checks default `false` → `true` via `localStorage.migrate.check`; reconciliation updates `--migrate-check` on new and existing member DaemonSets. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400)) **Needs review.**
+
+---
+
+### Upgrade Actions
+
+- **Removing custom variables:** remove declarations from `localStorage.member.extraEnv` and manually delete retained entries from the member DaemonSet.
+- **Migration adopters:** select a published [companion-compatible](https://github.com/hwameistor/hwameistor/pull/1869) `localStorage.member.tag` and set `localStorage.migrate.juicesync.tag=v1.2.0`; existing Jobs retain their original templates.
+- **Special-file migrations:** avoid `localStorage.migrate.juicesync.version=1.4.1`; it skips devices, sockets, FIFOs and OverlayFS whiteouts even with checks.
+- **Checks intentionally disabled:** set `localStorage.migrate.check=false` to retain disabled verification.
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...a297feac65d0bc18003fe746c1fe91bf55ac08fc)
