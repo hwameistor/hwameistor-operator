@@ -9,7 +9,7 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'release-assistant/')
     runs-on: ubuntu-latest
     steps:
-      - uses: hwameistor/release-assistant@0b7a82eb4df347c16dda33c42b8a74006dbc0971 # Release Assistant
+      - uses: hwameistor/release-assistant@0632de04eb75ebdcb670001be465bffdd8b91b7a # Release Assistant
         with:
           command: validate
           target-branch: ${{ github.base_ref }}
