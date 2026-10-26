@@ -28,7 +28,7 @@ jobs:
     if: >-
       github.event_name == 'issue_comment' &&
       github.event.issue.pull_request &&
-      github.event.comment.body == '/copilot-review' &&
+      github.event.comment.body == '/codex' &&
       github.event.comment.user.type == 'User'
     runs-on: ubuntu-latest
     timeout-minutes: 25

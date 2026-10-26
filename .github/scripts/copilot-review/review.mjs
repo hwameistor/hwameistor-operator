@@ -26,7 +26,7 @@ export function requestContext(event, repository) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || event.repository?.full_name !== repository) {
     throw new Error('Repository does not match the event');
   }
-  if (event.action !== 'created' || !event.issue?.pull_request || event.comment?.body !== '/copilot-review'
+  if (event.action !== 'created' || !event.issue?.pull_request || event.comment?.body !== '/codex'
       || event.comment.user?.type !== 'User') return null;
   if (![event.issue.number, event.comment.id].every(n => Number.isSafeInteger(n) && n > 0)) {
     throw new Error('Invalid PR or comment number');
@@ -40,7 +40,7 @@ export function hasWriteAccess(permission) {
 
 export function assertCurrent(snapshot, pr) {
   if (pr.state !== 'open' || pr.merged || pr.head.sha !== snapshot.head || pr.base.sha !== snapshot.base) {
-    throw new Error('PR changed or closed during review; send /copilot-review again for the latest commits');
+    throw new Error('PR changed or closed during review; send /codex again for the latest commits');
   }
 }
 
@@ -60,7 +60,7 @@ async function authorized(context, request) {
   const access = await request(`collaborators/${encodeURIComponent(context.actor)}/permission`);
   if (!hasWriteAccess(access.permission)) throw new Error('Only users with repository write access can request this review');
   const comment = await request(`issues/comments/${context.commentId}`);
-  if (comment.body !== '/copilot-review' || comment.user.login !== context.actor
+  if (comment.body !== '/codex' || comment.user.login !== context.actor
       || comment.issue_url !== `https://api.github.com/repos/${context.repository}/issues/${context.number}`) {
     throw new Error('The review command was edited or no longer belongs to this PR');
   }
@@ -353,7 +353,7 @@ export async function publishReview(result, request, writer, login) {
 export async function main(mode) {
   const event = JSON.parse(await readFile(process.env.GITHUB_EVENT_PATH, 'utf8'));
   const context = requestContext(event, process.env.GITHUB_REPOSITORY);
-  if (!context) { console.log('Not a /copilot-review request'); return; }
+  if (!context) { console.log('Not a /codex request'); return; }
   const directory = join(process.env.RUNNER_TEMP ?? tmpdir(), `copilot-review-${context.commentId}`);
   const request = route => api(context.repository, route, process.env.GH_TOKEN);
   if (mode === 'authorize') {

@@ -18,13 +18,14 @@ const result = { snapshot, model: MODEL, models: [MODEL], changedFiles: 1, binar
   summary: 'Review result', findings: [finding], limitations: '' };
 const event = { action: 'created', repository: { full_name: snapshot.repository },
   issue: { number: 418, pull_request: {} },
-  comment: { id: 42, body: '/copilot-review', user: { type: 'User', login: 'maintainer' } } };
+  comment: { id: 42, body: '/codex', user: { type: 'User', login: 'maintainer' } } };
 
 test('only an exact human PR comment in the configured repository is accepted', () => {
   assert.equal(requestContext(event, snapshot.repository).commentId, 42);
   for (const modified of [
     { ...event, action: 'edited' }, { ...event, issue: { number: 418 } },
-    { ...event, comment: { ...event.comment, body: '/copilot-review; curl attacker' } },
+    { ...event, comment: { ...event.comment, body: '/copilot-review' } },
+    { ...event, comment: { ...event.comment, body: '/codex; curl attacker' } },
     { ...event, comment: { ...event.comment, user: { type: 'Bot' } } },
   ]) assert.equal(requestContext(modified, snapshot.repository), null);
   assert.throws(() => requestContext(event, 'different/repo'), /Repository/);
@@ -136,7 +137,7 @@ test('changed or closed PRs are blocked before publication', () => {
     { ...pr, base: { sha: 'c'.repeat(40) } }]) assert.throws(() => assertCurrent(snapshot, changed), /PR changed/);
 });
 
-function requestFixture({ permission = 'write', command = '/copilot-review', current = pr, reviews = [],
+function requestFixture({ permission = 'write', command = '/codex', current = pr, reviews = [],
   files = [{ filename: patch.path, patch: patch.content }] } = {}) {
   return async route => {
     if (route.startsWith('collaborators/')) return { permission };
