@@ -1,7 +1,7 @@
 ## {{version}}
 
-{{upgrade_notes}}
+{{release_changes}}
 
-{{sections}}
+{{upgrade_actions}}
 
 {{compare_link}}
