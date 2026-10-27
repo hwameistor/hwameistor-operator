@@ -1,0 +1,70 @@
+name: Copilot review
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    paths:
+      - .github/scripts/copilot-review/**
+      - .github/workflows/copilot-review.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - run: node --test .github/scripts/copilot-review/review.test.mjs
+
+  review:
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/codex' &&
+      github.event.comment.user.type == 'User'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: read
+    concurrency:
+      group: copilot-review-${{ github.repository }}-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      # issue_comment uses the default-branch workflow and trusted helper scripts.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Check requester and PR
+        id: authorize
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/copilot-review/review.mjs authorize
+      - name: Install pinned review dependencies
+        if: steps.authorize.outputs.allowed == 'true'
+        working-directory: .github/scripts/copilot-review
+        run: npm ci --ignore-scripts --userconfig /dev/null
+      - name: Review with OpenAI through Copilot
+        if: steps.authorize.outputs.allowed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+        run: node .github/scripts/copilot-review/review.mjs generate
+      - name: Publish review
+        if: steps.authorize.outputs.allowed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COPILOT_REVIEW_TOKEN: ${{ secrets.COPILOT_REVIEW_TOKEN }}
+        run: node .github/scripts/copilot-review/review.mjs publish
