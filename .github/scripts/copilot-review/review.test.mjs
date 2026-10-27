@@ -172,7 +172,7 @@ test('reviews are advisory comments tied to the frozen commit and disclose binar
   const body = reviewPayload({ ...result, binaryFiles: ['image.png'] });
   assert.equal(body.event, 'COMMENT');
   assert.equal(body.commit_id, snapshot.head);
-  assert.match(body.body, /未运行测试/);
+  assert.match(body.body, /tests were not run/);
   assert.match(body.body, /image.png/);
   assert.equal(body.comments[0].path, finding.path);
   assert.throws(() => reviewPayload({ ...result, model: 'auto' }), /model/);
