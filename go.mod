@@ -94,7 +94,6 @@ replace (
 	github.com/emicklei/go-restful => github.com/emicklei/go-restful v2.16.1-0.20220930181236-19cadd947697+incompatible
 	github.com/go-logr/logr => github.com/go-logr/logr v1.2.0
 	github.com/googleapis/gnostic => github.com/googleapis/gnostic v0.4.1
-	google.golang.org/grpc => google.golang.org/grpc v1.38.0
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api => k8s.io/api v0.24.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.24.0
