@@ -78,7 +78,7 @@ func createOrUpdateCRD(cli client.Client, resourceBytes []byte) error {
 		}
 		if crd != nil {
 			unstructuredObj.SetResourceVersion(crd.ResourceVersion)
-			if updatingErr := cli.Update(context.TODO(), unstructuredObj, &client.UpdateOptions{}); err != nil {
+			if updatingErr := cli.Update(context.TODO(), unstructuredObj, &client.UpdateOptions{}); updatingErr != nil {
 				log.Errorf("Update crd err: %v", updatingErr)
 				return updatingErr
 			}
