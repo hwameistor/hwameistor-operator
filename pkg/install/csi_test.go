@@ -10,7 +10,7 @@ import (
 func TestSetCSIAttacherImage(t *testing.T) {
 	const repository = "registry.k8s.io/sig-storage/csi-attacher:"
 	older := repository + "v3.0.1"
-	current := repository + DefaultCSIAttacherTag
+	current := repository + csiAttacherCompatibilityTag
 	container := corev1.Container{Image: older, Args: []string{"--v=5"}}
 	if !SetCSIAttacherImage(&container, current) || container.Image != current || !reflect.DeepEqual(container.Args, []string{"--v=5", attacherCompatibilityArg}) {
 		t.Fatalf("upgrade did not apply the compatibility flag: image=%s args=%v", container.Image, container.Args)

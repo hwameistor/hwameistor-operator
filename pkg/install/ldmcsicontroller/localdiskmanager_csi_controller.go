@@ -33,12 +33,12 @@ var ldmCSIControllerReplicas = int32(1)
 var ldmCSIControllerLabelSelectorKey = "app"
 var ldmCSIControllerLabelSelectorValue = "hwameistor-local-disk-csi-controller"
 var defaultKubeletRootDir = "/var/lib/kubelet"
-var defaultLDMCSIProvisionerRegistry = "registry.k8s.io"
+var defaultLDMCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLDMCSIProvisionerRepository = "sig-storage/csi-provisioner"
-var defaultLDMCSIProvisionerTag = "v5.3.0"
-var defaultLDMCSIAttacherRegistry = "registry.k8s.io"
+var defaultLDMCSIProvisionerTag = "v2.0.3"
+var defaultLDMCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLDMCSIAttacherRepository = "sig-storage/csi-attacher"
-var defaultLDMCSIAttacherTag = install.DefaultCSIAttacherTag
+var defaultLDMCSIAttacherTag = "v3.0.1"
 var provisionerContainerName = "provisioner"
 var attacherContainerName = "attacher"
 

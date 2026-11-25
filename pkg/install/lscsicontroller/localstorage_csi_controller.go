@@ -34,18 +34,18 @@ var lsCSIControllerLabelSelectorKey = "app"
 var lsCSIControllerLabelSelectorValue = "hwameistor-local-storage-csi-controller"
 var defaultKubeletRootDir = "/var/lib/kubelet"
 var defaultLSCSIControllerReplicas = int32(1)
-var defaultLSCSIProvisionerRegistry = "registry.k8s.io"
+var defaultLSCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIProvisionerRepository = "sig-storage/csi-provisioner"
-var defaultLSCSIProvisionerTag = "v5.3.0"
-var defaultLSCSIAttacherRegistry = "registry.k8s.io"
+var defaultLSCSIProvisionerTag = "v2.0.3"
+var defaultLSCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIAttacherRepository = "sig-storage/csi-attacher"
-var defaultLSCSIAttacherTag = install.DefaultCSIAttacherTag
-var defaultLSCSIMonitorRegistry = "registry.k8s.io"
+var defaultLSCSIAttacherTag = "v3.0.1"
+var defaultLSCSIMonitorRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIMonitorRepository = "sig-storage/csi-external-health-monitor-controller"
-var defaultLSCSIMonitorTag = "v0.18.0"
-var defaultLSCSIResizerRegistry = "registry.k8s.io"
+var defaultLSCSIMonitorTag = "v0.8.0"
+var defaultLSCSIResizerRegistry = "k8s-gcr.m.daocloud.io"
 var defaultLSCSIResizerRepository = "sig-storage/csi-resizer"
-var defaultLSCSIResizerTag = "v1.12.0"
+var defaultLSCSIResizerTag = "v1.0.1"
 var provisionerContainerName = "provisioner"
 var attacherContainerName = "attacher"
 var monitorContainerName = "monitor"
@@ -645,31 +645,9 @@ func FulfillLSCSISpec(clusterInstance *hwameistoriov1alpha1.Cluster) *hwameistor
 	if clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag == "" {
 		clusterInstance.Spec.LocalStorage.CSI.Controller.Resizer.Image.Tag = defaultLSCSIResizerTag
 	}
-	controller := clusterInstance.Spec.LocalStorage.CSI.Controller
-	controller.SnapshotController = fulfillSnapshotContainer(controller.SnapshotController, "sig-storage/snapshot-controller")
-	controller.Snapshotter = fulfillSnapshotContainer(controller.Snapshotter, "sig-storage/csi-snapshotter")
 	if clusterInstance.Spec.LocalStorage.Snapshot == nil {
 		clusterInstance.Spec.LocalStorage.Snapshot = &hwameistoriov1alpha1.SnapshotSpec{}
 	}
 
 	return clusterInstance
-}
-
-func fulfillSnapshotContainer(container *hwameistoriov1alpha1.ContainerCommonSpec, repository string) *hwameistoriov1alpha1.ContainerCommonSpec {
-	if container == nil {
-		container = &hwameistoriov1alpha1.ContainerCommonSpec{}
-	}
-	if container.Image == nil {
-		container.Image = &hwameistoriov1alpha1.ImageSpec{}
-	}
-	if container.Image.Registry == "" {
-		container.Image.Registry = "registry.k8s.io"
-	}
-	if container.Image.Repository == "" {
-		container.Image.Repository = repository
-	}
-	if container.Image.Tag == "" {
-		container.Image.Tag = "v8.6.0"
-	}
-	return container
 }
