@@ -41,9 +41,9 @@ var defaultKubeletRootDir = "/var/lib/kubelet"
 var defaultLDMDaemonsetImageRegistry = "ghcr.m.daocloud.io"
 var defaultLDMDaemonsetImageRepository = "hwameistor/local-disk-manager"
 var defaultLDMDaemonsetImageTag = install.DefaultHwameistorVersion
-var defaultLDMDaemonsetCSIRegistrarImageRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMDaemonsetCSIRegistrarImageRegistry = "registry.k8s.io"
 var defaultLDMDaemonsetCSIRegistrarImageRepository = "sig-storage/csi-node-driver-registrar"
-var defaultLDMDaemonsetCSIRegistrarImageTag = "v2.5.0"
+var defaultLDMDaemonsetCSIRegistrarImageTag = "v2.18.0"
 var managerContainerName = "manager"
 var registrarContainerName = "registrar"
 

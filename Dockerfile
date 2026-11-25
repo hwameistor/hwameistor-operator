@@ -12,6 +12,7 @@ RUN yum -y --refresh upgrade ca-certificates 'glibc*' \
 
 COPY ./vendor/github.com/hwameistor/hwameistor/deploy/crds /hwameistorcrds
 COPY ./vendor/github.com/hwameistor/datastore/deploy/crds /hwameistorcrds
+COPY ./config/snapshot-crds/ /hwameistorcrds/
 COPY ./scheduler-config.yaml /scheduler-config.yaml
 
 COPY ./_build/operator /operator

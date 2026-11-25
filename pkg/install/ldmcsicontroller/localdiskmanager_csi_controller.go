@@ -33,12 +33,12 @@ var ldmCSIControllerReplicas = int32(1)
 var ldmCSIControllerLabelSelectorKey = "app"
 var ldmCSIControllerLabelSelectorValue = "hwameistor-local-disk-csi-controller"
 var defaultKubeletRootDir = "/var/lib/kubelet"
-var defaultLDMCSIProvisionerRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMCSIProvisionerRegistry = "registry.k8s.io"
 var defaultLDMCSIProvisionerRepository = "sig-storage/csi-provisioner"
-var defaultLDMCSIProvisionerTag = "v2.0.3"
-var defaultLDMCSIAttacherRegistry = "k8s-gcr.m.daocloud.io"
+var defaultLDMCSIProvisionerTag = "v5.3.0"
+var defaultLDMCSIAttacherRegistry = "registry.k8s.io"
 var defaultLDMCSIAttacherRepository = "sig-storage/csi-attacher"
-var defaultLDMCSIAttacherTag = "v3.0.1"
+var defaultLDMCSIAttacherTag = install.DefaultCSIAttacherTag
 var provisionerContainerName = "provisioner"
 var attacherContainerName = "attacher"
 
@@ -175,7 +175,7 @@ func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster
 			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Resources; resources != nil {
 				container.Resources = *resources
 			}
-			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
+			install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(clusterInstance))
 		}
 
 		ldmCSIControllerToCreate.Spec.Template.Spec.Containers[i] = container
@@ -211,9 +211,7 @@ func needOrNotToUpdateLDMCSIController(cluster *hwameistoriov1alpha1.Cluster, go
 			}
 		}
 		if container.Name == attacherContainerName {
-			wantedImage := getAttacherContainerImageStringFromClusterInstance(cluster)
-			if container.Image != wantedImage {
-				container.Image = wantedImage
+			if install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(cluster)) {
 				ldmCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}
