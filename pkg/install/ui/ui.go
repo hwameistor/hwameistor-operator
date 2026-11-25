@@ -29,7 +29,7 @@ var uiLabelKey = "app"
 var uiLabelValue = "hwameistor-ui"
 var defaultUIImageRegistry = "ghcr.m.daocloud.io"
 var defaultUIImageRepository = "hwameistor/hwameistor-ui"
-var defaultUIImageTag = "v0.17.1"
+var defaultUIImageTag = "v0.17.2"
 var uiContainerName = "hwameistor-ui"
 
 var ui = appsv1.Deployment{

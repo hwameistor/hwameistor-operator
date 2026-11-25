@@ -123,7 +123,7 @@ Create the name of the service account to use
 
 {{/* Allow UI image tag to be overridden. */}}
 {{- define "hwameistor.uiImageTag" -}}
-  {{- default .Values.global.hwameistorVersion .Values.ui.tag -}}
+  {{- default "v0.17.2" .Values.ui.tag -}}
 {{- end -}}
 
 {{/* Allow dataLoadManager image tag to be overridden. */}}
