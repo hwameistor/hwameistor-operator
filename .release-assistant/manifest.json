@@ -56,15 +56,15 @@
     "entries": [
       {
         "category": "breaking",
-        "summary": "Snapshot CRDs enforce source and volume-mode immutability, nonempty class names, and named, namespaced content references, including on existing clusters.",
+        "summary": "Snapshot CRDs enforce source and volume-mode immutability and named, namespaced content references. A VolumeSnapshot class name remains optional for default-class selection, but must be nonempty when specified.",
         "impact": "",
         "sources": [
           "pr:431"
         ],
         "upgradeNotes": [
-          "**Snapshot automation:** stop mutating snapshot sources or source volume modes; supply nonempty class names and complete content references."
+          "**Snapshot automation:** keep sources and source volume modes unchanged, supply complete content references, and omit the VolumeSnapshot class name for default selection instead of passing an empty string."
         ],
-        "needsReview": true
+        "needsReview": false
       },
       {
         "category": "features",
@@ -213,8 +213,8 @@
     "pr:431"
   ],
   "files": {
-    "CHANGELOG.md": "e758b824571f4b7947e3dd752c83ec0373dd853586998d8963104138c3dcd137",
-    "changelogs/released/v1.1.2/changelog": "e15b40bcfd0cec0ecd08918d3a39cf4a866f94ca6f6e9c3591cc1cb07a55e926",
+    "CHANGELOG.md": "26c00dfd054d0ced737a4aab7fc196f7ae52b009ae6870a87948f17f8f63c78f",
+    "changelogs/released/v1.1.2/changelog": "c3a2b468c774aee3438a03f7784aa52bc5ecf95347ed9dde2a1fa8cfed002144",
     "helm/operator/Chart.yaml": "de1cf11b7a66b3de33a09ee9cc656daf99205355b7a2095bcbfed8d88e50e486",
     "helm/operator/values.yaml": "0eb34a47f408293363e8e5e7177c540527776293ef0c86165f5a9a2c13933add"
   }

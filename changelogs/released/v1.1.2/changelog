@@ -4,7 +4,7 @@
 
 #### Breaking Changes
 
-- Snapshot CRDs enforce source and volume-mode immutability, nonempty class names, and named, namespaced content references, including on existing clusters. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431)) **Needs review.**
+- Snapshot CRDs enforce source and volume-mode immutability and named, namespaced content references. A VolumeSnapshot class name remains optional for default-class selection, but must be nonempty when specified. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431))
 
 #### Features
 
@@ -31,7 +31,7 @@
 
 ### Upgrade Actions
 
-- **Snapshot automation:** stop mutating snapshot sources or source volume modes; supply nonempty class names and complete content references.
+- **Snapshot automation:** keep sources and source volume modes unchanged, supply complete content references, and omit the VolumeSnapshot class name for default selection instead of passing an empty string.
 - **Retained migration tags:** to adopt the update, set `localStorage.migrate.juicesync.tag=v1.2.0`, deploy compatible Local Storage, and start new migration Jobs.
 - **Selecting JuiceFS `1.4.1`:** avoid this version when device nodes, FIFOs, sockets or OverlayFS whiteouts require preservation; these objects are skipped even with checks.
 - **Checks intentionally disabled:** retain that behavior by explicitly setting `localStorage.migrate.check=false` before upgrading.
