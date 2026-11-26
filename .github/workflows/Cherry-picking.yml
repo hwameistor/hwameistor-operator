@@ -80,13 +80,17 @@ jobs:
           target_branches: ${{ steps.prepare.outputs.targets }}
           label_pattern: ''
           cherry_picking: auto
-          experimental: '{"conflict_resolution":"fail"}'
+          experimental: '{"conflict_resolution":"draft_commit_conflicts"}'
           auto_merge_enabled: false
           comment_style: summary
           add_labels: cherry-pick
           pull_title: 'Automated cherry pick of #${pull_number}: ${pull_title}'
           pull_description: |
             Backport of #${pull_number} to `${target_branch}`.
+
+            If this PR is a draft, the `BACKPORT-CONFLICT` commit preserves the first conflict.
+            Follow the recovery instructions on the source PR to resolve it and apply any
+            remaining commits before marking this PR ready for review.
 
             ${pull_description}
 
