@@ -312,7 +312,7 @@ func setLSCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster,
 			}
 		}
 		if container.Name == attacherContainerName {
-			install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(clusterInstance))
+			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 			// container.Resources = *clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Resources
 			if resources := clusterInstance.Spec.LocalStorage.CSI.Controller.Attacher.Resources; resources != nil {
 				container.Resources = *resources
@@ -407,7 +407,9 @@ func needOrNotToUpdateExporter(cluster *hwameistoriov1alpha1.Cluster, gottenCSIC
 			}
 		}
 		if container.Name == attacherContainerName {
-			if install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(cluster)) {
+			wantedImage := getAttacherContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
 				lsCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}

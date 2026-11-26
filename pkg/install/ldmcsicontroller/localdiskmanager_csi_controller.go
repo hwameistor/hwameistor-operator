@@ -175,7 +175,7 @@ func setLDMCSIControllerContainers(clusterInstance *hwameistoriov1alpha1.Cluster
 			if resources := clusterInstance.Spec.LocalDiskManager.CSI.Controller.Attacher.Resources; resources != nil {
 				container.Resources = *resources
 			}
-			install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(clusterInstance))
+			container.Image = getAttacherContainerImageStringFromClusterInstance(clusterInstance)
 		}
 
 		ldmCSIControllerToCreate.Spec.Template.Spec.Containers[i] = container
@@ -211,7 +211,9 @@ func needOrNotToUpdateLDMCSIController(cluster *hwameistoriov1alpha1.Cluster, go
 			}
 		}
 		if container.Name == attacherContainerName {
-			if install.SetCSIAttacherImage(&container, getAttacherContainerImageStringFromClusterInstance(cluster)) {
+			wantedImage := getAttacherContainerImageStringFromClusterInstance(cluster)
+			if container.Image != wantedImage {
+				container.Image = wantedImage
 				ldmCSIControllerToUpdate.Spec.Template.Spec.Containers[i] = container
 				needToUpdate = true
 			}
