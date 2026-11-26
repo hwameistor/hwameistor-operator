@@ -1,0 +1,41 @@
+## v1.1.2
+
+### Release Changes
+
+#### Breaking Changes
+
+- Snapshot CRDs enforce source and volume-mode immutability and named, namespaced content references. A VolumeSnapshot class name remains optional for default-class selection, but must be nonempty when specified. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431))
+
+#### Features
+
+- Added `localStorage.member.extraEnv` for per-Cluster overrides such as host-tool `PATH`; existing member DaemonSets reconcile additions and updates while retaining undeclared variables. ([#399](https://github.com/hwameistor/hwameistor-operator/pull/399), [#413](https://github.com/hwameistor/hwameistor-operator/pull/413))
+
+#### Fixes
+
+- Migration image defaults change `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+- CRD installation now returns API update failures instead of reporting success when an existing CRD cannot be updated. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431)) **Needs review.**
+
+#### Changes
+
+- Migration checks now default to enabled (`false` → `true`) through new `localStorage.migrate.check`, including reconciliation of existing member DaemonSets. ([#400](https://github.com/hwameistor/hwameistor-operator/pull/400))
+- Local Storage snapshotter and snapshot-controller defaults change `v6.0.0` → `v8.6.0`, with matching ordinary snapshot CRDs bundled in the Operator image. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431)) **Needs review.**
+- CSI defaults change registrar `v2.5.0`→`v2.18.0`, provisioner (Local Disk Manager/Local Storage) `v2.0.3`/`v3.5.0`→`v5.3.0`, attacher `v3.0.1`→`v4.13.0`; Local Storage resizer `v1.0.1`→`v1.12.0` and health monitor `v0.8.0`→`v0.18.0`. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431)) **Needs review.**
+- Helm defaults change eleven HwameiStor component images `v1.1.1` → `v1.1.3` and UI `v0.17.1` → `v0.17.2`; explicit image overrides remain effective. ([#431](https://github.com/hwameistor/hwameistor-operator/pull/431)) **Needs review.**
+
+#### Maintenance
+
+- Operator builds now use gRPC `1.79.3` instead of `1.38.0`, removing the stale dependency override that kept vendored builds on the older version. ([#423](https://github.com/hwameistor/hwameistor-operator/pull/423))
+- Operator image builds refresh glibc and CA certificates, enforcing minimum versions `2.28-251.el8_10.11` and `2026.2.92_v9.0.319-81.3.el8_10`, respectively, while retaining Rocky Linux 8. ([#428](https://github.com/hwameistor/hwameistor-operator/pull/428))
+
+---
+
+### Upgrade Actions
+
+- **Snapshot automation:** keep sources and source volume modes unchanged, supply complete content references, and omit the VolumeSnapshot class name for default selection instead of passing an empty string.
+- **Retained migration tags:** to adopt the update, set `localStorage.migrate.juicesync.tag=v1.2.0`, deploy compatible Local Storage, and start new migration Jobs.
+- **Selecting JuiceFS `1.4.1`:** avoid this version when device nodes, FIFOs, sockets or OverlayFS whiteouts require preservation; these objects are skipped even with checks.
+- **Checks intentionally disabled:** retain that behavior by explicitly setting `localStorage.migrate.check=false` before upgrading.
+- **CSI upgrades:** deploy the updated chart with the new Operator image; for staged rollouts, retain previous CSI tags until snapshot CRDs reconcile.
+- **Existing snapshot installations:** verify stored API versions and save custom CRD configuration before the Operator applies replacement schemas.
+
+[Full diff](https://github.com/hwameistor/hwameistor-operator/compare/e0b6bc166135f42c4afe5080983dd3e2e9d71949...2981207914a9ac85c7bf012565edc8fd0c76fee2)

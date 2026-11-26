@@ -1,0 +1,221 @@
+{
+  "snapshot": {
+    "schemaVersion": 1,
+    "repository": "hwameistor/hwameistor-operator",
+    "targetBranch": "release/v1.1",
+    "version": "v1.1.2",
+    "fromTag": "v1.1.1",
+    "toRef": "refs/heads/release/v1.1",
+    "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+    "toSha": "2981207914a9ac85c7bf012565edc8fd0c76fee2",
+    "targetSha": "2981207914a9ac85c7bf012565edc8fd0c76fee2",
+    "createdAt": "2026-11-26T06:37:14.817Z",
+    "generatedPaths": [
+      "CHANGELOG.md",
+      "changelogs/released/v1.1.2/changelog",
+      "helm/operator/Chart.yaml",
+      "helm/operator/values.yaml"
+    ],
+    "fromTagSelection": {
+      "choice": "latest",
+      "candidates": [
+        {
+          "name": "v1.1.1",
+          "sha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949"
+        },
+        {
+          "name": "v1.0.2",
+          "sha": "253c54c0aa0d38b502f540b8d6b25d666118d6c5"
+        },
+        {
+          "name": "v1.0.1",
+          "sha": "03df348d270b0f65f27679361126ecc9e4db8883"
+        }
+      ]
+    },
+    "workflowRun": {
+      "repository": "hwameistor/hwameistor-operator",
+      "runId": "45769416323"
+    },
+    "versionFiles": [
+      {
+        "path": "helm/operator/values.yaml",
+        "fields": [
+          "operator.tag"
+        ]
+      }
+    ]
+  },
+  "templateSha": "afbad465883ada2cb3d7305a9c8f339e1223964c",
+  "generatedAt": "2026-11-26T06:47:12.160Z",
+  "policyHash": "62bad62a890d90595e0fdfcd313225bd1b71f8f52fbe91f44c55ff186c7d5b48",
+  "templateHash": "59911745ccb25f01a89a0a1e88546ea15079fa765df1bdf5aa82e7e04cc4ca08",
+  "provider": "copilot",
+  "model": "gpt-6.1-sol",
+  "notes": {
+    "entries": [
+      {
+        "category": "breaking",
+        "summary": "Snapshot CRDs enforce source and volume-mode immutability and named, namespaced content references. A VolumeSnapshot class name remains optional for default-class selection, but must be nonempty when specified.",
+        "impact": "",
+        "sources": [
+          "pr:431"
+        ],
+        "upgradeNotes": [
+          "**Snapshot automation:** keep sources and source volume modes unchanged, supply complete content references, and omit the VolumeSnapshot class name for default selection instead of passing an empty string."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "features",
+        "summary": "Added `localStorage.member.extraEnv` for per-Cluster overrides such as host-tool `PATH`; existing member DaemonSets reconcile additions and updates while retaining undeclared variables.",
+        "impact": "",
+        "sources": [
+          "pr:399",
+          "pr:413"
+        ],
+        "upgradeNotes": [],
+        "needsReview": false
+      },
+      {
+        "category": "fixes",
+        "summary": "Migration image defaults change `v1.0.4-01` → `v1.2.0` for directory-symlink SFTP errors; `localStorage.migrate.juicesync.version` selects JuiceFS (default `1.2.0`), requiring compatible Local Storage and migration images.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Retained migration tags:** to adopt the update, set `localStorage.migrate.juicesync.tag=v1.2.0`, deploy compatible Local Storage, and start new migration Jobs.",
+          "**Selecting JuiceFS `1.4.1`:** avoid this version when device nodes, FIFOs, sockets or OverlayFS whiteouts require preservation; these objects are skipped even with checks."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "fixes",
+        "summary": "CRD installation now returns API update failures instead of reporting success when an existing CRD cannot be updated.",
+        "impact": "",
+        "sources": [
+          "pr:431"
+        ],
+        "upgradeNotes": [],
+        "needsReview": true
+      },
+      {
+        "category": "changes",
+        "summary": "Migration checks now default to enabled (`false` → `true`) through new `localStorage.migrate.check`, including reconciliation of existing member DaemonSets.",
+        "impact": "",
+        "sources": [
+          "pr:400"
+        ],
+        "upgradeNotes": [
+          "**Checks intentionally disabled:** retain that behavior by explicitly setting `localStorage.migrate.check=false` before upgrading."
+        ],
+        "needsReview": false
+      },
+      {
+        "category": "changes",
+        "summary": "Local Storage snapshotter and snapshot-controller defaults change `v6.0.0` → `v8.6.0`, with matching ordinary snapshot CRDs bundled in the Operator image.",
+        "impact": "",
+        "sources": [
+          "pr:431"
+        ],
+        "upgradeNotes": [
+          "**CSI upgrades:** deploy the updated chart with the new Operator image; for staged rollouts, retain previous CSI tags until snapshot CRDs reconcile.",
+          "**Existing snapshot installations:** verify stored API versions and save custom CRD configuration before the Operator applies replacement schemas."
+        ],
+        "needsReview": true
+      },
+      {
+        "category": "changes",
+        "summary": "CSI defaults change registrar `v2.5.0`→`v2.18.0`, provisioner (Local Disk Manager/Local Storage) `v2.0.3`/`v3.5.0`→`v5.3.0`, attacher `v3.0.1`→`v4.13.0`; Local Storage resizer `v1.0.1`→`v1.12.0` and health monitor `v0.8.0`→`v0.18.0`.",
+        "impact": "",
+        "sources": [
+          "pr:431"
+        ],
+        "upgradeNotes": [],
+        "needsReview": true
+      },
+      {
+        "category": "changes",
+        "summary": "Helm defaults change eleven HwameiStor component images `v1.1.1` → `v1.1.3` and UI `v0.17.1` → `v0.17.2`; explicit image overrides remain effective.",
+        "impact": "",
+        "sources": [
+          "pr:431"
+        ],
+        "upgradeNotes": [],
+        "needsReview": true
+      },
+      {
+        "category": "maintenance",
+        "summary": "Operator builds now use gRPC `1.79.3` instead of `1.38.0`, removing the stale dependency override that kept vendored builds on the older version.",
+        "impact": "",
+        "sources": [
+          "pr:423"
+        ],
+        "upgradeNotes": [],
+        "needsReview": false
+      },
+      {
+        "category": "maintenance",
+        "summary": "Operator image builds refresh glibc and CA certificates, enforcing minimum versions `2.28-251.el8_10.11` and `2026.2.92_v9.0.319-81.3.el8_10`, respectively, while retaining Rocky Linux 8.",
+        "impact": "",
+        "sources": [
+          "pr:428"
+        ],
+        "upgradeNotes": [],
+        "needsReview": false
+      }
+    ],
+    "excluded": [
+      {
+        "sources": [
+          "pr:395",
+          "pr:398"
+        ],
+        "reason": "Internal CI branch filters and checkout-action maintenance; no deployed product behavior changes."
+      },
+      {
+        "sources": [
+          "pr:402",
+          "pr:405",
+          "pr:408",
+          "pr:410",
+          "pr:414",
+          "pr:416",
+          "pr:419"
+        ],
+        "reason": "Internal release automation, generated-version synchronization and editorial tooling; no storage runtime changes."
+      },
+      {
+        "sources": [
+          "pr:425"
+        ],
+        "reason": "Manual image-scanning CI; does not independently change runtime behavior or establish published-image vulnerability results."
+      }
+    ]
+  },
+  "sources": [
+    "pr:395",
+    "pr:398",
+    "pr:399",
+    "pr:400",
+    "pr:402",
+    "pr:405",
+    "pr:408",
+    "pr:410",
+    "pr:414",
+    "pr:413",
+    "pr:416",
+    "pr:419",
+    "pr:423",
+    "pr:425",
+    "pr:428",
+    "pr:431"
+  ],
+  "files": {
+    "CHANGELOG.md": "26c00dfd054d0ced737a4aab7fc196f7ae52b009ae6870a87948f17f8f63c78f",
+    "changelogs/released/v1.1.2/changelog": "c3a2b468c774aee3438a03f7784aa52bc5ecf95347ed9dde2a1fa8cfed002144",
+    "helm/operator/Chart.yaml": "de1cf11b7a66b3de33a09ee9cc656daf99205355b7a2095bcbfed8d88e50e486",
+    "helm/operator/values.yaml": "0eb34a47f408293363e8e5e7177c540527776293ef0c86165f5a9a2c13933add"
+  }
+}
