@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	operatorv1alpha1 "github.com/hwameistor/hwameistor-operator/api/v1alpha1"
+	"github.com/hwameistor/hwameistor-operator/pkg/install"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -29,7 +30,7 @@ var uiLabelKey = "app"
 var uiLabelValue = "hwameistor-ui"
 var defaultUIImageRegistry = "ghcr.m.daocloud.io"
 var defaultUIImageRepository = "hwameistor/hwameistor-ui"
-var defaultUIImageTag = "v0.17.1"
+var defaultUIImageTag = install.DefaultHwameistorVersion
 var uiContainerName = "hwameistor-ui"
 
 var ui = appsv1.Deployment{
