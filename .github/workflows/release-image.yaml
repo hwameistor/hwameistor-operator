@@ -11,18 +11,25 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
+        description: Operator image tag (an existing Git tag in image-only mode)
         required: true
         type: string
       branch:
-        required: true
+        description: Image source branch for a normal manual release (defaults to the workflow ref)
+        required: false
         type: string
+      image_only:
+        description: Rebuild images from the existing release tag without publishing a chart
+        type: boolean
+        default: false
 
 jobs:
   release-chart:
+    if: ${{ !inputs.image_only }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
       - name: Configure Git
@@ -45,33 +52,56 @@ jobs:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
   release-image:
+    if: >-
+      ${{ !cancelled() && (needs.release-chart.result == 'success' ||
+      (github.event_name == 'workflow_dispatch' && inputs.image_only && needs.release-chart.result == 'skipped')) }}
     runs-on: ubuntu-latest
     needs:
       - release-chart
     permissions:
+      contents: read
       packages: write
+    env:
+      BUILDX_NO_DEFAULT_ATTESTATIONS: '1'
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.image_only && format('refs/tags/{0}', inputs.release_tag) || inputs.branch || github.sha }}
+          persist-credentials: false
       - name: Set up QEMU
         id: qemu
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
         with:
-          image: tonistiigi/binfmt:latest
-          platforms: all
+          platforms: arm64
       - name: Available platforms
         run: echo ${{ steps.qemu.outputs.platforms }}
       - name: Login registry
+        env:
+          REGISTRY_TOKEN: ${{ github.token }}
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Set env
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+      - name: Resolve image version
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+          IMAGE_ONLY: ${{ inputs.image_only }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          echo "RELEASE_TAG=`[ "${{ inputs.release_tag }}" != "" ] && echo ${{ inputs.release_tag }} || echo $(git describe --tags --abbrev=0)`" >> $GITHUB_ENV
-          echo "PROJECT_SOURCE_CODE_DIR=`echo ${GITHUB_WORKSPACE}`" >> $GITHUB_ENV
-          echo "IMAGE_REGISTRY=`echo ghcr.io/$(echo ${{ github.repository_owner }} | tr 'A-Z' 'a-z')`" >> $GITHUB_ENV
+          tag=${REQUESTED_TAG:-$(git describe --exact-match --tags --match 'v[0-9]*' HEAD)}
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]
+          if [[ "$IMAGE_ONLY" == true ]]; then
+            test "$(git rev-parse "refs/tags/$tag^{commit}")" = "$(git rev-parse HEAD)"
+            test "$(awk '$1 == "version:" { print $2 }' helm/operator/Chart.yaml)" = "$tag"
+          fi
+          {
+            printf 'RELEASE_TAG=%s\nPROJECT_SOURCE_CODE_DIR=%s\nIMAGE_REGISTRY=ghcr.io/%s\n' \
+              "$tag" "$GITHUB_WORKSPACE" "$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          } >> "$GITHUB_ENV"
       - name: Release image
+        run: make release
+      - name: Verify published image platforms
+        shell: bash
         run: |
-          PROJECT_SOURCE_CODE_DIR=${PROJECT_SOURCE_CODE_DIR} IMAGE_REGISTRY=${IMAGE_REGISTRY} RELEASE_TAG=${RELEASE_TAG} make release
+          docker buildx imagetools inspect --raw "$IMAGE_REGISTRY/operator:$RELEASE_TAG" |
+            jq -e '[.manifests[].platform | "\(.os)/\(.architecture)"] | sort == ["linux/amd64", "linux/arm64"]'
