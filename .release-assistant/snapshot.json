@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "repository": "hwameistor/hwameistor-operator",
+  "targetBranch": "release/v1.1",
+  "version": "v1.1.2",
+  "fromTag": "v1.1.1",
+  "toRef": "refs/heads/release/v1.1",
+  "fromSha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949",
+  "toSha": "2981207914a9ac85c7bf012565edc8fd0c76fee2",
+  "targetSha": "2981207914a9ac85c7bf012565edc8fd0c76fee2",
+  "createdAt": "2026-11-26T06:37:14.817Z",
+  "generatedPaths": [
+    "CHANGELOG.md",
+    "changelogs/released/v1.1.2/changelog",
+    "helm/operator/Chart.yaml",
+    "helm/operator/values.yaml"
+  ],
+  "fromTagSelection": {
+    "choice": "latest",
+    "candidates": [
+      {
+        "name": "v1.1.1",
+        "sha": "e0b6bc166135f42c4afe5080983dd3e2e9d71949"
+      },
+      {
+        "name": "v1.0.2",
+        "sha": "253c54c0aa0d38b502f540b8d6b25d666118d6c5"
+      },
+      {
+        "name": "v1.0.1",
+        "sha": "03df348d270b0f65f27679361126ecc9e4db8883"
+      }
+    ]
+  },
+  "workflowRun": {
+    "repository": "hwameistor/hwameistor-operator",
+    "runId": "45769416323"
+  },
+  "versionFiles": [
+    {
+      "path": "helm/operator/values.yaml",
+      "fields": [
+        "operator.tag"
+      ]
+    }
+  ]
+}
